@@ -10,6 +10,7 @@
     "lint:fix": "eslint . --ext .vue,.js,.ts,.jsx,.tsx --fix",
     "format": "prettier --write .",
     "type-check": "vue-tsc --noEmit",
+    "collect:css": "node scripts/collect-css.mjs",
     "generate:api": "node scripts/generate-api-types.mjs",
     "generate:api:check": "node scripts/generate-api-types.mjs && git diff --exit-code src/services/api/generated.d.ts",
     "test": "vitest",
