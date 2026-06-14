@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { usePermissionStore } from '@/store/modules/permission'
-import { permissionDirective, setupPermissionDirective } from '@/directives/permission'
+import { usePermissionStore } from '@/lib/store/modules/permission'
+import { permissionDirective, setupPermissionDirective } from '@/lib/directives/permission'
 
 describe('permission 指令', () => {
   beforeEach(() => {

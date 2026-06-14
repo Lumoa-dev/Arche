@@ -1,31 +1,25 @@
 <template>
   <div class="users-dashboard">
-    <div class="page-header">
-      <div class="page-header-row">
-        <div class="page-header-left">
-          <h1 class="page-title">用户管理</h1>
-          <p class="page-desc">用户数据总览与全量管理</p>
-        </div>
-        <div class="page-header-tools">
-          <button class="refresh-btn" title="刷新数据" @click="loadUsers()">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-          </button>
-          <ArButton size="sm" @click="showCreateModal = true">+ 创建用户</ArButton>
-        </div>
-      </div>
-    </div>
+    <ArPageHeader title="用户总览" desc="用户数据总览与全量管理">
+      <template #actions>
+        <button class="refresh-btn" title="刷新数据" @click="loadUsers()">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="23 4 23 10 17 10" />
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+          </svg>
+        </button>
+        <ArButton size="sm" @click="showCreateModal = true">+ 创建用户</ArButton>
+      </template>
+    </ArPageHeader>
 
     <!-- 指标卡片 -->
     <div class="metric-grid">
@@ -287,9 +281,10 @@
 import { ref, h, computed, onMounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { NModal, NForm, NFormItem, NSelect, NInputNumber, NPopconfirm } from 'naive-ui'
+import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { ArTag, ArTable, ArButton } from '@/components/ui'
 import type { ArTableColumn } from '@/components/ui/ArTable.vue'
-import { getUserStatsApi, type UserStats } from '@/services/api/auth'
+import { getUserStatsApi, type UserStats } from '@/components/logic/api/auth'
 import {
   getUsersApi,
   disableUserApi,
@@ -302,7 +297,7 @@ import {
   type AdminUser,
   type HotPost,
   type Paginated
-} from '@/services/api'
+} from '@/components/logic/api'
 
 const message = useMessage()
 
@@ -745,38 +740,6 @@ onMounted(() => {
   max-width: 100%;
 }
 
-.page-header {
-  margin-bottom: 20px;
-}
-.page-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.page-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-primary);
-}
-.page-desc {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin: 0;
-}
-.page-header-tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  padding-top: 4px;
-}
 .refresh-btn {
   display: inline-flex;
   align-items: center;

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { h, onMounted, ref } from 'vue'
 import { NInput, NProgress, useMessage } from 'naive-ui'
+import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { ArButton, ArTable } from '@/components/ui'
 import type { ArTableColumn } from '@/components/ui/ArTable.vue'
-import { getOssAdminQuotasApi, updateOssUserQuotaApi, type OSSQuota } from '@/services/api'
+import { getOssAdminQuotasApi, updateOssUserQuotaApi, type OSSQuota } from '@/components/logic/api'
 
 const message = useMessage()
 const quotas = ref<OSSQuota[]>([])
@@ -173,10 +174,13 @@ onMounted(() => {
 
 <template>
   <div class="quota-management-page">
-    <div class="page-header">
-      <h2 class="page-title">OSS 存储配额管理</h2>
-      <ArButton size="sm" type="secondary" @click="fetchQuotas" :loading="loading"> 刷新 </ArButton>
-    </div>
+    <ArPageHeader title="配额管理" desc="管理 OSS 用户存储配额">
+      <template #actions>
+        <ArButton size="sm" type="secondary" @click="fetchQuotas" :loading="loading">
+          刷新
+        </ArButton>
+      </template>
+    </ArPageHeader>
 
     <div class="table-wrapper">
       <ArTable
@@ -199,20 +203,6 @@ onMounted(() => {
 <style scoped>
 .quota-management-page {
   max-width: 100%;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-md);
-}
-
-.page-title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
 }
 
 .table-wrapper {

@@ -46,19 +46,26 @@ const itemRefs = ref<Map<number, HTMLElement>>(new Map())
 // ─── 选中状态同步 ───
 const localItems = ref<MultiSelectItem[]>([])
 
-watch(() => props.items, (val) => {
-  localItems.value = val.map(item => ({
-    ...item,
-    selected: props.modelValue.includes(item.id)
-  }))
-}, { immediate: true, deep: true })
+watch(
+  () => props.items,
+  (val) => {
+    localItems.value = val.map((item) => ({
+      ...item,
+      selected: props.modelValue.includes(item.id)
+    }))
+  },
+  { immediate: true, deep: true }
+)
 
 function syncModelValue() {
-  emit('update:modelValue', localItems.value.filter(i => i.selected).map(i => i.id))
+  emit(
+    'update:modelValue',
+    localItems.value.filter((i) => i.selected).map((i) => i.id)
+  )
 }
 
 // ─── 滚动物理引擎 ───
-const SCROLL_FRICTION = 0.90
+const SCROLL_FRICTION = 0.9
 const MIN_VELOCITY = 0.5
 const WHEEL_FACTOR = 0.5
 
@@ -106,8 +113,8 @@ function stopPhysics() {
 function onWheel(e: WheelEvent) {
   if (props.disabled || isAnimating) return
   // 检查是否还能滚动
-  if ((e.deltaY > 0 && offset.value <= maxOffset.value) ||
-      (e.deltaY < 0 && offset.value >= 0)) return
+  if ((e.deltaY > 0 && offset.value <= maxOffset.value) || (e.deltaY < 0 && offset.value >= 0))
+    return
   velocity += e.deltaY * WHEEL_FACTOR
   if (!animFrameId) {
     animFrameId = requestAnimationFrame(physicsTick)
@@ -203,12 +210,16 @@ function refresh() {
 }
 
 function selectAll() {
-  localItems.value.forEach(i => { if (!i.disabled) i.selected = true })
+  localItems.value.forEach((i) => {
+    if (!i.disabled) i.selected = true
+  })
   syncModelValue()
 }
 
 function clearAll() {
-  localItems.value.forEach(i => { i.selected = false })
+  localItems.value.forEach((i) => {
+    i.selected = false
+  })
   syncModelValue()
 }
 
@@ -224,19 +235,35 @@ onUnmounted(() => {
 })
 
 // 窗口 resize 时更新
-watch(() => [props.items, props.modelValue], () => {
-  nextTick(refresh)
-}, { deep: true })
+watch(
+  () => [props.items, props.modelValue],
+  () => {
+    nextTick(refresh)
+  },
+  { deep: true }
+)
 </script>
 
 <template>
-  <div class="ar-multi-select" :class="{ 'ar-multi-select--disabled': disabled }" ref="containerRef">
+  <div
+    class="ar-multi-select"
+    :class="{ 'ar-multi-select--disabled': disabled }"
+    ref="containerRef"
+  >
     <div class="ar-multi-select__viewport" ref="viewportRef" @wheel.prevent="onWheel">
-      <div class="ar-multi-select__inner" ref="innerRef" :style="{ transform: `translateY(${offset}px)` }">
+      <div
+        class="ar-multi-select__inner"
+        ref="innerRef"
+        :style="{ transform: `translateY(${offset}px)` }"
+      >
         <div
           v-for="(item, index) in localItems"
           :key="item.id"
-          :ref="el => { if (el) itemRefs.set(index, el as HTMLElement) }"
+          :ref="
+            (el) => {
+              if (el) itemRefs.set(index, el as HTMLElement)
+            }
+          "
           class="ar-multi-select__item"
           :class="{
             'ar-multi-select__item--checked': item.selected,
@@ -269,7 +296,15 @@ watch(() => [props.items, props.modelValue], () => {
         title="下移三项"
         @click="scrollToNext"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
@@ -283,7 +318,15 @@ watch(() => [props.items, props.modelValue], () => {
         title="上移三项"
         @click="scrollToPrev"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
           <polyline points="18 15 12 9 6 15" />
         </svg>
       </button>
@@ -447,7 +490,9 @@ watch(() => [props.items, props.modelValue], () => {
 /* ── 箭头淡入淡出 ── */
 .ar-arrow-fade-enter-active,
 .ar-arrow-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .ar-arrow-fade-enter-from {

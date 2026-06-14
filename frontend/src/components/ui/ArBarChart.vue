@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useArChartTheme } from '@/composables/useArChartTheme'
+import { useArChartTheme } from '@/lib/composables/useArChartTheme'
 import ArChart from './ArChart.vue'
 
 const props = withDefaults(
@@ -31,13 +31,13 @@ const option = computed(() => {
     tooltip: {
       ...tooltipStyle(),
       trigger: 'axis',
-      axisPointer: { type: 'shadow' },
+      axisPointer: { type: 'shadow' }
     },
     grid: {
       left: isHorizontal ? 60 : 40,
       right: 16,
       top: 16,
-      bottom: 24,
+      bottom: 24
     },
     xAxis: isHorizontal
       ? { type: 'value', splitLine: { lineStyle: { color: t.borderLight } }, ...axis }
@@ -50,8 +50,8 @@ const option = computed(() => {
       name: s.name,
       data: s.data,
       barMaxWidth: 32,
-      itemStyle: { borderRadius: [4, 4, 0, 0] },
-    })),
+      itemStyle: { borderRadius: [4, 4, 0, 0] }
+    }))
   } as Record<string, unknown>
 })
 </script>

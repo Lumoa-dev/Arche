@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { useUserStore } from '@/store/modules/user'
+import { useUserStore } from '@/lib/store/modules/user'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArTag from '@/components/ui/ArTag.vue'
 import ArAvatar from '@/components/ui/ArAvatar.vue'

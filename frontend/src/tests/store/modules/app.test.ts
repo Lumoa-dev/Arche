@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useAppStore } from '@/store/modules/app'
+import { useAppStore } from '@/lib/store/modules/app'
 
 // 模拟 window.matchMedia
 function createMatchMediaMock(matches: boolean) {

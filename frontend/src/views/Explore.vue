@@ -4,9 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { NIcon, NTag } from 'naive-ui'
 import { PersonOutline, PricetagOutline } from '@vicons/ionicons5'
 import { PostCard } from '@/components/blog'
-import { getBlogPostsApi, type BlogPost } from '@/services/api/blog'
-import { withFallback } from '@/services/mock'
-import { useSearchStore } from '@/store/modules/search'
+import { getBlogPostsApi, type BlogPost } from '@/components/logic/api/blog'
+import { withFallback } from '@/lib/services/mock'
+import { useSearchStore } from '@/lib/store/modules/search'
 
 interface ExploreItem {
   id: number

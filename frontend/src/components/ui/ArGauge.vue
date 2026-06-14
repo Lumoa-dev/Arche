@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useArChartTheme } from '@/composables/useArChartTheme'
+import { useArChartTheme } from '@/lib/composables/useArChartTheme'
 import ArChart from './ArChart.vue'
 
 const props = withDefaults(
@@ -36,7 +36,7 @@ const option = computed(() => {
         splitNumber: 5,
         progress: { show: true, width: 6, itemStyle: { color: t.accent } },
         axisLine: {
-          lineStyle: { width: 6, color: [[1, t.borderLight]] },
+          lineStyle: { width: 6, color: [[1, t.borderLight]] }
         },
         axisTick: { show: false },
         splitLine: { show: false },
@@ -47,17 +47,17 @@ const option = computed(() => {
           fontWeight: 600,
           color: t.textPrimary,
           formatter: `{value}`,
-          offsetCenter: [0, '60%'],
+          offsetCenter: [0, '60%']
         },
         title: {
           ...ts,
           fontSize: 11,
           color: t.textTertiary,
-          offsetCenter: [0, '40%'],
+          offsetCenter: [0, '40%']
         },
-        data: [{ value: ind.value, name: ind.name }],
+        data: [{ value: ind.value, name: ind.name }]
       }
-    }),
+    })
   } as Record<string, unknown>
 })
 </script>

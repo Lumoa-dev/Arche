@@ -25,7 +25,7 @@
  * ```
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useSpring } from '@/utils/spring'
+import { useSpring } from '@/lib/utils/spring'
 
 // ── Props ──
 const props = withDefaults(

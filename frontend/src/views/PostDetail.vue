@@ -17,17 +17,17 @@ import {
   type BlogPost,
   type BlogComment,
   type ParagraphData
-} from '@/services/api'
-import { useUserStore } from '@/store/modules/user'
-import PostDetail from '@/components/blog/PostDetail.vue'
-import AuthorBar from '@/components/blog/AuthorBar.vue'
-import FloatingActions from '@/components/blog/FloatingActions.vue'
-import ParagraphCommentPanel from '@/components/blog/ParagraphCommentPanel.vue'
-import LikeButton from '@/components/blog/LikeButton.vue'
-import FavoriteButton from '@/components/blog/FavoriteButton.vue'
-import ShareButton from '@/components/blog/ShareButton.vue'
-import CommentForm from '@/components/blog/CommentForm.vue'
-import CommentList from '@/components/blog/CommentList.vue'
+} from '@/components/logic/api'
+import { useUserStore } from '@/lib/store/modules/user'
+import PostDetail from '@/components/widgets/blog/PostDetail.vue'
+import AuthorBar from '@/components/widgets/blog/AuthorBar.vue'
+import FloatingActions from '@/components/widgets/blog/FloatingActions.vue'
+import ParagraphCommentPanel from '@/components/widgets/blog/ParagraphCommentPanel.vue'
+import LikeButton from '@/components/widgets/blog/LikeButton.vue'
+import FavoriteButton from '@/components/widgets/blog/FavoriteButton.vue'
+import ShareButton from '@/components/widgets/blog/ShareButton.vue'
+import CommentForm from '@/components/widgets/blog/CommentForm.vue'
+import CommentList from '@/components/widgets/blog/CommentList.vue'
 
 const route = useRoute()
 const message = useMessage()

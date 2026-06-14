@@ -42,11 +42,6 @@ function handleClick(e: Event) {
   if (props.disabled) return
   emit('click', e)
 }
-
-function handleKeydown(e: KeyboardEvent) {
-  if (props.disabled) return
-  emit('click', e)
-}
 </script>
 
 <template>
@@ -59,17 +54,30 @@ function handleKeydown(e: KeyboardEvent) {
     @keydown.enter="handleClick"
     @keydown.space.prevent="handleClick"
   >
-    <!-- 封面区（可选） -->
+    <!-- 封面区（全宽，无内边距） -->
     <div v-if="$slots.cover" class="ar-card__cover">
       <slot name="cover" />
     </div>
 
-    <!-- 内容区 -->
-    <div v-if="$slots.default" class="ar-card__body">
-      <slot />
+    <!-- 顶栏（全宽） -->
+    <div v-if="$slots.header" class="ar-card__header">
+      <slot name="header" />
     </div>
 
-    <!-- 底部（可选） -->
+    <!-- 主区域：左栏 | 内容区 | 右栏 -->
+    <div v-if="$slots.left || $slots.default || $slots.right" class="ar-card__main">
+      <div v-if="$slots.left" class="ar-card__left">
+        <slot name="left" />
+      </div>
+      <div v-if="$slots.default" class="ar-card__body">
+        <slot />
+      </div>
+      <div v-if="$slots.right" class="ar-card__right">
+        <slot name="right" />
+      </div>
+    </div>
+
+    <!-- 底栏（全宽） -->
     <div v-if="$slots.footer" class="ar-card__footer">
       <slot name="footer" />
     </div>
@@ -89,6 +97,7 @@ function handleKeydown(e: KeyboardEvent) {
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-lg);
+  background: var(--card-bg);
   transition:
     transform var(--transition-normal),
     box-shadow var(--transition-normal),
@@ -187,43 +196,100 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 /* ════════════════════════════════════════
-   内部区块
+   内部区块 — 五区布局
+   封面 > 顶栏 > (左栏 | 内容区 | 右栏) > 底栏
    ════════════════════════════════════════ */
 
 /* 封面区 — 顶部，无内边距，撑满宽度 */
 .ar-card__cover {
+  background: var(--card-bg-cover);
   line-height: 0;
-  /* 确保封面图片不会溢出圆角 */
   overflow: hidden;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
-/* 内容区 */
+/* 顶栏 */
+.ar-card__header {
+  background: var(--card-bg-header);
+  display: flex;
+  align-items: center;
+}
+
+/* 主区域：左栏 + 内容区 + 右栏 横向排列 */
+.ar-card__main {
+  background: var(--card-bg-main);
+  display: flex;
+  flex-direction: row;
+  min-width: 0;
+}
+
+.ar-card__left {
+  background: var(--card-bg-left);
+  flex-shrink: 0;
+}
+
 .ar-card__body {
+  background: var(--card-bg-body);
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* 底部 — 带分隔线 */
+.ar-card__right {
+  background: var(--card-bg-right);
+  flex-shrink: 0;
+}
+
+/* 底栏 — 带分隔线 */
 .ar-card__footer {
+  background: var(--card-bg-footer);
   display: flex;
   align-items: center;
   border-top: 1px solid var(--color-border-light);
 }
 
 /* ════════════════════════════════════════
-   内边距预设
+   内边距预设 — 五区统一
    ════════════════════════════════════════ */
-.ar-card--pad-none .ar-card__body { padding: 0; }
-.ar-card--pad-none .ar-card__footer { padding: 0; }
+.ar-card--pad-none {
+  --card-pad-body: 0;
+  --card-pad-h: 0;
+  --card-pad-v: 0;
+}
 
-.ar-card--pad-sm .ar-card__body { padding: var(--space-3); }
-.ar-card--pad-sm .ar-card__footer { padding: var(--space-2) var(--space-3); }
+.ar-card--pad-sm {
+  --card-pad-body: var(--space-3);
+  --card-pad-h: var(--space-3);
+  --card-pad-v: var(--space-2);
+}
 
-.ar-card--pad-md .ar-card__body { padding: var(--space-4); }
-.ar-card--pad-md .ar-card__footer { padding: var(--space-3) var(--space-4); }
+.ar-card--pad-md {
+  --card-pad-body: var(--space-4);
+  --card-pad-h: var(--space-4);
+  --card-pad-v: var(--space-3);
+}
 
-.ar-card--pad-lg .ar-card__body { padding: var(--space-6); }
-.ar-card--pad-lg .ar-card__footer { padding: var(--space-4) var(--space-6); }
+.ar-card--pad-lg {
+  --card-pad-body: var(--space-6);
+  --card-pad-h: var(--space-6);
+  --card-pad-v: var(--space-4);
+}
+
+.ar-card__header {
+  padding: var(--card-pad-v) var(--card-pad-h);
+}
+.ar-card__left {
+  padding: var(--card-pad-body) 0 var(--card-pad-body) var(--card-pad-body);
+}
+.ar-card__body {
+  padding: var(--card-pad-body);
+}
+.ar-card__right {
+  padding: var(--card-pad-body) var(--card-pad-body) var(--card-pad-body) 0;
+}
+.ar-card__footer {
+  padding: var(--card-pad-v) var(--card-pad-h);
+}
 </style>

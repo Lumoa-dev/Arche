@@ -7,7 +7,7 @@ import { ArTable, ArPagination } from '@/components/ui'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArTag from '@/components/ui/ArTag.vue'
 import { PostCard } from '@/components/blog'
-import { deletePostApi, getMyPostsApi, type BlogPost } from '@/services/api'
+import { deletePostApi, getMyPostsApi, type BlogPost } from '@/components/logic/api'
 
 const message = useMessage()
 const router = useRouter()

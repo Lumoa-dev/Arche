@@ -27,7 +27,7 @@ vi.mock('@/services/api/blog', () => ({
 // fetch 需要 mock，因为 ensurePostCover 内部用 fetch 将 dataURL 转 Blob
 vi.stubGlobal('fetch', mockFetch)
 
-import { ensurePostCover, ensurePostsCovers } from '@/composables/useCoverLazyGenerator'
+import { ensurePostCover, ensurePostsCovers } from '@/components/logic/useCoverLazyGenerator'
 
 /** 创建一个基础帖子对象 */
 function createPost(overrides: Record<string, any> = {}): any {

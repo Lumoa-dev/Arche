@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { usePermissionStore } from '@/store/modules/permission'
+import { usePermissionStore } from '@/lib/store/modules/permission'
 
 describe('usePermissionStore', () => {
   beforeEach(() => {

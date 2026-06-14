@@ -14,7 +14,7 @@ vi.mock('vue-router', () => ({
 }))
 
 // 在 useViewMode 导入之后重新导入
-import { useViewMode } from '@/composables/useViewMode'
+import { useViewMode } from '@/lib/composables/useViewMode'
 
 describe('useViewMode', () => {
   beforeEach(() => {

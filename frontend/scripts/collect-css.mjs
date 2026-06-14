@@ -48,7 +48,7 @@ function extractVueStyles(content, filePath) {
       blocks.push({
         scoped: isScoped,
         body,
-        raw: match[0],
+        raw: match[0]
       })
     }
   }
@@ -80,7 +80,7 @@ for (const file of cssFiles) {
     type: 'css',
     scoped: false,
     lines: css.split('\n').length,
-    body: css,
+    body: css
   })
 }
 
@@ -96,7 +96,7 @@ for (const file of vueFiles) {
       type: 'vue',
       scoped: block.scoped,
       lines: block.body.split('\n').length,
-      body: block.body,
+      body: block.body
     })
   }
 }
@@ -125,10 +125,7 @@ writeFileSync(OUTPUT_CSS, header + cssParts.join('\n\n'), 'utf-8')
 const groups = {}
 for (const block of allBlocks) {
   const parts = block.source.replace(/\\/g, '/').split('/')
-  const dir =
-    parts[0] === 'src'
-      ? parts.slice(0, 3).join('/')
-      : parts[0]
+  const dir = parts[0] === 'src' ? parts.slice(0, 3).join('/') : parts[0]
 
   if (!groups[dir]) {
     groups[dir] = { files: new Set(), blocks: 0, lines: 0, scopedLines: 0 }
@@ -146,7 +143,7 @@ for (const [dir, info] of Object.entries(groups)) {
     files: [...info.files].sort(),
     blocks: info.blocks,
     lines: info.lines,
-    scopedLines: info.scopedLines,
+    scopedLines: info.scopedLines
   }
 }
 
@@ -161,7 +158,7 @@ const report = {
     totalBlocks: allBlocks.length,
     totalLines,
     scopedLines,
-    globalLines: totalLines - scopedLines,
+    globalLines: totalLines - scopedLines
   },
   groups: reportGroups,
   top20: allBlocks
@@ -170,14 +167,14 @@ const report = {
     .map((b) => ({
       source: b.source,
       scoped: b.scoped,
-      lines: b.lines,
+      lines: b.lines
     })),
   blocks: allBlocks.map((b) => ({
     source: b.source,
     type: b.type,
     scoped: b.scoped,
-    lines: b.lines,
-  })),
+    lines: b.lines
+  }))
 }
 
 writeFileSync(OUTPUT_REPORT, JSON.stringify(report, null, 2), 'utf-8')
@@ -187,7 +184,9 @@ writeFileSync(OUTPUT_REPORT, JSON.stringify(report, null, 2), 'utf-8')
 console.log('')
 console.log('  CSS 收集完成!')
 console.log('  ───────────────────────────────────')
-console.log(`  来源:       ${cssFiles.length} 个 .css + ${vueFiles.length} 个 .vue = ${allBlocks.length} 个样式块`)
+console.log(
+  `  来源:       ${cssFiles.length} 个 .css + ${vueFiles.length} 个 .vue = ${allBlocks.length} 个样式块`
+)
 console.log(`  总行数:     ${totalLines} 行`)
 console.log(`    其中 scope: ${scopedLines} 行`)
 console.log(`    其中全局:   ${totalLines - scopedLines} 行`)
@@ -203,6 +202,8 @@ console.log('  ─────────────────────�
 const sorted = Object.entries(reportGroups).sort((a, b) => b[1].lines - a[1].lines)
 for (const [dir, info] of sorted) {
   const pct = ((info.lines / totalLines) * 100).toFixed(1)
-  console.log(`  ${dir.padEnd(30)} ${String(info.lines).padStart(6)} 行 (${pct}%)  ${info.blocks} 块`)
+  console.log(
+    `  ${dir.padEnd(30)} ${String(info.lines).padStart(6)} 行 (${pct}%)  ${info.blocks} 块`
+  )
 }
 console.log('')

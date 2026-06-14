@@ -7,7 +7,7 @@ import {
   truncate,
   maskPhone,
   maskEmail
-} from '@/utils/string'
+} from '@/lib/utils/string'
 
 describe('camelToKebab', () => {
   it('驼峰转短横线', () => {

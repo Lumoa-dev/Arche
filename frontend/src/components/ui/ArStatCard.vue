@@ -38,17 +38,41 @@ const displayValue = computed(() => {
   <ArCard variant="glass" class="ar-stat-card" :padding="size === 'sm' ? 'sm' : 'md'">
     <div class="ar-stat-card__inner">
       <div class="ar-stat-card__top">
-        <span v-if="sublabel" class="ar-stat-card__sublabel" :class="`ar-stat-card__sublabel--${trend}`">
-          <svg v-if="trend === 'up'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <span
+          v-if="sublabel"
+          class="ar-stat-card__sublabel"
+          :class="`ar-stat-card__sublabel--${trend}`"
+        >
+          <svg
+            v-if="trend === 'up'"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          >
             <polyline points="18 15 12 9 6 15" />
           </svg>
-          <svg v-else-if="trend === 'down'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <svg
+            v-else-if="trend === 'down'"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          >
             <polyline points="6 9 12 15 18 9" />
           </svg>
           {{ sublabel }}
         </span>
       </div>
-      <span class="ar-stat-card__value" :class="`ar-stat-card__value--${size}`">{{ displayValue }}</span>
+      <span class="ar-stat-card__value" :class="`ar-stat-card__value--${size}`">{{
+        displayValue
+      }}</span>
       <span class="ar-stat-card__label">{{ label }}</span>
     </div>
   </ArCard>
@@ -82,9 +106,15 @@ const displayValue = computed(() => {
   line-height: 1;
 }
 
-.ar-stat-card__sublabel--up { color: var(--color-success); }
-.ar-stat-card__sublabel--down { color: var(--color-danger); }
-.ar-stat-card__sublabel--neutral { color: var(--color-text-tertiary); }
+.ar-stat-card__sublabel--up {
+  color: var(--color-success);
+}
+.ar-stat-card__sublabel--down {
+  color: var(--color-danger);
+}
+.ar-stat-card__sublabel--neutral {
+  color: var(--color-text-tertiary);
+}
 
 .ar-stat-card__value {
   font-family: var(--font-mono);
@@ -94,9 +124,15 @@ const displayValue = computed(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.ar-stat-card__value--sm { font-size: var(--text-xl); }
-.ar-stat-card__value--md { font-size: var(--text-2xl); }
-.ar-stat-card__value--lg { font-size: var(--text-3xl); }
+.ar-stat-card__value--sm {
+  font-size: var(--text-xl);
+}
+.ar-stat-card__value--md {
+  font-size: var(--text-2xl);
+}
+.ar-stat-card__value--lg {
+  font-size: var(--text-3xl);
+}
 
 .ar-stat-card__label {
   font-size: var(--text-xs);

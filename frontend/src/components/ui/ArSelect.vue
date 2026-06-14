@@ -69,27 +69,25 @@ function handleChange(e: Event) {
         class="ar-select__native"
         @change="handleChange"
       >
-        <option
-          v-if="placeholder"
-          value=""
-          disabled
-          hidden
-        >
+        <option v-if="placeholder" value="" disabled hidden>
           {{ placeholder }}
         </option>
-        <option
-          v-for="opt in options"
-          :key="opt.value"
-          :value="opt.value"
-          :disabled="opt.disabled"
-        >
+        <option v-for="opt in options" :key="opt.value" :value="opt.value" :disabled="opt.disabled">
           {{ opt.label }}
         </option>
       </select>
 
       <!-- 自定义下拉箭头 -->
       <span class="ar-select__arrow" aria-hidden="true">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </span>

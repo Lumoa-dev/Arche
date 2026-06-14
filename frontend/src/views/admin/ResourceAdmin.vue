@@ -2,7 +2,7 @@
 import { h, onMounted, ref } from 'vue'
 import { NGrid, NGi, NTabPane, NTabs, useMessage } from 'naive-ui'
 import { ArButton, ArTable, ArPagination } from '@/components/ui'
-import { getAssetsApi, getAssetStatsApi, type AssetStats } from '@/services/api'
+import { getAssetsApi, getAssetStatsApi, type AssetStats } from '@/components/logic/api'
 import {
   getOssAdminStatsApi,
   getOssAdminFilesApi,
@@ -11,7 +11,7 @@ import {
   type OSSAdminStats,
   type OSSFile,
   type OSSTopUser
-} from '@/services/api'
+} from '@/components/logic/api'
 
 const message = useMessage()
 const activeTab = ref('assets')

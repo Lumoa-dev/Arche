@@ -1,9 +1,6 @@
 <template>
   <div class="page-shell">
-    <div class="page-heading">
-      <h1>GitHub</h1>
-      <p class="page-desc">项目开源仓库，欢迎 Star 和贡献</p>
-    </div>
+    <ArPageHeader title="GitHub" desc="项目开源仓库，欢迎 Star 和贡献" />
     <div class="placeholder-card">
       <p>正在跳转到 GitHub...</p>
       <a :href="repoUrl" target="_blank" rel="noopener noreferrer" class="repo-link">
@@ -14,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { onMounted } from 'vue'
 
 const repoUrl = 'https://github.com/jamnodesmith/Arche'
@@ -30,16 +28,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--layout-gap);
-}
-
-.page-heading h1 {
-  margin: 0 0 6px;
-  font-size: 28px;
-}
-
-.page-desc {
-  margin: 0;
-  color: var(--text-secondary);
 }
 
 .placeholder-card {

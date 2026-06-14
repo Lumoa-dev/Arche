@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useArChartTheme } from '@/composables/useArChartTheme'
+import { useArChartTheme } from '@/lib/composables/useArChartTheme'
 import ArChart from './ArChart.vue'
 
 const props = withDefaults(
@@ -30,7 +30,7 @@ const option = computed(() => {
     tooltip: {
       ...tooltipStyle(),
       formatter: (p: { value: number[] }) =>
-        `${props.categoriesX[p.value[0]]} ~ ${props.categoriesY[p.value[1]]}: ${p.value[2]}`,
+        `${props.categoriesX[p.value[0]]} ~ ${props.categoriesY[p.value[1]]}: ${p.value[2]}`
     },
     grid: { left: 60, right: 40, top: 16, bottom: 40 },
     xAxis: { type: 'category', data: props.categoriesX, splitArea: { show: true }, ...axis },
@@ -42,7 +42,7 @@ const option = computed(() => {
       orient: 'horizontal',
       left: 'center',
       bottom: 0,
-      inRange: { color: [t.bgMuted, t.warmLight, t.warm, t.accent] },
+      inRange: { color: [t.bgMuted, t.warmLight, t.warm, t.accent] }
     },
     series: [
       {
@@ -50,10 +50,10 @@ const option = computed(() => {
         data: props.data,
         label: { show: props.categoriesX.length <= 10 },
         emphasis: {
-          itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.15)' },
-        },
-      },
-    ],
+          itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.15)' }
+        }
+      }
+    ]
   } as Record<string, unknown>
 })
 </script>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useArChartTheme } from '@/composables/useArChartTheme'
+import { useArChartTheme } from '@/lib/composables/useArChartTheme'
 import ArChart from './ArChart.vue'
 
 const props = withDefaults(
@@ -37,24 +37,24 @@ const option = computed(() => {
     color: palette(),
     tooltip: {
       ...tooltipStyle(),
-      trigger: 'axis',
+      trigger: 'axis'
     },
     grid: {
       left: 40,
       right: 16,
       top: 16,
-      bottom: 24,
+      bottom: 24
     },
     xAxis: {
       type: 'category',
       data: props.categories,
       boundaryGap: false,
-      ...axis,
+      ...axis
     },
     yAxis: {
       type: 'value',
       splitLine: { lineStyle: { color: t.borderLight } },
-      ...axis,
+      ...axis
     },
     series: props.series.map((s) => {
       const serie: Record<string, unknown> = {
@@ -64,18 +64,21 @@ const option = computed(() => {
         smooth: props.smooth,
         symbol: 'none',
         lineStyle: { width: 1.5, color: t.accent },
-        itemStyle: { color: t.accent },
+        itemStyle: { color: t.accent }
       }
       if (props.showArea) {
         serie.areaStyle = {
           color: {
             type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
               { offset: 0, color: t.accent + '60' },
-              { offset: 1, color: t.accent + '05' },
-            ],
-          },
+              { offset: 1, color: t.accent + '05' }
+            ]
+          }
         }
       }
       if (props.showMarkLine) {
@@ -89,15 +92,15 @@ const option = computed(() => {
               label: {
                 formatter: '峰值: {c}',
                 ...textStyle(11),
-                color: t.textSecondary,
+                color: t.textSecondary
               },
-              lineStyle: { color: t.textQuaternary, type: 'dashed' as const, width: 1 },
-            },
-          ],
+              lineStyle: { color: t.textQuaternary, type: 'dashed' as const, width: 1 }
+            }
+          ]
         }
       }
       return serie
-    }),
+    })
   } as Record<string, unknown>
 })
 </script>

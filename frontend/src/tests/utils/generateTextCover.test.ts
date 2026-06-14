@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { BlogPost, ParagraphData } from '@/services/api/blog'
+import type { BlogPost, ParagraphData } from '@/components/logic/api/blog'
 
 describe('generateTextCover', () => {
   it('应该返回 data URL', async () => {

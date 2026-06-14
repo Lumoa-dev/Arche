@@ -64,18 +64,36 @@ function pad(n: number | undefined, len = 2): string | null {
 /** 日期片段 */
 const dateParts = computed(() => {
   const parts: string[] = []
-  if (!props.hideYear) { const v = pad(props.year, 4); if (v) parts.push(v) }
-  if (!props.hideMonth) { const v = pad(props.month); if (v) parts.push(v) }
-  if (!props.hideDay) { const v = pad(props.day); if (v) parts.push(v) }
+  if (!props.hideYear) {
+    const v = pad(props.year, 4)
+    if (v) parts.push(v)
+  }
+  if (!props.hideMonth) {
+    const v = pad(props.month)
+    if (v) parts.push(v)
+  }
+  if (!props.hideDay) {
+    const v = pad(props.day)
+    if (v) parts.push(v)
+  }
   return parts
 })
 
 /** 时间片段 */
 const timeParts = computed(() => {
   const parts: string[] = []
-  if (!props.hideHour) { const v = pad(props.hour); if (v) parts.push(v) }
-  if (!props.hideMinute) { const v = pad(props.minute); if (v) parts.push(v) }
-  if (!props.hideSecond) { const v = pad(props.second); if (v) parts.push(v) }
+  if (!props.hideHour) {
+    const v = pad(props.hour)
+    if (v) parts.push(v)
+  }
+  if (!props.hideMinute) {
+    const v = pad(props.minute)
+    if (v) parts.push(v)
+  }
+  if (!props.hideSecond) {
+    const v = pad(props.second)
+    if (v) parts.push(v)
+  }
   return parts
 })
 

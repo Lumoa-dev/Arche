@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useUserStore } from '@/store/modules/user'
-import { usePermissionStore } from '@/store/modules/permission'
-import type { UserInfo } from '@/services/api/auth'
+import { useUserStore } from '@/lib/store/modules/user'
+import { usePermissionStore } from '@/lib/store/modules/permission'
+import type { UserInfo } from '@/components/logic/api/auth'
 
 // 模拟 auth API
 vi.mock('@/services/api/auth', () => ({
@@ -12,7 +12,7 @@ vi.mock('@/services/api/auth', () => ({
   getUserInfoApi: vi.fn()
 }))
 
-import { loginApi, logoutApi, refreshTokenApi, getUserInfoApi } from '@/services/api/auth'
+import { loginApi, logoutApi, refreshTokenApi, getUserInfoApi } from '@/components/logic/api/auth'
 
 describe('useUserStore', () => {
   beforeEach(() => {

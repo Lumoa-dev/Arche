@@ -112,6 +112,50 @@
      ========================================================= */
   --bg-gradient: linear-gradient(180deg, #f5f0e8 0%, #efe8dc 100%);
   --bg-gradient-light: linear-gradient(180deg, #faf6ef 0%, #f5f0e8 100%);
+
+  /* =========================================================
+     Ar 组件兼容别名 — 新命名体系映射到墨色体系
+     ========================================================= */
+
+  /* 颜色映射 */
+  --color-accent: var(--accent-color);
+  --color-accent-hover: var(--primary-hover-color);
+  --color-border: var(--border-color);
+  --color-border-light: var(--divider-color);
+  --color-bg-muted: var(--bg-color);
+  --color-bg-soft: var(--surface-inset-color);
+  --color-bg-surface: var(--surface-color);
+  --color-danger: var(--error-color);
+  --color-success: var(--success-color);
+  --color-text-on-primary: #fff;
+  --color-text-primary: var(--text-primary);
+  --color-text-quaternary: var(--text-disabled);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  /* 间距映射 */
+  --space-1: var(--spacing-xs);
+  --space-2: var(--spacing-sm);
+  --space-3: var(--spacing-md);
+  --space-4: var(--spacing-lg);
+  --space-6: var(--spacing-xl);
+
+  /* 字号映射 */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+  --font-size-xs: 11px;
+
+  /* 字重映射 */
+  --weight-medium: var(--font-weight-medium);
+  --weight-bold: var(--font-weight-bold);
+
+  /* 其他 */
+  --surface-solid: var(--surface-strong-color);
+  --text-on-primary: #fff;
 }
 
 /* =============================================================
@@ -252,6 +296,111 @@
 .dark .glass-surface {
   background: rgba(26, 24, 23, 0.6);
   border: 1px solid rgba(230, 225, 218, 0.1);
+}
+
+/* =============================================================
+   全局样式 — 源自 style.css（已合并）
+   ============================================================= */
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+}
+
+body {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+/* 全局容器 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* 滚动条样式 — 墨色 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(26, 24, 23, 0.06);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 24, 23, 0.18);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 24, 23, 0.32);
+}
+
+/* ── 叠化转场（dissolve） ── */
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.fade-transform-enter-from,
+.fade-transform-leave-to {
+  opacity: 0;
+}
+
+/* Stagger 列表进入动画 */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: stagger-in 0.4s var(--ease-out-smooth) forwards;
+}
+
+@keyframes stagger-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 水墨加载动画 */
+.ink-loading {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--primary-color), transparent 70%);
+  animation: ink-spread 1.2s ease-in-out infinite;
+}
+
+@keyframes ink-spread {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
 }
 
 /* =============================================================

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
-import { getMyPostsApi, getPostCommentsApi, type BlogPost } from '@/services/api'
+import { getMyPostsApi, getPostCommentsApi, type BlogPost } from '@/components/logic/api'
 import ArTable from '@/components/ui/ArTable.vue'
 import type { ArTableColumn } from '@/components/ui/ArTable.vue'
 

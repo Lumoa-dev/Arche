@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getCoverGradient } from '@/utils/cover'
+import { getCoverGradient } from '@/lib/utils/cover'
 
 describe('getCoverGradient', () => {
   it('相同输入返回相同渐变色', () => {

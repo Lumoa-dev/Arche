@@ -135,8 +135,7 @@ function handleKeydown(e: KeyboardEvent) {
   border-radius: 50%;
   background: var(--color-accent);
   transform: scale(0);
-  transition:
-    transform var(--transition-normal) var(--ease-out-spring);
+  transition: transform var(--transition-normal) var(--ease-out-spring);
 }
 
 .ar-radio--checked .ar-radio__fill {

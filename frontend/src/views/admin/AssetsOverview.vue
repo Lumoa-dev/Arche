@@ -1,9 +1,6 @@
 <template>
   <div class="assets-page">
-    <div class="page-header">
-      <h1 class="page-title">资产管理</h1>
-      <p class="page-desc">管理用户产生的帖子、评论和静态文件</p>
-    </div>
+    <ArPageHeader title="资源管理" desc="管理用户产生的帖子、评论和静态文件" />
 
     <!-- Tab 切换 -->
     <div class="tabs">
@@ -134,6 +131,7 @@
 </template>
 
 <script setup lang="ts">
+import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { ref } from 'vue'
 import { NIcon } from 'naive-ui'
 import { DocumentTextOutline, ChatbubblesOutline, ImageOutline } from '@vicons/ionicons5'
@@ -247,21 +245,6 @@ const mockFiles = [
 .assets-page {
   max-width: 100%;
 }
-.page-header {
-  margin-bottom: 20px;
-}
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 2px;
-  color: var(--text-primary);
-}
-.page-desc {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin: 0;
-}
-
 /* ── Tabs ── */
 .tabs {
   display: flex;

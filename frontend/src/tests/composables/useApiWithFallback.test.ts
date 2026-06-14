@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useApiWithFallback } from '@/composables/useApiWithFallback'
+import { useApiWithFallback } from '@/lib/composables/useApiWithFallback'
 
 // withFallback 的内部逻辑依赖 $message，这里 mock 掉
 vi.mock('@/utils/message', () => ({

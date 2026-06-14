@@ -1,7 +1,6 @@
 <template>
   <div class="tasks-page">
-    <h1 class="page-title">托管任务</h1>
-    <p class="page-desc">管理和监控长期运行的后台任务</p>
+    <ArPageHeader title="托管任务" desc="管理和监控长期运行的后台任务" />
     <div class="card-grid">
       <!-- 爬虫管理卡片 -->
       <div class="card" @click="router.push('/tasks/crawler')">
@@ -53,6 +52,7 @@
 </template>
 
 <script setup lang="ts">
+import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { useRouter } from 'vue-router'
 import { NIcon } from 'naive-ui'
 import { BugOutline, CloudOutline } from '@vicons/ionicons5'
@@ -63,19 +63,6 @@ const router = useRouter()
 <style scoped>
 .tasks-page {
   max-width: 100%;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 4px;
-  color: var(--text-primary);
-}
-
-.page-desc {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin-bottom: 24px;
 }
 
 .card-grid {

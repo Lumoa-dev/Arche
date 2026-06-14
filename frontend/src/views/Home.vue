@@ -2,12 +2,12 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NPagination, useMessage } from 'naive-ui'
-import { getBlogPostsApi, type BlogPost } from '@/services/api/blog'
-import { withFallback, blogMockData } from '@/services/mock'
-import { useUserStore } from '@/store/modules/user'
-import { PostCard, HeroCarousel, TrendingTags, WatchHistoryStack } from '@/components/blog'
-import { ensurePostsCovers } from '@/composables/useCoverLazyGenerator'
-import type { WatchHistoryItem } from '@/components/blog/WatchHistoryStack.vue'
+import { getBlogPostsApi, type BlogPost } from '@/components/logic/api/blog'
+import { withFallback, blogMockData } from '@/lib/services/mock'
+import { useUserStore } from '@/lib/store/modules/user'
+import { PostCard, HeroCarousel, TrendingTags, WatchHistoryStack } from '@/components/widgets'
+import { ensurePostsCovers } from '@/components/logic/useCoverLazyGenerator'
+import type { WatchHistoryItem } from '@/components/widgets/blog/WatchHistoryStack.vue'
 
 const route = useRoute()
 const router = useRouter()

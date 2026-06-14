@@ -44,10 +44,13 @@ const classes = computed(() => [
   }
 ])
 
-const barStyle = computed(() => ({
-  height: `${barHeight.value}px`,
-  '--progress-color': barColor.value
-} as Record<string, string>))
+const barStyle = computed(
+  () =>
+    ({
+      height: `${barHeight.value}px`,
+      '--progress-color': barColor.value
+    }) as Record<string, string>
+)
 
 const fillStyle = computed(() => {
   if (isIndeterminate.value) return {}
@@ -57,12 +60,31 @@ const fillStyle = computed(() => {
 
 <template>
   <!-- ═══ top 变体：贴顶细条 ═══ -->
-  <div v-if="variant === 'top'" :class="classes" :style="barStyle" role="progressbar" :aria-valuenow="percent" aria-valuemin="0" aria-valuemax="100">
-    <div class="ar-progress__fill" :class="{ 'ar-progress__fill--indeterminate': isIndeterminate || loading }" :style="fillStyle" />
+  <div
+    v-if="variant === 'top'"
+    :class="classes"
+    :style="barStyle"
+    role="progressbar"
+    :aria-valuenow="percent"
+    aria-valuemin="0"
+    aria-valuemax="100"
+  >
+    <div
+      class="ar-progress__fill"
+      :class="{ 'ar-progress__fill--indeterminate': isIndeterminate || loading }"
+      :style="fillStyle"
+    />
   </div>
 
   <!-- ═══ inline 变体：左插槽 + 进度条 + 右插槽 ═══ -->
-  <div v-else :class="classes" role="progressbar" :aria-valuenow="percent" aria-valuemin="0" aria-valuemax="100">
+  <div
+    v-else
+    :class="classes"
+    role="progressbar"
+    :aria-valuenow="percent"
+    aria-valuemin="0"
+    aria-valuemax="100"
+  >
     <!-- 左容器 -->
     <div v-if="$slots.left" class="ar-progress__side ar-progress__side--left">
       <slot name="left" />
@@ -120,8 +142,12 @@ const fillStyle = computed(() => {
 }
 
 @keyframes ar-progress-sweep {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }
 
 /* ── inline 变体：横向三栏布局 ── */
@@ -167,8 +193,7 @@ const fillStyle = computed(() => {
   height: 100%;
   background: var(--progress-color, var(--color-accent));
   border-radius: var(--radius-full);
-  transition:
-    width 0.4s var(--ease-out-smooth);
+  transition: width 0.4s var(--ease-out-smooth);
   position: relative;
 }
 
@@ -180,9 +205,15 @@ const fillStyle = computed(() => {
 }
 
 @keyframes ar-progress-indeterminate {
-  0%   { transform: translateX(-100%); }
-  50%  { transform: translateX(150%); }
-  100% { transform: translateX(350%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
 }
 
 /* ── 脉冲光效（呼吸闪烁） ── */
@@ -200,9 +231,15 @@ const fillStyle = computed(() => {
 }
 
 @keyframes ar-progress-pulse {
-  0%   { opacity: 0; }
-  50%  { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* ── 动画优先：减少动效时关闭 ── */

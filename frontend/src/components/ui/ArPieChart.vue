@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useArChartTheme } from '@/composables/useArChartTheme'
+import { useArChartTheme } from '@/lib/composables/useArChartTheme'
 import ArChart from './ArChart.vue'
 
 const props = withDefaults(

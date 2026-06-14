@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatDate, isToday } from '@/utils/date'
+import { formatDate, isToday } from '@/lib/utils/date'
 
 describe('formatDate', () => {
   it('Date 对象格式化', () => {

@@ -135,8 +135,7 @@ function toggle() {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.15),
     0 1px 2px rgba(0, 0, 0, 0.1);
-  transition:
-    transform var(--transition-slow) var(--ease-out-spring);
+  transition: transform var(--transition-slow) var(--ease-out-spring);
   z-index: 1;
 }
 

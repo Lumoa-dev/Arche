@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { h, computed, onMounted, ref } from 'vue'
 import { useMessage, NModal, NForm, NFormItem, NInput, NSwitch, NPopconfirm } from 'naive-ui'
+import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { ArButton, ArTable, ArTag } from '@/components/ui'
 import type { ArTableColumn } from '@/components/ui/ArTable.vue'
 import {
@@ -12,7 +13,7 @@ import {
   type ConfigItem,
   type ConfigListParams,
   type CreateConfigPayload
-} from '@/services/api'
+} from '@/components/logic/api'
 
 const message = useMessage()
 
@@ -219,18 +220,12 @@ onMounted(() => {
 
 <template>
   <div class="config-admin-page">
-    <div class="page-header">
-      <div class="page-header-row">
-        <div class="page-header-left">
-          <h1 class="page-title">运行时配置</h1>
-          <p class="page-desc">管理系统运行时的所有配置项</p>
-        </div>
-        <div class="page-header-tools">
-          <ArButton size="sm" @click="fetchConfigs()">刷新</ArButton>
-          <ArButton size="sm" type="primary" @click="openCreate()">+ 新建配置</ArButton>
-        </div>
-      </div>
-    </div>
+    <ArPageHeader title="配置管理" desc="管理系统运行时的所有配置项">
+      <template #actions>
+        <ArButton size="sm" @click="fetchConfigs()">刷新</ArButton>
+        <ArButton size="sm" type="primary" @click="openCreate()">+ 新建配置</ArButton>
+      </template>
+    </ArPageHeader>
 
     <div class="filter-bar">
       <button
@@ -288,44 +283,6 @@ onMounted(() => {
 <style scoped>
 .config-admin-page {
   max-width: 100%;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.page-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.page-desc {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin: 0;
-}
-
-.page-header-tools {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  padding-top: 4px;
 }
 
 .filter-bar {
