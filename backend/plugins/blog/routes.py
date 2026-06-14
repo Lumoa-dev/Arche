@@ -20,8 +20,8 @@ class CreatePostRequest(BaseModel):
     subtitles: list[str] | None = Field(
         None, description="副标题列表"
     )
-    introduction: list[dict] | None = Field(
-        None, description="引言 KV 数组，每项含 key/value"
+    introduction: str | None = Field(
+        None, max_length=10000, description="引言（Markdown 富文本）"
     )
     paragraphs: list[dict] | None = Field(
         None, description="段落列表，每项含 content/type/heading/media_url/caption"
@@ -39,7 +39,7 @@ class CreatePostRequest(BaseModel):
 class UpdatePostRequest(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=256, description="标题")
     subtitles: list[str] | None = Field(None, description="副标题列表")
-    introduction: list[dict] | None = Field(None, description="引言 KV 数组，每项含 key/value")
+    introduction: str | None = Field(None, max_length=10000, description="引言（Markdown 富文本）")
     paragraphs: list[dict] | None = Field(None, description="段落列表")
     cover_url: str | None = Field(None, max_length=1024, description="封面图片 URL")
     required_level: int | None = Field(

@@ -41,8 +41,8 @@ class BlogPost(Base, HasSID):
     required_level: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     # 副标题（JSON 数组，如 ["副标题1", "副标题2"]）
     subtitles: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
-    # 引言区域（结构化 JSON，KV 数组，如 [{"key": "摘要", "value": "..."}]）
-    introduction: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
+    # 引言区域（富文本 Markdown 内容）
+    introduction: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     # 段落顺序（JSON 数组，如 ["PID_001", "PID_002"]，控制渲染顺序）
     paragraph_ids: Mapped[list | None] = mapped_column(
         JSON, nullable=True, default=None
