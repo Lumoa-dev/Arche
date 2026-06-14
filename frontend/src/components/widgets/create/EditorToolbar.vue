@@ -180,6 +180,7 @@ const emit = defineEmits<{
       </div>
     </div>
   </div>
+  </div>
 </template>
 
 <style scoped>
