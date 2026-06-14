@@ -1,141 +1,139 @@
-<template>
-  <div class="editor-page">
-    <!-- 编辑区 -->
-    <div class="editor-body">
-      <div class="editor-content">
-        <PostEditor
-          ref="editorRef"
-          :post="editor.isNew.value ? null : editor.editingPost.value"
-          :cover-url="editor.coverUrl.value"
-          :loading="editor.saving.value"
-          hide-footer
-          @cancel="goBack"
-        />
-      </div>
-
-      <!-- 右侧：封面/资源 -->
-      <aside class="editor-sidebar">
-        <CoverUploader
-          v-model:cover-url="editor.coverUrl.value"
-          @cover-file="editor.handleCoverFile"
-        />
-        <AssetSidebar
-          :staged-files="editor.stagedFiles.value"
-          @insert="handleInsertRef"
-          @upload="editor.stageFiles"
-        />
-      </aside>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+/**
+ * editor.vue — 段落编辑器主页面
+ *
+ * 全页卡片式编辑，所有操作集中在工具栏。
+ * 结构：工具栏 → 封面预览 → 标题区 → 引言 → 段落卡片
+ */
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import { marked } from 'marked'
-import PostEditor from '@/components/widgets/create/PostEditor.vue'
-import CoverUploader from '@/components/widgets/create/CoverUploader.vue'
-import AssetSidebar from '@/components/widgets/create/AssetSidebar.vue'
-import { usePostManager } from '@/components/logic/usePostManager'
-import { usePostEditor } from '@/components/logic/usePostEditor'
-import { getCoverGradient } from '@/lib/utils/cover'
-import { getPostByIdApi } from '@/components/logic/api'
+import ArVBox from '@/components/ui/ArVBox.vue'
+import EditorToolbar from '@/components/widgets/create/EditorToolbar.vue'
+import EditorBody from '@/components/widgets/create/EditorBody.vue'
+import EditorCoverArea from '@/components/widgets/create/EditorCoverArea.vue'
+import EditorTitleArea from '@/components/widgets/create/EditorTitleArea.vue'
+import EditorIntroductionCard from '@/components/widgets/create/EditorIntroductionCard.vue'
+import EditorParagraphCard from '@/components/widgets/create/EditorParagraphCard.vue'
+import { useParagraphEditor } from '@/components/logic/useParagraphEditor'
+import type { Editor } from '@tiptap/vue-3'
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
-const editorRef = ref<InstanceType<typeof PostEditor> | null>(null)
 
-const manager = usePostManager()
-const editor = usePostEditor()
+const editor = useParagraphEditor()
 
-function goBack() {
+/** 各段落 uid → TipTap editor 实例映射（供工具栏联动） */
+const editorMap = ref<Record<string, Editor>>({})
+const hasActiveEditor = computed(() => Object.keys(editorMap.value).length > 0)
+
+const isEditing = computed(() => !!route.query.postId)
+
+/** 封面是否显示 */
+const showCover = ref(false)
+
+onMounted(async () => {
+  const postId = route.query.postId as string | undefined
+  if (postId) {
+    await editor.loadPost(postId)
+    // 编辑已有帖子时自动打开封面
+    if (editor.coverUrl.value) showCover.value = true
+  } else {
+    editor.resetForNew()
+  }
+})
+
+function handleCancel() {
   router.push('/create')
 }
 
-function handleInsertRef(refStr: string) {
-  if (editorRef.value) {
-    editorRef.value.content += refStr
+async function handleSaveDraft() {
+  // 存草稿 = 保存但标记为 draft 状态，暂用普通保存
+  await editor.save()
+}
+
+async function handlePublish() {
+  const ok = await editor.save()
+  if (ok) {
+    router.push('/create')
   }
 }
 
-async function handleSave() {
-  if (!editorRef.value) return
-  const title = editorRef.value.title.trim()
-  const content = editorRef.value.content.trim()
-  if (!title || !content) {
-    message.warning('标题和内容不能为空')
-    return
-  }
-  await editor.save(title, content, manager.refreshPosts)
-  message.success('保存成功')
+function handleParagraphReady(uid: string, ed: Editor) {
+  editorMap.value[uid] = ed
 }
 
-// 从创作列表页导航过来时，检查 sessionStorage 中是否有待编辑的帖子
-onMounted(async () => {
-  await manager.fetchData()
-  const editId = sessionStorage.getItem('editPostId')
-  if (editId) {
-    sessionStorage.removeItem('editPostId')
-    try {
-      const post = await getPostByIdApi(editId)
-      editor.openEdit(post)
-    } catch {
-      // 加载帖子失败，新建一篇
-      editor.openNew()
-    }
-  } else {
-    editor.openNew()
-  }
-})
-
-// 编辑器挂载后，若有导入的文件内容则填充
-watch(editorRef, (editorComponent) => {
-  if (editorComponent && editor.pendingImport.value) {
-    const data = editor.pendingImport.value as any
-    editorComponent.title = data.title || ''
-    const rawContent = data.content || ''
-    editorComponent.content = rawContent ? (marked.parse(rawContent, { gfm: true }) as string) : ''
-    if (data.cover_url) {
-      editor.coverUrl.value = data.cover_url
-    } else {
-      editor.coverUrl.value = getCoverGradient({ title: data.title, tags: data.tags })
-    }
-    editor.pendingImport.value = null
-  }
-})
+function toggleCover() {
+  showCover.value = !showCover.value
+}
 </script>
 
-<style scoped>
-.editor-page {
-  display: flex;
-  height: 100%;
-  min-height: 0;
-}
+<template>
+  <ArVBox style="height: 100vh; background: var(--bg-color)">
+    <!-- 顶部工具栏（集成全部操作） -->
+    <EditorToolbar
+      :has-active-editor="hasActiveEditor"
+      :saving="editor.saving.value"
+      :is-edit="isEditing"
+      @cancel="handleCancel"
+      @insert="(type: any) => editor.addParagraph(type)"
+      @insert-separator="() => editor.addParagraph('separator')"
+      @toggle-cover="toggleCover"
+      @save-draft="handleSaveDraft"
+      @publish="handlePublish"
+    />
 
-.editor-body {
-  flex: 1;
-  display: flex;
-  min-height: 0;
-  overflow: hidden;
-}
+    <!-- 编辑区主体（可滚动+拖放） -->
+    <EditorBody @drop-paragraph="(type: any) => editor.addParagraph(type)">
+      <!-- 封面 -->
+      <EditorCoverArea
+        v-if="showCover"
+        :title="editor.title.value"
+        :content="editor.paragraphs.value[0]?.content || ''"
+        :tags="editor.tags.value"
+        @update:cover-url="editor.coverUrl.value = $event"
+      />
 
-.editor-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-}
+      <!-- 标题区域 -->
+      <EditorTitleArea
+        :title="editor.title.value"
+        :subtitles="editor.subtitles.value"
+        @update:title="editor.title.value = $event"
+        @update:subtitle="(idx: number, val: string) => editor.updateSubtitle(idx, val)"
+        @add-subtitle="editor.addSubtitle()"
+        @remove-subtitle="(idx: number) => editor.removeSubtitle(idx)"
+      />
 
-.editor-sidebar {
-  width: 280px;
-  flex-shrink: 0;
-  border-left: 1px solid var(--border-color);
-  overflow-y: auto;
-  background: var(--surface-color);
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-</style>
+      <!-- 引言卡片 -->
+      <EditorIntroductionCard
+        :entries="editor.introduction.value"
+        @add-entry="editor.addIntroductionEntry()"
+        @remove-entry="(idx: number) => editor.removeIntroductionEntry(idx)"
+        @update:entry="
+          (idx: number, field: 'key' | 'value', val: string) =>
+            editor.updateIntroductionEntry(idx, field, val)
+        "
+      />
+
+      <!-- 段落卡片列表 -->
+      <EditorParagraphCard
+        v-for="(para, idx) in editor.paragraphs.value"
+        :key="para.uid"
+        :paragraph="para"
+        :can-move-up="idx > 0"
+        :can-move-down="idx < editor.paragraphs.value.length - 1"
+        @update:type="(uid: string, type: any) => editor.setParagraphType(uid, type)"
+        @move-up="(uid: string) => editor.moveParagraphUp(uid)"
+        @move-down="(uid: string) => editor.moveParagraphDown(uid)"
+        @delete="(uid: string) => editor.removeParagraph(uid)"
+        @update:content="
+          (uid: string, content: string) => editor.updateParagraphContent(uid, content)
+        "
+        @update:media-url="(uid: string, url: string) => editor.updateParagraphMediaUrl(uid, url)"
+        @update:caption="
+          (uid: string, caption: string) => editor.updateParagraphCaption(uid, caption)
+        "
+        @ready="handleParagraphReady"
+      />
+    </EditorBody>
+  </ArVBox>
+</template>

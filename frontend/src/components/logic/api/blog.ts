@@ -10,6 +10,7 @@ export interface BlogPost {
   id: string
   slug: string
   title: string
+  subtitles?: string[]
   cover_url?: string
   auto_cover_url?: string
   intro?: string
@@ -72,8 +73,9 @@ export interface BlogTag {
 
 export interface CreatePostPayload {
   title: string
+  subtitles?: string[]
   content?: string
-  introduction?: Record<string, unknown>
+  introduction?: Array<{ key?: string; value: string }>
   paragraphs?: Array<{
     content: string
     type: string
@@ -89,8 +91,9 @@ export interface CreatePostPayload {
 
 export interface UpdatePostPayload {
   title?: string
+  subtitles?: string[]
   content?: string
-  introduction?: Record<string, unknown>
+  introduction?: Array<{ key?: string; value: string }>
   paragraphs?: Array<{
     content: string
     type: string

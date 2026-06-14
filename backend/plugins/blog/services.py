@@ -347,7 +347,8 @@ class BlogService:
         self,
         author_id: uuid.UUID,
         title: str,
-        introduction: dict | None = None,
+        subtitles: list[str] | None = None,
+        introduction: list[dict] | None = None,
         paragraphs_data: list[dict] | None = None,
         tags: list[str] | None = None,
         cover_url: str | None = None,
@@ -409,6 +410,7 @@ class BlogService:
                 slug=slug,
                 cover_url=cover_url,
                 introduction=introduction,
+                subtitles=subtitles,
                 status="pending",
                 required_level=required_level,
             )
@@ -482,7 +484,8 @@ class BlogService:
         post_id: uuid.UUID,
         author_id: uuid.UUID,
         title: str | None = None,
-        introduction: dict | None = None,
+        subtitles: list[str] | None = None,
+        introduction: list[dict] | None = None,
         paragraphs_data: list[dict] | None = None,
         required_level: int | None = None,
         tags: list[str] | None = None,
@@ -508,6 +511,8 @@ class BlogService:
                 post.slug = await self.generate_slug(title, exclude_slug=post.slug)
             if introduction is not None:
                 post.introduction = introduction
+            if subtitles is not None:
+                post.subtitles = subtitles
             if cover_url is not None:
                 post.cover_url = cover_url
             if paragraphs_data is not None:
@@ -1918,6 +1923,7 @@ class BlogService:
             "title": post.title,
             "slug": post.slug,
             "cover_url": post.cover_url,
+            "subtitles": post.subtitles,
             "introduction": post.introduction,
             "paragraph_ids": post.paragraph_ids,
             "status": post.status,

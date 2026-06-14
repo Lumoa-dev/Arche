@@ -17,8 +17,11 @@ router = APIRouter(prefix="/api/blog", tags=["blog"])
 # --- 请求体模型 ---
 class CreatePostRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=256, description="标题")
-    introduction: dict | None = Field(
-        None, description="引言 JSON（含 abstract, background, purpose, key_points 等）"
+    subtitles: list[str] | None = Field(
+        None, description="副标题列表"
+    )
+    introduction: list[dict] | None = Field(
+        None, description="引言 KV 数组，每项含 key/value"
     )
     paragraphs: list[dict] | None = Field(
         None, description="段落列表，每项含 content/type/heading/media_url/caption"
@@ -35,7 +38,8 @@ class CreatePostRequest(BaseModel):
 
 class UpdatePostRequest(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=256, description="标题")
-    introduction: dict | None = Field(None, description="引言 JSON")
+    subtitles: list[str] | None = Field(None, description="副标题列表")
+    introduction: list[dict] | None = Field(None, description="引言 KV 数组，每项含 key/value")
     paragraphs: list[dict] | None = Field(None, description="段落列表")
     cover_url: str | None = Field(None, max_length=1024, description="封面图片 URL")
     required_level: int | None = Field(
@@ -137,6 +141,7 @@ async def create_post(req: CreatePostRequest, request: Request):
     result = await blog_service.create_post(
         author_id=author_id,
         title=req.title,
+        subtitles=req.subtitles,
         introduction=req.introduction,
         paragraphs_data=req.paragraphs,
         tags=req.tags,
@@ -185,6 +190,7 @@ async def update_post(post_id: str, req: UpdatePostRequest, request: Request):
         post_id=uuid.UUID(post_id),
         author_id=author_id,
         title=req.title,
+        subtitles=req.subtitles,
         introduction=req.introduction,
         paragraphs_data=req.paragraphs,
         cover_url=req.cover_url,

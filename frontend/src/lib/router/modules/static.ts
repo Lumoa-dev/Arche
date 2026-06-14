@@ -65,10 +65,20 @@ export const staticRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/create/editor',
-    name: 'PostEditorNew',
+    name: 'PostEditor',
     component: () => import('@/views/create/editor.vue'),
     meta: {
       title: '编辑器',
+      layout: 'guest',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/create/preview',
+    name: 'PostPreview',
+    component: () => import('@/views/create/preview.vue'),
+    meta: {
+      title: '预览',
       layout: 'guest',
       requiresAuth: true
     }
@@ -133,25 +143,13 @@ export const staticRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/posts/new',
-    name: 'PostCreate',
-    component: () => import('@/views/user/PostEditor.vue'),
-    meta: {
-      title: '新建文章',
-      layout: 'guest',
-      requiresAuth: true,
-      permission: API_PERMISSION.BLOG_POSTS_WRITE
-    }
+    redirect: '/create/editor',
+    meta: { requiresAuth: true }
   },
   {
     path: '/posts/:id/edit',
-    name: 'PostEdit',
-    component: () => import('@/views/user/PostEditor.vue'),
-    meta: {
-      title: '编辑文章',
-      layout: 'guest',
-      requiresAuth: true,
-      permission: API_PERMISSION.BLOG_POSTS_WRITE
-    }
+    redirect: (to) => ({ path: '/create/editor', query: { postId: to.params.id as string } }),
+    meta: { requiresAuth: true }
   },
   {
     path: '/creator',

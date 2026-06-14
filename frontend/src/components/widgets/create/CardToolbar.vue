@@ -29,8 +29,7 @@ const typeOptions: { label: string; value: ParagraphType }[] = [
   { label: '图片', value: 'image' },
   { label: '视频', value: 'video' },
   { label: '代码', value: 'code' },
-  { label: '表格', value: 'table' },
-  { label: '分隔线', value: 'separator' }
+  { label: '表格', value: 'table' }
 ]
 </script>
 

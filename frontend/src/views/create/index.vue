@@ -77,8 +77,7 @@ function handleOpenPost(post: BlogPost) {
 }
 
 function handleEditPost(post: BlogPost) {
-  sessionStorage.setItem('editPostId', post.id)
-  router.push('/create/editor')
+  router.push(`/create/editor?postId=${post.id}`)
 }
 
 onMounted(() => {

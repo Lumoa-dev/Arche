@@ -27,7 +27,7 @@ const emit = defineEmits<{
   <ArVBox
     gap="var(--spacing-sm)"
     style="
-      padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+      padding: var(--spacing-lg) 0 var(--spacing-md);
       border-bottom: 1px solid var(--border-color);
       margin-bottom: var(--spacing-md);
     "
@@ -56,7 +56,10 @@ const emit = defineEmits<{
       </ArHBox>
     </ArVBox>
 
-    <!-- 添加副标题 -->
-    <ArButton size="sm" type="ghost" @click="emit('addSubtitle')"> + 添加副标题 </ArButton>
+    <!-- 添加副标题：文字左 + 号右 -->
+    <ArHBox justify="space-between" align="center">
+      <span style="font-size: 13px; color: var(--text-tertiary)">添加副标题</span>
+      <ArButton size="sm" type="ghost" @click="emit('addSubtitle')"> + </ArButton>
+    </ArHBox>
   </ArVBox>
 </template>

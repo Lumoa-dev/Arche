@@ -132,11 +132,11 @@ const fetchPosts = async () => {
 }
 
 const handleCreate = () => {
-  router.push('/posts/new')
+  router.push('/create/editor')
 }
 
 const handleEdit = (row: PostRow) => {
-  router.push(`/posts/${row.id}/edit`)
+  router.push(`/create/editor?postId=${row.id}`)
 }
 
 const confirmDelete = (row: PostRow) => {

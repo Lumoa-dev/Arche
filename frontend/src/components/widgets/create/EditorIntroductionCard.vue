@@ -24,7 +24,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <ArCard variant="outlined" padding="md" style="margin: 0 var(--spacing-lg) var(--spacing-md)">
+  <ArCard variant="outlined" padding="md" style="margin-bottom: var(--spacing-md)">
     <template #header>
       <span
         style="

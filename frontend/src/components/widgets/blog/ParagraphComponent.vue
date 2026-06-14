@@ -42,6 +42,17 @@ function renderContent(text: string): string {
     <blockquote v-else-if="paragraph.type === 'quote'" class="paragraph-quote">
       <p>{{ paragraph.content }}</p>
     </blockquote>
+    <figure v-else-if="paragraph.type === 'video'" class="paragraph-video">
+      <iframe
+        :src="paragraph.media_url"
+        frameborder="0"
+        allowfullscreen
+        loading="lazy"
+      />
+      <figcaption v-if="paragraph.caption">{{ paragraph.caption }}</figcaption>
+    </figure>
+    <div v-else-if="paragraph.type === 'table'" class="paragraph-text" v-html="renderContent(paragraph.content)" />
+    <hr v-else-if="paragraph.type === 'separator'" class="paragraph-separator" />
     <h3 v-else-if="paragraph.type === 'heading'" class="paragraph-heading">
       {{ paragraph.content }}
     </h3>
@@ -304,6 +315,44 @@ function renderContent(text: string): string {
 }
 
 /* ── heading 类型 ── */
+.paragraph-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 1.5em 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+}
+
+.paragraph-video iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.paragraph-video figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+  font-family: var(--font-sans);
+}
+
+.paragraph-separator {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1.5em 0;
+}
+
 .paragraph-heading {
   font-size: 1.2em;
   font-weight: 600;
