@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /**
- * EditorToolbar — 精简工具栏
+ * EditorToolbar — 精简工具栏（与纸面三栏对齐）
  *
  * 摒弃 Word 风格组标签和过多分隔线，采用轻量化单行排列。
- * 常用格式化图标一字排开，插入/操作用图标区分。
+ * 整个工具栏内嵌在 .toolbar-container 中，与 EditorBody 纸面
+ * 共用 max-width: 880px + 32px 内边距，实现上下视觉对齐。
  */
 import ArHBox from '@/components/ui/ArHBox.vue'
 import ArButton from '@/components/ui/ArButton.vue'
@@ -39,7 +40,8 @@ const emit = defineEmits<{
 
 <template>
   <div class="toolbar">
-    <div class="toolbar-inner">
+    <div class="toolbar-container">
+      <div class="toolbar-inner">
       <!-- ── 左侧：格式化 ── -->
       <div class="toolbar-group">
         <!-- 加粗 -->
@@ -191,11 +193,18 @@ const emit = defineEmits<{
   height: 52px;
 }
 
+/* 居中容器 — 与纸面同宽同缩进，实现上下视觉对齐 */
+.toolbar-container {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-xl);
+  height: 100%;
+}
+
 .toolbar-inner {
   display: flex;
   align-items: center;
   height: 100%;
-  padding: 0 16px;
   gap: 4px;
 }
 
