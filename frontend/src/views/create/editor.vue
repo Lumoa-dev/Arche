@@ -145,15 +145,10 @@ function toggleCover() {
         @remove-subtitle="(idx: number) => editor.removeSubtitle(idx)"
       />
 
-      <!-- 引言卡片 -->
+      <!-- 引言编辑区 -->
       <EditorIntroductionCard
-        :entries="editor.introduction.value"
-        @add-entry="editor.addIntroductionEntry()"
-        @remove-entry="(idx: number) => editor.removeIntroductionEntry(idx)"
-        @update:entry="
-          (idx: number, field: 'key' | 'value', val: string) =>
-            editor.updateIntroductionEntry(idx, field, val)
-        "
+        :model-value="editor.introduction.value"
+        @update:model-value="editor.updateIntroduction($event)"
       />
 
       <!-- 段落卡片列表 -->

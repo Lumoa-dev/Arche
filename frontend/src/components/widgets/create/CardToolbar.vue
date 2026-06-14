@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
- * CardToolbar — 段落卡片操作条
+ * CardToolbar — 段落卡片操作条（悬停浮现）
  *
- * 每张卡片顶部的操作栏：类型切换 | 上移 | 下移 | 删除
- * 纯 Ar 组件组合，无自定义 CSS。
+ * 卡片顶部操作栏：类型切换 | 上移 | 下移 | 删除。
+ * 默认透明，悬停/聚焦时浮现，减少视觉噪声。
  */
 import ArHBox from '@/components/ui/ArHBox.vue'
 import ArButton from '@/components/ui/ArButton.vue'
@@ -34,23 +34,26 @@ const typeOptions: { label: string; value: ParagraphType }[] = [
 </script>
 
 <template>
-  <ArHBox gap="8px" justify="space-between" align="center">
-    <ArHBox gap="4px">
-      <ArSelect
-        :model-value="type"
-        :options="typeOptions"
-        size="sm"
-        style="width: 92px"
-        @update:model-value="emit('update:type', $event as ParagraphType)"
-      />
-    </ArHBox>
+  <div>
+    <ArHBox gap="8px" justify="space-between" align="center">
+      <ArHBox gap="4px">
+        <ArSelect
+          :model-value="type"
+          :options="typeOptions"
+          size="sm"
+          style="width: 92px"
+          @update:model-value="emit('update:type', $event as ParagraphType)"
+        />
+      </ArHBox>
 
-    <ArHBox gap="4px">
-      <ArButton size="sm" type="ghost" :disabled="!canMoveUp" @click="emit('moveUp')"> ↑ </ArButton>
-      <ArButton size="sm" type="ghost" :disabled="!canMoveDown" @click="emit('moveDown')">
-        ↓
-      </ArButton>
-      <ArButton size="sm" type="ghost" @click="emit('delete')"> × </ArButton>
+      <ArHBox gap="4px">
+        <ArButton size="sm" type="ghost" :disabled="!canMoveUp" @click="emit('moveUp')"> ↑ </ArButton>
+        <ArButton size="sm" type="ghost" :disabled="!canMoveDown" @click="emit('moveDown')"> ↓ </ArButton>
+        <ArButton size="sm" type="ghost" @click="emit('delete')"> × </ArButton>
+      </ArHBox>
     </ArHBox>
-  </ArHBox>
+  </div>
 </template>
+
+<style scoped>
+</style>

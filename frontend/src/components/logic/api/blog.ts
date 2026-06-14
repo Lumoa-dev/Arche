@@ -15,14 +15,7 @@ export interface BlogPost {
   auto_cover_url?: string
   intro?: string
   content?: string
-  introduction?: {
-    abstract?: string
-    background?: string
-    purpose?: string
-    key_points?: string[]
-    reading_time?: number
-    difficulty_level?: string
-  }
+  introduction?: string
   paragraph_ids?: string[]
   tags: string[]
   required_level?: number
@@ -75,7 +68,7 @@ export interface CreatePostPayload {
   title: string
   subtitles?: string[]
   content?: string
-  introduction?: Array<{ key?: string; value: string }>
+  introduction?: string
   paragraphs?: Array<{
     content: string
     type: string
@@ -93,7 +86,7 @@ export interface UpdatePostPayload {
   title?: string
   subtitles?: string[]
   content?: string
-  introduction?: Array<{ key?: string; value: string }>
+  introduction?: string
   paragraphs?: Array<{
     content: string
     type: string

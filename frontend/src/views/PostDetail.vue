@@ -220,12 +220,7 @@ onMounted(fetchPost)
       />
 
       <!-- 引言 -->
-      <PostIntro
-        :abstract="post.introduction?.abstract"
-        :key-points="post.introduction?.key_points"
-        :reading-time="post.introduction?.reading_time"
-        :difficulty-level="post.introduction?.difficulty_level"
-      />
+      <PostIntro :content="post.introduction" />
 
       <!-- 正文 -->
       <PostDetail :paragraphs="paragraphs" />

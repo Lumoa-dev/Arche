@@ -26,9 +26,14 @@ const TAG_COLORS = ['red', 'blue', 'yellow', 'green', 'default'] as const
 const hasRealCover = computed(() => !!props.post.cover_url)
 const displayCoverUrl = computed(() => props.post.cover_url || props.post.auto_cover_url || '')
 
+/** 从 HTML 中提取纯文本 */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, '').trim()
+}
+
 /** 有真实封面时用短摘要，无封面时用长摘要 */
 const excerptText = computed(() => {
-  const text = props.post.introduction?.abstract ?? ''
+  const text = props.post.introduction ? stripHtml(props.post.introduction) : ''
   if (hasRealCover.value) return text.slice(0, 50)
   return text.slice(0, 120)
 })

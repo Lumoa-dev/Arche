@@ -22,7 +22,7 @@ describe('generateTextCover', () => {
       id: '2',
       slug: 'test-2',
       title: '测试',
-      introduction: { abstract: '自定义引言' },
+      introduction: '自定义引言',
       content: '正文内容',
       tags: []
     }

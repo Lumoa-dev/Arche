@@ -28,9 +28,7 @@ const paragraphs = ref<ParagraphData[]>([])
 const loading = ref(true)
 
 const subtitles = computed(() => post.value?.subtitles || [])
-const introduction = computed<Array<{ key?: string; value: string }>>(
-  () => (post.value?.introduction as Array<{ key?: string; value: string }>) || []
-)
+const introduction = computed(() => post.value?.introduction || '')
 
 const fetchPreview = async () => {
   const postId = route.query.postId as string
@@ -82,23 +80,8 @@ onMounted(fetchPreview)
         </p>
       </div>
 
-      <!-- 引言 -->
-      <div v-if="introduction.length > 0" class="preview-introduction">
-        <div
-          v-for="(item, idx) in introduction"
-          :key="idx"
-          class="intro-item"
-          :class="{ 'intro-item--centered': !item.key }"
-        >
-          <template v-if="item.key">
-            <span class="intro-key">{{ item.key }}：</span>
-            <span class="intro-value">{{ item.value }}</span>
-          </template>
-          <template v-else>
-            <span class="intro-value-centered">{{ item.value }}</span>
-          </template>
-        </div>
-      </div>
+      <!-- 引言（富文本） -->
+      <div v-if="introduction" class="preview-introduction" v-html="introduction" />
 
       <!-- 段落 -->
       <article class="preview-paragraphs">
@@ -158,28 +141,10 @@ onMounted(fetchPreview)
   background: var(--surface-hover-color);
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--primary-color);
-}
-
-.intro-item {
-  font-size: 14px;
-  line-height: 1.8;
-  color: var(--text-secondary);
   font-family: var(--font-serif);
-}
-
-.intro-item--centered {
-  text-align: center;
-  font-style: italic;
-  margin: 0.3em 0;
-}
-
-.intro-key {
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-}
-
-.intro-value-centered {
-  color: var(--text-tertiary);
+  font-size: 1.05em;
+  line-height: 1.7;
+  color: var(--text-secondary);
 }
 
 .preview-paragraphs {

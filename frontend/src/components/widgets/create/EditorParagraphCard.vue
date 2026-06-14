@@ -38,20 +38,23 @@ function onTypeChange(type: ParagraphType) {
 </script>
 
 <template>
-  <ArCard variant="glass" padding="none" shadow="sm">
-    <template #header>
-      <CardToolbar
-        :type="paragraph.type"
-        :can-move-up="canMoveUp"
-        :can-move-down="canMoveDown"
-        @update:type="onTypeChange"
-        @move-up="emit('moveUp', paragraph.uid)"
-        @move-down="emit('moveDown', paragraph.uid)"
-        @delete="emit('delete', paragraph.uid)"
-      />
-    </template>
+  <div class="paragraph-card">
+    <ArCard variant="glass" padding="none" shadow="none">
+      <template #header>
+        <div class="card-header-controls">
+          <CardToolbar
+            :type="paragraph.type"
+            :can-move-up="canMoveUp"
+            :can-move-down="canMoveDown"
+            @update:type="onTypeChange"
+            @move-up="emit('moveUp', paragraph.uid)"
+            @move-down="emit('moveDown', paragraph.uid)"
+            @delete="emit('delete', paragraph.uid)"
+          />
+        </div>
+      </template>
 
-    <!-- 文本 / 标题 -->
+      <!-- 文本 / 标题 -->
     <RichTextEditor
       v-if="paragraph.type === 'text' || paragraph.type === 'heading'"
       :uid="paragraph.uid"
@@ -97,4 +100,27 @@ function onTypeChange(type: ParagraphType) {
       表格编辑（即将支持）
     </div>
   </ArCard>
+  </div>
 </template>
+
+<style scoped>
+.paragraph-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.paragraph-card:hover {
+  background: var(--surface-hover-color, rgba(128, 128, 128, 0.03));
+}
+
+.paragraph-card .card-header-controls {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.paragraph-card:hover .card-header-controls,
+.paragraph-card:focus-within .card-header-controls {
+  opacity: 1;
+}
+</style>

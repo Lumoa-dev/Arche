@@ -28,18 +28,13 @@ export interface EditorParagraph {
   caption?: string // 媒体说明文字
 }
 
-/** 引言条目（KV 结构） */
-export interface IntroductionEntry {
-  key: string
-  value: string
-}
 
 /** 编辑器完整状态 */
 export interface EditorState {
   postId: string | null // null = 新建
   title: string
   subtitles: string[]
-  introduction: IntroductionEntry[]
+  introduction: string
   paragraphs: EditorParagraph[]
   coverUrl: string
   tags: string[]
@@ -58,7 +53,7 @@ export function useParagraphEditor() {
   const postId = ref<string | null>(null)
   const title = ref('')
   const subtitles = ref<string[]>([])
-  const introduction = ref<IntroductionEntry[]>([])
+  const introduction = ref<string>('')
   const paragraphs = ref<EditorParagraph[]>([])
   const coverUrl = ref('')
   const tags = ref<string[]>([])
@@ -162,22 +157,10 @@ export function useParagraphEditor() {
     subtitles.value[index] = value
   }
 
-  // ── 引言操作 ──
+  // ── 引言（富文本） ──
 
-  function addIntroductionEntry() {
-    introduction.value.push({ key: '', value: '' })
-  }
-
-  function removeIntroductionEntry(index: number) {
-    introduction.value.splice(index, 1)
-  }
-
-  function updateIntroductionEntry(index: number, field: 'key' | 'value', val: string) {
-    if (field === 'key') {
-      introduction.value[index].key = val
-    } else {
-      introduction.value[index].value = val
-    }
+  function updateIntroduction(val: string) {
+    introduction.value = val
   }
 
   // ── 加载与保存 ──
@@ -194,15 +177,8 @@ export function useParagraphEditor() {
       tags.value = post.tags || []
       requiredLevel.value = post.required_level ?? 5
 
-      // 解析引言
-      if (post.introduction && Array.isArray(post.introduction)) {
-        introduction.value = post.introduction.map((item: any) => ({
-          key: item.key || '',
-          value: item.value || ''
-        }))
-      } else {
-        introduction.value = []
-      }
+      // 解析引言（富文本）
+      introduction.value = typeof post.introduction === 'string' ? post.introduction : ''
 
       // 加载段落
       const paraList = await getPostParagraphsApi(id, { limit: 200, offset: 0 })
@@ -226,7 +202,7 @@ export function useParagraphEditor() {
     postId.value = null
     title.value = ''
     subtitles.value = []
-    introduction.value = []
+    introduction.value = ''
     paragraphs.value = [{
       uid: generateUid(),
       type: 'text',
@@ -256,11 +232,8 @@ export function useParagraphEditor() {
       }))
 
       const introductionData =
-        introduction.value.length > 0
-          ? introduction.value.map((item) => ({
-              ...(item.key ? { key: item.key } : {}),
-              value: item.value
-            }))
+        introduction.value.trim().length > 0
+          ? introduction.value
           : undefined
 
       const payload: CreatePostPayload = {
@@ -322,9 +295,7 @@ export function useParagraphEditor() {
     updateSubtitle,
 
     // 引言操作
-    addIntroductionEntry,
-    removeIntroductionEntry,
-    updateIntroductionEntry,
+    updateIntroduction,
 
     // 生命周期
     loadPost,

@@ -1,91 +1,115 @@
 <script setup lang="ts">
 /**
- * EditorIntroductionCard — 引言卡片
+ * EditorIntroductionCard — 引言编辑区
  *
- * 与段落卡片区分：柔和底色 + 左侧朱砂装饰线 + 独特 header。
- * 使用 ArCard outlined 变体（增强后已有底色和微阴影）。
+ * 从 KV 数组改为富文本编辑。设计上摒弃了「卡片」概念，
+ * 以流动式 inline 编辑区呈现，视觉上"长"在标题与正文之间。
+ * 使用轻量 TipTap 编辑，与段落编辑器共享排版能力。
  */
-import ArVBox from '@/components/ui/ArVBox.vue'
-import ArHBox from '@/components/ui/ArHBox.vue'
-import ArCard from '@/components/ui/ArCard.vue'
-import ArInput from '@/components/ui/ArInput.vue'
-import ArButton from '@/components/ui/ArButton.vue'
-import type { IntroductionEntry } from '@/components/logic/useParagraphEditor'
+import { watch, onBeforeUnmount } from 'vue'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { StarterKit } from '@tiptap/starter-kit'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Placeholder } from '@tiptap/extension-placeholder'
 
-defineProps<{
-  entries: IntroductionEntry[]
+const props = defineProps<{
+  modelValue: string
 }>()
 
 const emit = defineEmits<{
-  addEntry: []
-  removeEntry: [index: number]
-  'update:entry': [index: number, field: 'key' | 'value', value: string]
+  'update:modelValue': [value: string]
 }>()
+
+const editor = useEditor({
+  content: props.modelValue || '',
+  extensions: [
+    StarterKit.configure({
+      heading: { levels: [1, 2, 3] },
+      codeBlock: false,
+      blockquote: false
+    }),
+    TextStyle,
+    TextAlign.configure({ types: ['paragraph'] }),
+    Placeholder.configure({
+      placeholder: '写一段引言……简要概括文章的核心观点'
+    })
+  ],
+  editorProps: {
+    attributes: {
+      class: 'intro-editor'
+    }
+  },
+  onUpdate: ({ editor: ed }) => {
+    const html = ed.getHTML()
+    if (html !== props.modelValue) {
+      emit('update:modelValue', html)
+    }
+  }
+})
+
+watch(
+  () => props.modelValue,
+  (val) => {
+    if (editor.value && val !== editor.value.getHTML()) {
+      editor.value.commands.setContent(val || '', false)
+    }
+  }
+)
+
+onBeforeUnmount(() => {
+  editor.value?.destroy()
+})
 </script>
 
 <template>
-  <ArCard
-    variant="outlined"
-    padding="md"
-    shadow="sm"
-    style="
-      margin-bottom: var(--spacing-md);
-      background: var(--intro-card-bg, rgba(245, 235, 220, 0.35));
-      border-left: 3px solid var(--primary-color);
-      border-radius: var(--radius-md);
-    "
-  >
-    <template #header>
-      <div style="display: flex; align-items: center; gap: 8px">
-        <!-- 小图标装饰 -->
-        <svg
-          width="14" height="14" viewBox="0 0 24 24"
-          fill="none" stroke="var(--primary-color)"
-          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="16" x2="12" y2="12" />
-          <line x1="12" y1="8" x2="12.01" y2="8" />
-        </svg>
-        <span
-          style="
-            font-size: 13px;
-            font-weight: var(--font-weight-semibold);
-            color: var(--text-secondary);
-          "
-        >引言</span>
-      </div>
-    </template>
-
-    <ArVBox gap="8px">
-      <ArHBox v-for="(entry, index) in entries" :key="`intro_${index}`" gap="6px">
-        <ArInput
-          :model-value="entry.key"
-          placeholder="Key（可选）"
-          size="sm"
-          style="width: 140px"
-          @update:model-value="emit('update:entry', index, 'key', $event)"
-        />
-        <span
-          style="
-            color: var(--text-tertiary);
-            font-weight: var(--font-weight-bold);
-            flex-shrink: 0;
-          "
-        >:</span>
-        <ArInput
-          :model-value="entry.value"
-          placeholder="Value"
-          size="sm"
-          style="flex: 1"
-          @update:model-value="emit('update:entry', index, 'value', $event)"
-        />
-        <ArButton size="sm" type="ghost" @click="emit('removeEntry', index)"> × </ArButton>
-      </ArHBox>
-
-      <ArHBox style="padding-top: 4px; border-top: 1px dashed var(--border-color)">
-        <ArButton size="sm" type="ghost" @click="emit('addEntry')"> + 添加条目 </ArButton>
-      </ArHBox>
-    </ArVBox>
-  </ArCard>
+  <div class="intro-section">
+    <!-- 轻标签：纯文字标识 -->
+    <div class="intro-label">引言</div>
+    <!-- 编辑区：无边框无背景，flow 在文档流中 -->
+    <EditorContent :editor="editor" class="intro-editor-wrapper" />
+  </div>
 </template>
+
+<style scoped>
+.intro-section {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
+}
+
+.intro-label {
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-tertiary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-xs);
+  user-select: none;
+}
+
+.intro-editor-wrapper {
+  /* 编辑器本身是 flow 布局，不产生额外卡片效应 */
+}
+
+.intro-editor-wrapper :deep(.ProseMirror) {
+  min-height: 60px;
+  padding: var(--spacing-sm) 0;
+  font-size: 1.05em;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  font-family: var(--font-serif);
+  outline: none;
+}
+
+.intro-editor-wrapper :deep(.ProseMirror p) {
+  margin: 0;
+}
+
+.intro-editor-wrapper :deep(.ProseMirror p.is-editor-empty:first-child::before) {
+  color: var(--text-quaternary);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+</style>

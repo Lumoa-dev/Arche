@@ -36,7 +36,7 @@ function generateCover() {
     id: 'preview',
     slug: '',
     title: props.title || 'Untitled',
-    introduction: {} as any,
+    introduction: '',
     paragraphs: props.content
       ? [{ content: props.content, type: 'text', pid: '', word_count: 0 }]
       : [],

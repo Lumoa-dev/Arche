@@ -26,8 +26,8 @@ function stripHtml(html: string): string {
 
 /** 从 post 中提取用于封面的文本片段 */
 function extractText(post: BlogPost): string {
-  // 优先级 1：引言 abstract
-  if (post.introduction?.abstract?.trim()) return post.introduction.abstract.trim()
+  // 优先级 1：引言文本（strip HTML）
+  if (post.introduction?.trim()) return stripHtml(post.introduction).trim()
 
   // 优先级 2：段落数据第一段
   if (post.paragraphs?.length && post.paragraphs[0]?.content?.trim()) {

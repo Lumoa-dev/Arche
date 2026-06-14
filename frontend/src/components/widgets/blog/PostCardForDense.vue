@@ -18,8 +18,13 @@ const emit = defineEmits<{
 
 const TAG_COLORS = ['red', 'blue', 'yellow', 'green', 'default'] as const
 
+/** 从 HTML 中提取纯文本 */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, '').trim()
+}
+
 const excerptText = computed(() => {
-  const text = props.post.introduction?.abstract ?? ''
+  const text = props.post.introduction ? stripHtml(props.post.introduction) : ''
   return text.slice(0, 120)
 })
 
