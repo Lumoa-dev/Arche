@@ -164,13 +164,11 @@ function handleExternalDrop(evt: any) {
       <draggable
         v-model="editor.paragraphs.value"
         item-key="uid"
-        handle=".drag-rail"
         direction="vertical"
-        :animation="200"
+        :animation="250"
         ghost-class="sortable-ghost"
+        chosen-class="sortable-chosen"
         group="editor-paragraphs"
-        :force-fallback="true"
-        fallback-tolerance="5"
         @add="handleExternalDrop"
       >
         <template #item="{ element: para, index: idx }">
@@ -198,18 +196,23 @@ function handleExternalDrop(evt: any) {
   </ArVBox>
 </template>
 
-<!-- 全局样式：SortableJS 拖拽幽灵占位（不受 scoped 限制） -->
+<!-- 全局样式：SortableJS 拖拽反馈（不受 scoped 限制） -->
 <style>
+/* 原位置的幽灵占位 — 虚线框 */
 .sortable-ghost {
   border: 2px dashed var(--primary-color) !important;
   background: transparent !important;
   box-shadow: none !important;
   min-height: 12px;
   border-radius: var(--radius-md);
-  opacity: 1 !important;
 }
 
-.sortable-ghost * {
+.sortable-ghost > * {
   visibility: hidden;
+}
+
+/* 拖拽中的卡片 — 稍微加点阴影，不变透明 */
+.sortable-chosen {
+  box-shadow: var(--card-shadow-elevated) !important;
 }
 </style>
