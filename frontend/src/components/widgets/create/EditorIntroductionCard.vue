@@ -1,10 +1,9 @@
 <script setup lang="ts">
 /**
- * EditorIntroductionCard — 引言编辑区
+ * EditorIntroductionCard — 引言卡片（与段落卡片统一样式）
  *
- * 从 KV 数组改为富文本编辑。设计上摒弃了「卡片」概念，
- * 以流动式 inline 编辑区呈现，视觉上"长"在标题与正文之间。
- * 使用轻量 TipTap 编辑，与段落编辑器共享排版能力。
+ * 视觉上和段落卡片一致（同款 border/bg/圆角），但固定在标题下方
+ * 不可拖拽排序（锚定位置）。
  */
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
@@ -44,9 +43,6 @@ const editor = useEditor({
   }
 })
 
-const editorWrapper = ref<HTMLElement | null>(null)
-
-/** 点击标签时聚焦编辑器 */
 function focusEditor() {
   editor.value?.commands.focus()
 }
@@ -66,22 +62,28 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="intro-section">
-    <!-- 标签：点击聚焦编辑器 -->
-    <div class="intro-label" @click="focusEditor">引言</div>
-    <!-- 编辑区：无边框无背景，flow 在文档流中 -->
-    <EditorContent :editor="editor" class="intro-editor-wrapper" />
+  <div class="intro-card">
+    <div class="intro-card__label" @click="focusEditor">引言</div>
+    <EditorContent :editor="editor" class="intro-card__editor" />
   </div>
 </template>
 
 <style scoped>
-.intro-section {
-  margin-bottom: var(--spacing-lg);
-  padding: var(--spacing-sm) 0;
+.intro-card {
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--surface-color, #fff);
+  padding: 12px 16px;
 }
 
-.intro-label {
-  font-size: 12px;
+.intro-card:hover {
+  border-color: var(--border-hover-color, rgba(0, 0, 0, 0.12));
+  box-shadow: var(--card-shadow-glass);
+}
+
+.intro-card__label {
+  font-size: 11px;
   font-weight: var(--font-weight-semibold);
   color: var(--text-tertiary);
   letter-spacing: 0.06em;
@@ -89,19 +91,15 @@ onBeforeUnmount(() => {
   margin-bottom: var(--spacing-xs);
   user-select: none;
   cursor: pointer;
+  transition: color var(--transition-fast);
 }
 
-.intro-label:hover {
+.intro-card__label:hover {
   color: var(--text-secondary);
 }
 
-.intro-editor-wrapper {
-  /* 编辑器本身是 flow 布局，不产生额外卡片效应 */
-}
-
-.intro-editor-wrapper :deep(.ProseMirror) {
+.intro-card__editor :deep(.ProseMirror) {
   min-height: 60px;
-  padding: var(--spacing-sm) 0;
   font-size: 1.05em;
   line-height: 1.7;
   color: var(--text-secondary);
@@ -109,7 +107,7 @@ onBeforeUnmount(() => {
   outline: none;
 }
 
-.intro-editor-wrapper :deep(.ProseMirror p) {
+.intro-card__editor :deep(.ProseMirror p) {
   margin: 0;
 }
 </style>

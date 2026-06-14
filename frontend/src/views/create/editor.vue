@@ -161,7 +161,6 @@ function toggleCover() {
         ghost-class="sortable-ghost"
         :force-fallback="true"
         fallback-tolerance="5"
-        @end="() => {}"
       >
         <template #item="{ element: para, index: idx }">
           <EditorParagraphCard
@@ -187,3 +186,19 @@ function toggleCover() {
     </EditorBody>
   </ArVBox>
 </template>
+
+<!-- 全局样式：SortableJS 拖拽幽灵占位（不受 scoped 限制） -->
+<style>
+.sortable-ghost {
+  border: 2px dashed var(--primary-color) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: 12px;
+  border-radius: var(--radius-md);
+  opacity: 1 !important;
+}
+
+.sortable-ghost * {
+  visibility: hidden;
+}
+</style>

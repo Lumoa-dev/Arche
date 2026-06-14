@@ -261,28 +261,6 @@ function stripHtml(html: string): string {
   cursor: grabbing;
 }
 
-/* SortableJS 拖拽中的 ghost 样式 */
-.sortable-ghost {
-  opacity: 0.4;
-  border-color: var(--primary-color);
-  box-shadow: var(--card-shadow-glass);
-}
-
-.sortable-ghost .drag-rail {
-  background: var(--primary-light-color, rgba(102, 126, 234, 0.08));
-  border-left-color: var(--primary-color);
-}
-
-.sortable-ghost .drag-rail__icon {
-  opacity: 0.8;
-  color: var(--primary-color);
-}
-
-.sortable-ghost .drag-rail__track {
-  background: var(--primary-color);
-  opacity: 0.3;
-}
-
 /* ── 控制栏 ── */
 
 .paragraph-controls {
