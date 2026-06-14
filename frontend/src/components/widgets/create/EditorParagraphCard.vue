@@ -6,6 +6,7 @@
  * 左侧拖拽手柄（仅上下拖拽），右侧浮出控制栏含预览切换按钮。
  */
 import { ref } from 'vue'
+import ArDropIndicator from '@/components/ui/ArDropIndicator.vue'
 import CardToolbar from './CardToolbar.vue'
 import RichTextEditor from './RichTextEditor.vue'
 import EditorImageUploader from './EditorImageUploader.vue'
@@ -94,10 +95,8 @@ function stripHtml(html: string): string {
       'paragraph-card--preview': isPreview
     }"
   >
-    <!-- 拖拽放置指示线（悬停时显示） -->
-    <div v-if="isDragOver" class="drop-indicator">
-      <span class="drop-indicator__label">移动到此</span>
-    </div>
+    <!-- 拖拽放置指示线 -->
+    <ArDropIndicator v-if="isDragOver" label="移动到此" />
 
     <!-- 卡片主体（flex row: 内容区 + 右侧操作栏） -->
     <div class="paragraph-card__inner">
@@ -172,6 +171,7 @@ function stripHtml(html: string): string {
         </template>
       </div>
     </div>
+  </div>
 
     <!-- 右侧拖拽手柄 -->
     <div
@@ -225,40 +225,6 @@ function stripHtml(html: string): string {
 
 .paragraph-card--preview {
   background: var(--surface-hover-color, rgba(128, 128, 128, 0.03));
-}
-
-/* ── 放置指示线 ── */
-
-.drop-indicator {
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  right: -1px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.drop-indicator::before,
-.drop-indicator::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  background: var(--primary-color);
-  border-radius: 1px;
-}
-
-.drop-indicator__label {
-  font-size: 11px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--primary-color);
-  background: var(--surface-color);
-  padding: 0 8px;
-  white-space: nowrap;
-  border-radius: var(--radius-sm);
-  line-height: 22px;
 }
 
 /* ── 卡片内部布局 ── */
