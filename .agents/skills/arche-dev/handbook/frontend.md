@@ -156,36 +156,34 @@ const { data } = await api.get('/posts')  // forbidden
 ### Core Principles
 
 - Only two responsibilities: **permission isolation** + **layout composition**
-- CSS volume is **near zero** — at most layout properties (`display`, `flex`, `grid`, `gap`)
-- ❌ No color, font-size, padding, margin, or background in page styles
+- CSS volume is **zero** — no `<style>` tag of any kind in page files
+- Use `ArVBox`, `ArHBox`, `ArCard` and other base components for layout composition
+- ❌ No color, font-size, padding, margin, flex, grid, or background in page styles
+- ❌ No `<style scoped>` or `<style>` in `.vue` files under `views/`
 - ❌ No direct API calls
 
 ```vue
-<!-- ✅ Correct -->
+<!-- ✅ Correct: page uses base components for layout, 0 CSS -->
 <template>
-  <ArPageContainer>
+  <ArVBox gap="var(--spacing-lg)">
+    <ArPageHeader title="文章列表" />
     <PostFilterBar />
     <PostGrid>
       <PostCard v-for="post in posts" :key="post.id" :post="post" />
     </PostGrid>
     <ArPagination :page="page" :total="total" @change="handlePageChange" />
-  </ArPageContainer>
+  </ArVBox>
 </template>
-<style scoped>
-/* layout-only CSS */
-.post-list-page { display: flex; flex-direction: column; gap: 24px; }
-</style>
+<!-- No <style> tag -->
 ```
 
 ```vue
-<!-- ❌ Wrong -->
+<!-- ❌ Wrong: page with any style tag -->
+<template>
+  <div class="my-page">...</div>
+</template>
 <style scoped>
-.post-list-page {
-  color: #333;          /* forbidden */
-  font-size: 14px;      /* forbidden */
-  padding: 16px;        /* forbidden */
-  background: #fff;     /* forbidden */
-}
+.my-page { display: flex; }   /* forbidden: use ArVBox instead */
 </style>
 ```
 
@@ -196,10 +194,30 @@ const { data } = await api.get('/posts')  // forbidden
 | Layer | CSS Volume | Responsibility | Boundary |
 |-------|-----------|---------------|----------|
 | Base | Heavy | Visual + animation + CSS variable API | scoped, no external deps |
-| Business | Medium | Fixed specs for all scenes | scoped, no overrides accepted |
-| Pages | ≤5 lines | Layout only (flex/grid/gap) | ❌ No color/font/spacing |
+| Business | **少量** | 业务场景的固定样式定义（场景、边界、尺寸） | scoped, 不得覆盖外部变量 |
+| Pages | **0 CSS** | 纯组件组合，无任何样式标签 | ❌ 禁止任何 `style` 标签和 `scoped` CSS |
 
-**CR Red Line:** Any page with more than 5 lines of CSS or non-layout style properties is rejected outright.
+### 核心原则
+
+1. **页面 0 CSS** — 页面只负责组合组件，不允许出现任何 `<style>` 标签（包括 scoped）。布局用 ArVBox / ArHBox 等基础布局组件完成。
+2. **业务组件少量 CSS** — 允许有限的自定义样式，仅用于定义业务场景的固定规格（间距、尺寸、状态）。
+3. **基础组件大量 CSS** — 这里是样式的主战场，高度完备的通用 UI 组件。
+4. **布局用基础布局组件** — ArVBox / ArHBox / ArSpacer / ArGrid 等布局原语，不得在业务组件或页面中手写 flex/grid。
+
+### 缺失组件处理流程
+
+> 如果需要某个基础组件不存在的 UI 模式：
+> 1. 汇报给项目负责人，说明缺少什么能力
+> 2. 由负责人决定是否在基础组件层新增
+> 3. ❌ 禁止在业务组件或页面中用 CSS 临时实现
+
+### Code Review 红线
+
+符合以下任一条件的，**直接打回**：
+- 页面出现任何 `<style>` 标签
+- 业务组件出现超过 20 行自定义 CSS
+- 出现手写 flex/grid 布局而未使用 ArVBox/ArHBox/ArGrid
+- 发现未汇报的「临时 CSS 实现」替代方案
 
 ---
 
