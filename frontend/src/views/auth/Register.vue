@@ -117,14 +117,14 @@ const handleRegister = async () => {
         <NForm :model="formModel" :rules="rules" label-width="80">
           <NGrid :cols="1">
             <NFormItemGi label="邮箱" path="email"
-              ><ArInput v-model:value="formModel.email" placeholder="请输入邮箱"
+              ><ArInput v-model="formModel.email" placeholder="请输入邮箱"
             /></NFormItemGi>
             <NFormItemGi label="用户名" path="username"
-              ><ArInput v-model:value="formModel.username" placeholder="请输入用户名"
+              ><ArInput v-model="formModel.username" placeholder="请输入用户名"
             /></NFormItemGi>
             <NFormItemGi label="密码" path="password">
               <ArInput
-                v-model:value="formModel.password"
+                v-model="formModel.password"
                 type="password"
                 show-password-on="click"
                 placeholder="请输入密码"
@@ -132,7 +132,7 @@ const handleRegister = async () => {
             </NFormItemGi>
             <NFormItemGi label="确认密码" path="confirmPassword">
               <ArInput
-                v-model:value="formModel.confirmPassword"
+                v-model="formModel.confirmPassword"
                 type="password"
                 show-password-on="click"
                 placeholder="请再次输入密码"
@@ -330,6 +330,10 @@ const handleRegister = async () => {
 }
 
 .register-card :deep(.n-form-item-blank) {
+  width: 100%;
+}
+
+.register-card :deep(.ar-input) {
   width: 100%;
 }
 .card-header {

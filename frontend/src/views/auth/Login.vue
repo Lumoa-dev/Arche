@@ -32,11 +32,11 @@
         <NForm :model="formModel" :show-feedback="true" label-width="80">
           <NGrid :cols="1">
             <NFormItemGi label="账号" path="identity" :span="1">
-              <ArInput v-model:value="formModel.identity" placeholder="请输入用户名或邮箱" />
+              <ArInput v-model="formModel.identity" placeholder="请输入用户名或邮箱" />
             </NFormItemGi>
             <NFormItemGi label="密码" path="password" :span="1">
               <ArInput
-                v-model:value="formModel.password"
+                v-model="formModel.password"
                 type="password"
                 show-password-on="click"
                 placeholder="请输入密码"
@@ -409,6 +409,10 @@ const handleLogin = async () => {
 }
 
 .login-card :deep(.n-form-item-blank) {
+  width: 100%;
+}
+
+.login-card :deep(.ar-input) {
   width: 100%;
 }
 
