@@ -2,19 +2,14 @@
 /**
  * PostListPanel — 帖子列表面板（浏览模式）
  *
- * 包含标签栏（全部/已发布/草稿）、帖子列表、悬停统计提示和统计详情弹窗。
- * 所有弹窗和工具提示状态均为内部管理。
+ * 标签栏（全部/已发布/草稿）+ 帖子列表 + 悬停统计提示。
+ * 统计详情弹窗已提取为 PostStatsModal。
  */
 import { ref } from 'vue'
-import { NModal, NIcon } from 'naive-ui'
-import {
-  EyeOutline,
-  HeartOutline,
-  BookmarkOutline,
-  TimeOutline,
-  CreateOutline
-} from '@vicons/ionicons5'
+import { NIcon } from 'naive-ui'
+import { EyeOutline, CreateOutline } from '@vicons/ionicons5'
 import ArTag from '@/components/ui/ArTag.vue'
+import PostStatsModal from './PostStatsModal.vue'
 import type { BlogPost } from '@/components/logic/api'
 import type { PostTab } from '@/components/logic/usePostManager'
 
@@ -156,56 +151,7 @@ function handleEditPost(post: BlogPost) {
       </div>
     </div>
 
-    <NModal
-      :show="showStatsModal"
-      :on-update:show="(val) => !val && handleCloseStats()"
-      :mask-closable="true"
-      preset="card"
-      class="stats-modal"
-      :style="{ maxWidth: '420px' }"
-      :title="statsPost?.title || '文章数据'"
-      :bordered="false"
-      :segmented="false"
-    >
-      <div v-if="statsPost" class="stats-detail">
-        <div class="stats-detail-row">
-          <div class="stats-detail-item">
-            <NIcon size="18" color="var(--text-tertiary)"><EyeOutline /></NIcon>
-            <div class="stats-detail-body">
-              <span class="stats-detail-value">{{ statsPost.views || 0 }}</span>
-              <span class="stats-detail-label">阅读量</span>
-            </div>
-          </div>
-          <div class="stats-detail-item">
-            <NIcon size="18" color="var(--text-tertiary)"><HeartOutline /></NIcon>
-            <div class="stats-detail-body">
-              <span class="stats-detail-value">{{ statsPost.likes || 0 }}</span>
-              <span class="stats-detail-label">点赞</span>
-            </div>
-          </div>
-        </div>
-        <div class="stats-detail-row">
-          <div class="stats-detail-item">
-            <NIcon size="18" color="var(--text-tertiary)"><BookmarkOutline /></NIcon>
-            <div class="stats-detail-body">
-              <span class="stats-detail-value">{{
-                Math.round((statsPost.likes || 0) * 0.65)
-              }}</span>
-              <span class="stats-detail-label">收藏</span>
-            </div>
-          </div>
-          <div class="stats-detail-item">
-            <NIcon size="18" color="var(--text-tertiary)"><TimeOutline /></NIcon>
-            <div class="stats-detail-body">
-              <span class="stats-detail-value">{{
-                statsPost.created_at?.slice(0, 10) || '—'
-              }}</span>
-              <span class="stats-detail-label">发布时间</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </NModal>
+    <PostStatsModal :show="showStatsModal" :post="statsPost" @close="handleCloseStats" />
   </div>
 </template>
 
@@ -390,56 +336,5 @@ function handleEditPost(post: BlogPost) {
 
 .empty-state p {
   margin: 0;
-}
-
-.stats-modal :deep(.n-card-header) {
-  padding: var(--spacing-lg) var(--spacing-lg) 0;
-}
-
-.stats-modal :deep(.n-card-header__title) {
-  font-size: 16px;
-}
-
-.stats-modal :deep(.n-card__content) {
-  padding: var(--spacing-lg);
-}
-
-.stats-detail {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.stats-detail-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-md);
-}
-
-.stats-detail-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-inset-color);
-  border-radius: var(--radius-md);
-  padding: 12px;
-}
-
-.stats-detail-body {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.stats-detail-value {
-  font-size: 16px;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.stats-detail-label {
-  font-size: 11px;
-  color: var(--text-tertiary);
 }
 </style>

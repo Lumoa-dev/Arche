@@ -1,5 +1,5 @@
 // 认证相关接口
-import { get, post, type RequestConfig } from '../request'
+import { get, post, type RequestConfig } from '../../../lib/services/request'
 
 // 登录参数
 export interface LoginParams {

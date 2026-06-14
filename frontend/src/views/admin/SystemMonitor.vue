@@ -3,7 +3,7 @@ import { h, onMounted, onUnmounted, ref } from 'vue'
 import { NTag } from 'naive-ui'
 import { ArTable } from '@/components/ui'
 import { getProcessesApi, type ProcessInfo } from '@/components/logic/api'
-import { SystemMetrics } from '@/components/admin'
+import { SystemMetrics } from '@/components/widgets/admin/SystemMetrics.vue'
 
 const processes = ref<ProcessInfo[]>([])
 const loading = ref(false)

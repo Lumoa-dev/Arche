@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { PostEditor } from '@/components/blog'
+import PostEditor from '@/components/widgets/create/PostEditor.vue'
 import {
   createPostApi,
   updatePostApi,

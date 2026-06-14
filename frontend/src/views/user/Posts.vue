@@ -6,7 +6,7 @@ import { AddOutline } from '@/icons'
 import { ArTable, ArPagination } from '@/components/ui'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArTag from '@/components/ui/ArTag.vue'
-import { PostCard } from '@/components/blog'
+import PostCardForCompact from '@/components/widgets/blog/PostCardForCompact.vue'
 import { deletePostApi, getMyPostsApi, type BlogPost } from '@/components/logic/api'
 
 const message = useMessage()
@@ -56,10 +56,8 @@ const columns = [
     width: 400,
     render: (row: PostRow) =>
       h('div', { class: 'posts-title-cell' }, [
-        h(PostCard, {
-          post: toBlogPost(row),
-          layout: 'compact',
-          showExcerpt: false
+        h(PostCardForCompact, {
+          post: toBlogPost(row)
         })
       ])
   },

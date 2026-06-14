@@ -61,3 +61,7 @@ data/
 
 # testgen cache
 .testgen-cache/
+
+reasonix.toml
+.reasonix/
+.codegraph/

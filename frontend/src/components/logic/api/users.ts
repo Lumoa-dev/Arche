@@ -1,4 +1,4 @@
-import { del, get, post, put, type RequestConfig } from '../request'
+import { del, get, post, put, type RequestConfig } from '../../../lib/services/request'
 import type { ApiListParams, Paginated } from './types/common'
 
 export interface AdminUser {

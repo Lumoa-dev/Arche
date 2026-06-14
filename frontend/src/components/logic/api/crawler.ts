@@ -1,4 +1,4 @@
-import { get, post, type RequestConfig } from '../request'
+import { get, post, type RequestConfig } from '../../../lib/services/request'
 import type { ApiListParams, BackendPaginated } from './types/common'
 import { normalizePaginated } from './types/common'
 

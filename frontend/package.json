@@ -32,6 +32,7 @@
     "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.15.2",
     "dompurify": "^3.4.10",
+    "echarts": "^6.1.0",
     "marked": "^18.0.5",
     "naive-ui": "^2.44.1",
     "pinia": "^3.0.4",

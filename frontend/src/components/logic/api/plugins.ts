@@ -1,4 +1,4 @@
-import { get, type RequestConfig } from '../request'
+import { get, type RequestConfig } from '../../../lib/services/request'
 import type { ApiListParams, Paginated } from './types/common'
 
 export interface PluginSummary {
