@@ -100,21 +100,4 @@ onBeforeUnmount(() => {
 .intro-editor-wrapper :deep(.ProseMirror p) {
   margin: 0;
 }
-
-/* CSS 占位符 — 空状态显示提示文字 */
-.intro-editor-wrapper :deep(.ProseMirror p:first-child::before) {
-  color: var(--text-quaternary);
-  content: '写一段引言……简要概括文章的核心观点';
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
-.intro-editor-wrapper :deep(.ProseMirror p:first-child:not(.is-empty)::before) {
-  display: none;
-}
-
-.intro-editor-wrapper :deep(.ProseMirror p:first-child:empty::before) {
-  display: block;
-}
 </style>
