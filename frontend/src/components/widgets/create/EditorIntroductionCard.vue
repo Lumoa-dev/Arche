@@ -11,7 +11,6 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import { StarterKit } from '@tiptap/starter-kit'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { TextStyle } from '@tiptap/extension-text-style'
-import { Placeholder } from '@tiptap/extension-placeholder'
 
 const props = defineProps<{
   modelValue: string
@@ -30,10 +29,7 @@ const editor = useEditor({
       blockquote: false
     }),
     TextStyle,
-    TextAlign.configure({ types: ['paragraph'] }),
-    Placeholder.configure({
-      placeholder: '写一段引言……简要概括文章的核心观点'
-    })
+    TextAlign.configure({ types: ['paragraph'] })
   ],
   editorProps: {
     attributes: {
@@ -105,11 +101,20 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-.intro-editor-wrapper :deep(.ProseMirror p.is-editor-empty:first-child::before) {
+/* CSS 占位符 — 空状态显示提示文字 */
+.intro-editor-wrapper :deep(.ProseMirror p:first-child::before) {
   color: var(--text-quaternary);
-  content: attr(data-placeholder);
+  content: '写一段引言……简要概括文章的核心观点';
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+.intro-editor-wrapper :deep(.ProseMirror p:first-child:not(.is-empty)::before) {
+  display: none;
+}
+
+.intro-editor-wrapper :deep(.ProseMirror p:first-child:empty::before) {
+  display: block;
 }
 </style>
