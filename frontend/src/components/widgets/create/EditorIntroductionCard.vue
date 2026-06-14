@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /**
- * EditorIntroductionCard — 引言卡片（特殊卡片）
+ * EditorIntroductionCard — 引言卡片
  *
- * KV 结构输入：每行一个 [Key] : [Value]。
- * 使用 ArCard outlined 作为容器。
+ * 与段落卡片区分：柔和底色 + 左侧朱砂装饰线 + 独特 header。
+ * 使用 ArCard outlined 变体（增强后已有底色和微阴影）。
  */
 import ArVBox from '@/components/ui/ArVBox.vue'
 import ArHBox from '@/components/ui/ArHBox.vue'
@@ -24,16 +24,37 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <ArCard variant="outlined" padding="md" style="margin-bottom: var(--spacing-md)">
+  <ArCard
+    variant="outlined"
+    padding="md"
+    shadow="sm"
+    style="
+      margin-bottom: var(--spacing-md);
+      background: var(--intro-card-bg, rgba(245, 235, 220, 0.35));
+      border-left: 3px solid var(--primary-color);
+      border-radius: var(--radius-md);
+    "
+  >
     <template #header>
-      <span
-        style="
-          font-size: 13px;
-          font-weight: var(--font-weight-semibold);
-          color: var(--text-secondary);
-        "
-        >引言</span
-      >
+      <div style="display: flex; align-items: center; gap: 8px">
+        <!-- 小图标装饰 -->
+        <svg
+          width="14" height="14" viewBox="0 0 24 24"
+          fill="none" stroke="var(--primary-color)"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+        <span
+          style="
+            font-size: 13px;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-secondary);
+          "
+        >引言</span>
+      </div>
     </template>
 
     <ArVBox gap="8px">
@@ -45,7 +66,13 @@ const emit = defineEmits<{
           style="width: 140px"
           @update:model-value="emit('update:entry', index, 'key', $event)"
         />
-        <span style="color: var(--text-tertiary); font-weight: var(--font-weight-bold)">:</span>
+        <span
+          style="
+            color: var(--text-tertiary);
+            font-weight: var(--font-weight-bold);
+            flex-shrink: 0;
+          "
+        >:</span>
         <ArInput
           :model-value="entry.value"
           placeholder="Value"

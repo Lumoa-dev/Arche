@@ -1,10 +1,9 @@
 <script setup lang="ts">
 /**
- * EditorBody — 编辑器正文区（可滚动+拖放插入）
+ * EditorBody — 编辑器正文区（纸面 + 可滚动 + 拖放插入）
  *
- * 包裹标题区、引言、段落卡片列表。
- * 支持从工具栏拖拽「插入」创建文本段落。
- * 横向间距由上层容器控制，此组件只负责纵向滚动和拖放。
+ * Apple Notes 式纸面布局：居中纸面 + 阴影，与背景形成「桌面-纸张」层次。
+ * 横向间距由纸面内边距控制，此组件只负责纸面容器 + 纵向滚动 + 拖放。
  */
 import { ref } from 'vue'
 import type { ParagraphType } from '@/components/logic/useParagraphEditor'
@@ -51,26 +50,48 @@ function handleDrop(e: DragEvent) {
 </script>
 
 <template>
+  <!-- 外层的「桌面」区域 — 负责滚动 -->
   <div
-    style="
-      flex: 1;
-      overflow-y: auto;
-      padding: var(--spacing-md) var(--spacing-lg);
-      max-width: 880px;
-      width: 100%;
-      margin: 0 auto;
-      outline: 2px dashed transparent;
-      outline-offset: -2px;
-      transition: outline-color var(--transition-fast);
-    "
-    :style="{
-      outlineColor: isDragOver ? 'var(--primary-color)' : 'transparent'
-    }"
+    class="editor-desk"
     @dragover.prevent="handleDragOver"
     @dragenter="handleDragEnter"
     @dragleave="handleDragLeave"
     @drop.prevent="handleDrop"
   >
-    <slot />
+    <!-- 内层的「纸面」— 居中、白底、阴影 -->
+    <div
+      class="editor-paper"
+      :class="{ 'editor-paper--drag-over': isDragOver }"
+    >
+      <slot />
+    </div>
   </div>
 </template>
+
+<style scoped>
+.editor-desk {
+  flex: 1;
+  overflow-y: auto;
+  /* 桌面背景延续页面渐变 */
+}
+
+.editor-paper {
+  max-width: 880px;
+  width: 100%;
+  margin: var(--spacing-lg) auto;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  min-height: calc(100vh - 120px);
+  background: var(--paper-color);
+  box-shadow: var(--paper-shadow);
+  border-radius: var(--radius-lg);
+  transition:
+    box-shadow var(--transition-normal),
+    outline-color var(--transition-fast);
+  outline: 2px dashed transparent;
+  outline-offset: -2px;
+}
+
+.editor-paper--drag-over {
+  outline-color: var(--primary-color);
+}
+</style>

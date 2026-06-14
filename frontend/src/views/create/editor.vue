@@ -68,7 +68,7 @@ function toggleCover() {
 </script>
 
 <template>
-  <ArVBox style="height: 100vh; background: var(--bg-color)">
+  <ArVBox style="height: 100vh; background: var(--bg-gradient)">
     <!-- 顶部工具栏（集成全部操作） -->
     <EditorToolbar
       :has-active-editor="hasActiveEditor"

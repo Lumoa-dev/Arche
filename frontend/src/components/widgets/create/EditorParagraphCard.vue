@@ -2,8 +2,8 @@
 /**
  * EditorParagraphCard — 通用段落卡片
  *
- * 使用 ArCard（outlined 变体）作为容器，
- * header 槽放 CardToolbar，default 槽放类型编辑区。
+ * 使用 ArCard（glass 变体）作为容器，
+ * 玻璃通透感+微阴影，在纸面上形成第二层浮层。
  */
 import ArCard from '@/components/ui/ArCard.vue'
 import CardToolbar from './CardToolbar.vue'
@@ -37,7 +37,7 @@ function onTypeChange(type: ParagraphType) {
 </script>
 
 <template>
-  <ArCard variant="outlined" padding="none">
+  <ArCard variant="glass" padding="none" shadow="sm">
     <template #header>
       <CardToolbar
         :type="paragraph.type"
