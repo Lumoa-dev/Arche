@@ -94,52 +94,39 @@ function stripHtml(html: string): string {
       'paragraph-card--preview': isPreview
     }"
   >
-    <!-- 拖拽手柄（左侧，仅竖直拖拽） -->
-    <div
-      class="drag-handle"
-      draggable="true"
-      title="拖拽排序"
-      @dragstart="handleDragStart"
-      @dragend="handleDragEnd"
-      @dragover="handleDragOver"
-      @dragleave="handleDragLeave"
-      @drop="handleDrop"
-    >
-      <svg width="14" height="18" viewBox="0 0 14 18" fill="currentColor" opacity="0.4">
-        <circle cx="4" cy="3" r="1.5" /><circle cx="10" cy="3" r="1.5" />
-        <circle cx="4" cy="9" r="1.5" /><circle cx="10" cy="9" r="1.5" />
-        <circle cx="4" cy="15" r="1.5" /><circle cx="10" cy="15" r="1.5" />
-      </svg>
+    <!-- 拖拽放置指示线（悬停时显示） -->
+    <div v-if="isDragOver" class="drop-indicator">
+      <span class="drop-indicator__label">移动到此</span>
     </div>
 
-    <!-- 卡片主体 -->
-    <div class="paragraph-card__body">
-      <!-- 控制栏 -->
-      <div class="paragraph-controls">
-        <CardToolbar
-          :type="paragraph.type"
-          :can-move-up="canMoveUp"
-          :can-move-down="canMoveDown"
-          :preview="isPreview"
-          @update:type="onTypeChange"
-          @move-up="emit('moveUp', paragraph.uid)"
-          @move-down="emit('moveDown', paragraph.uid)"
-          @delete="emit('delete', paragraph.uid)"
-          @toggle-preview="togglePreview"
-        />
-      </div>
-
+    <!-- 卡片主体（flex row: 内容区 + 右侧操作栏） -->
+    <div class="paragraph-card__inner">
       <!-- 内容区 -->
-      <div class="paragraph-content">
-        <template v-if="!isPreview">
-          <RichTextEditor
-            v-if="paragraph.type === 'text' || paragraph.type === 'heading'"
-            :uid="paragraph.uid"
-            :model-value="paragraph.content"
-            @update:model-value="emit('update:content', paragraph.uid, $event)"
-            @ready="(ed: Editor) => emit('ready', paragraph.uid, ed)"
-            @focus="(uid: string, ed: Editor) => emit('focus', uid, ed)"
+      <div class="paragraph-card__content">
+        <div class="paragraph-controls">
+          <CardToolbar
+            :type="paragraph.type"
+            :can-move-up="canMoveUp"
+            :can-move-down="canMoveDown"
+            :preview="isPreview"
+            @update:type="onTypeChange"
+            @move-up="emit('moveUp', paragraph.uid)"
+            @move-down="emit('moveDown', paragraph.uid)"
+            @delete="emit('delete', paragraph.uid)"
+            @toggle-preview="togglePreview"
           />
+        </div>
+
+        <div class="paragraph-body">
+          <template v-if="!isPreview">
+            <RichTextEditor
+              v-if="paragraph.type === 'text' || paragraph.type === 'heading'"
+              :uid="paragraph.uid"
+              :model-value="paragraph.content"
+              @update:model-value="emit('update:content', paragraph.uid, $event)"
+              @ready="(ed: Editor) => emit('ready', paragraph.uid, ed)"
+              @focus="(uid: string, ed: Editor) => emit('focus', uid, ed)"
+            />
           <EditorImageUploader
             v-else-if="paragraph.type === 'image'"
             :media-url="paragraph.media_url || ''"
@@ -185,13 +172,27 @@ function stripHtml(html: string): string {
         </template>
       </div>
     </div>
+
+    <!-- 右侧拖拽手柄 -->
+    <div
+      class="drag-handle"
+      draggable="true"
+      title="拖拽排序"
+      @dragstart="handleDragStart"
+      @dragend="handleDragEnd"
+    >
+      <svg width="14" height="18" viewBox="0 0 14 18" fill="currentColor" opacity="0.35">
+        <circle cx="4" cy="3" r="1.5" /><circle cx="10" cy="3" r="1.5" />
+        <circle cx="4" cy="9" r="1.5" /><circle cx="10" cy="9" r="1.5" />
+        <circle cx="4" cy="15" r="1.5" /><circle cx="10" cy="15" r="1.5" />
+      </svg>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .paragraph-card {
-  display: flex;
-  gap: 0;
+  position: relative;
   margin-bottom: var(--spacing-md);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
@@ -213,16 +214,68 @@ function stripHtml(html: string): string {
 
 .paragraph-card--drag-over {
   border-color: var(--primary-color);
-  box-shadow:
-    0 -2px 0 0 var(--primary-color),
-    var(--card-shadow-glass);
+  box-shadow: var(--card-shadow-glass);
+  /* 「开合」效果：被悬停的卡片上方让出空间给指示线 */
+  padding-top: 32px;
+  transition:
+    padding-top 0.2s ease,
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .paragraph-card--preview {
   background: var(--surface-hover-color, rgba(128, 128, 128, 0.03));
 }
 
-/* 拖拽手柄 */
+/* ── 放置指示线 ── */
+
+.drop-indicator {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.drop-indicator::before,
+.drop-indicator::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: var(--primary-color);
+  border-radius: 1px;
+}
+
+.drop-indicator__label {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-color);
+  background: var(--surface-color);
+  padding: 0 8px;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  line-height: 22px;
+}
+
+/* ── 卡片内部布局 ── */
+
+.paragraph-card__inner {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.paragraph-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── 拖拽手柄（右侧） ── */
+
 .drag-handle {
   display: flex;
   align-items: center;
@@ -232,8 +285,8 @@ function stripHtml(html: string): string {
   cursor: grab;
   color: var(--text-tertiary);
   transition: color var(--transition-fast), background var(--transition-fast);
-  border-right: 1px solid var(--border-color);
-  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border-left: 1px solid var(--border-color);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
   user-select: none;
 }
 
@@ -246,10 +299,7 @@ function stripHtml(html: string): string {
   cursor: grabbing;
 }
 
-.paragraph-card__body {
-  flex: 1;
-  min-width: 0;
-}
+/* ── 控制栏 ── */
 
 .paragraph-controls {
   opacity: 0;
@@ -261,6 +311,12 @@ function stripHtml(html: string): string {
 .paragraph-card:focus-within .paragraph-controls {
   opacity: 1;
 }
+
+.paragraph-body {
+  /* 编辑器内容区 */
+}
+
+/* ── 预览内容 ── */
 
 .paragraph-preview {
   padding: 12px 16px;
