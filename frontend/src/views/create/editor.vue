@@ -110,22 +110,21 @@ function toggleCover() {
 
 <template>
   <ArVBox style="height: 100vh; background: var(--bg-gradient)">
-    <!-- 顶部工具栏（集成全部操作） -->
-    <EditorToolbar
-      :has-active-editor="hasActiveEditor"
-      :saving="editor.saving.value"
-      :is-edit="isEditing"
-      :exec-command="execCommand"
-      @cancel="handleCancel"
-      @insert="(type: any) => editor.addParagraph(type)"
-      @insert-separator="() => editor.addParagraph('separator')"
-      @toggle-cover="toggleCover"
-      @save-draft="handleSaveDraft"
-      @publish="handlePublish"
-    />
-
-    <!-- 编辑区主体（可滚动+拖放） -->
+    <!-- 编辑区主体（可滚动+拖放），工具栏移入纸面顶部 -->
     <EditorBody @drop-paragraph="(type: any) => editor.addParagraph(type)">
+      <!-- 工具栏 — 位于纸面顶部，随纸面滚动 -->
+      <EditorToolbar
+        :has-active-editor="hasActiveEditor"
+        :saving="editor.saving.value"
+        :is-edit="isEditing"
+        :exec-command="execCommand"
+        @cancel="handleCancel"
+        @insert="(type: any) => editor.addParagraph(type)"
+        @insert-separator="() => editor.addParagraph('separator')"
+        @toggle-cover="toggleCover"
+        @save-draft="handleSaveDraft"
+        @publish="handlePublish"
+      />
       <!-- 封面 -->
       <EditorCoverArea
         v-if="showCover"

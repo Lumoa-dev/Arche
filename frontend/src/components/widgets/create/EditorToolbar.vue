@@ -1,10 +1,9 @@
 <script setup lang="ts">
 /**
- * EditorToolbar — 精简工具栏（与纸面三栏对齐）
+ * EditorToolbar — 纸面内嵌工具栏
  *
- * 摒弃 Word 风格组标签和过多分隔线，采用轻量化单行排列。
- * 整个工具栏内嵌在 .toolbar-container 中，与 EditorBody 纸面
- * 共用 max-width: 880px + 32px 内边距，实现上下视觉对齐。
+ * 位于纸面（EditorBody）顶部，与正文内容构成一体。
+ * 无 sticky 无通栏背景，融入纸面色。
  */
 import ArHBox from '@/components/ui/ArHBox.vue'
 import ArButton from '@/components/ui/ArButton.vue'
@@ -39,9 +38,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="toolbar">
-    <div class="toolbar-container">
-      <div class="toolbar-inner">
+  <div class="paper-toolbar">
       <!-- ── 左侧：格式化 ── -->
       <div class="toolbar-group">
         <!-- 加粗 -->
@@ -178,34 +175,17 @@ const emit = defineEmits<{
         </ArButton>
         <ArButton size="sm" type="ghost" @click="emit('cancel')" title="取消">取消</ArButton>
       </div>
-    </div>
-  </div>
   </div>
 </template>
 
 <style scoped>
-.toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--surface-color);
-  border-bottom: 1px solid var(--border-color);
+.paper-toolbar {
   user-select: none;
-  height: 52px;
-}
-
-/* 居中容器 — 与纸面同宽同缩进，实现上下视觉对齐 */
-.toolbar-container {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-xl);
-  height: 100%;
-}
-
-.toolbar-inner {
+  padding: 0 0 var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  height: 100%;
   gap: 4px;
 }
 
