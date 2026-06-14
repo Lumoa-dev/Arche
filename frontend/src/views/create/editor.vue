@@ -1,47 +1,32 @@
 <template>
-  <EditorLayout>
-    <template #sidebar>
-      <EditorSidebar
-        :posts="manager.posts.value"
-        :active-post-id="editor.editingPost.value?.id ?? null"
-        @select="editor.switchPost"
-        @back="goBack"
-      />
-    </template>
-    <template #topbar>
-      <EditorTopBar
-        :status="editor.editingPost.value?.status ?? null"
-        :is-new="editor.isNew.value"
-        :tags="editor.tags.value"
-        :access="editor.access.value"
-        @update:tags="editor.tags.value = $event"
-        @update:access="editor.access.value = $event"
-        @save="handleSave"
-        @cancel="goBack"
-      />
-    </template>
-    <template #editor>
-      <PostEditor
-        ref="editorRef"
-        :post="editor.isNew.value ? null : editor.editingPost.value"
-        :cover-url="editor.coverUrl.value"
-        :loading="editor.saving.value"
-        hide-footer
-        @cancel="goBack"
-      />
-    </template>
-    <template #sidebar-inner>
-      <CoverUploader
-        v-model:cover-url="editor.coverUrl.value"
-        @cover-file="editor.handleCoverFile"
-      />
-      <AssetSidebar
-        :staged-files="editor.stagedFiles.value"
-        @insert="handleInsertRef"
-        @upload="editor.stageFiles"
-      />
-    </template>
-  </EditorLayout>
+  <div class="editor-page">
+    <!-- 编辑区 -->
+    <div class="editor-body">
+      <div class="editor-content">
+        <PostEditor
+          ref="editorRef"
+          :post="editor.isNew.value ? null : editor.editingPost.value"
+          :cover-url="editor.coverUrl.value"
+          :loading="editor.saving.value"
+          hide-footer
+          @cancel="goBack"
+        />
+      </div>
+
+      <!-- 右侧：封面/资源 -->
+      <aside class="editor-sidebar">
+        <CoverUploader
+          v-model:cover-url="editor.coverUrl.value"
+          @cover-file="editor.handleCoverFile"
+        />
+        <AssetSidebar
+          :staged-files="editor.stagedFiles.value"
+          @insert="handleInsertRef"
+          @upload="editor.stageFiles"
+        />
+      </aside>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -49,9 +34,6 @@ import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { marked } from 'marked'
-import EditorLayout from '@/components/widgets/blog/EditorLayout.vue'
-import EditorSidebar from '@/components/widgets/blog/EditorSidebar.vue'
-import EditorTopBar from '@/components/widgets/blog/EditorTopBar.vue'
 import PostEditor from '@/components/widgets/blog/PostEditor.vue'
 import CoverUploader from '@/components/widgets/blog/CoverUploader.vue'
 import AssetSidebar from '@/components/widgets/blog/AssetSidebar.vue'
@@ -124,3 +106,36 @@ watch(editorRef, (editorComponent) => {
   }
 })
 </script>
+
+<style scoped>
+.editor-page {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.editor-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editor-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+}
+
+.editor-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-color);
+  overflow-y: auto;
+  background: var(--surface-color);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+</style>

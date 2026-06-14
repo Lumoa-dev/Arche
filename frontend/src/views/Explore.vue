@@ -294,11 +294,10 @@ const filteredItems = computed(() => {
             </TransitionGroup>
           </div>
           <div class="explore-grid">
-            <PostCard
+            <PostCardForDense
               v-for="item in filteredItems"
               :key="item.id"
               :post="toBlogPost(item)"
-              mode="dense"
               @open="handleOpenItem"
             />
           </div>

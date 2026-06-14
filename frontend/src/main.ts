@@ -1,9 +1,9 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
+import router from './lib/router'
 import pinia from './store'
 import { setupDirectives } from './directives'
-import './router/guard'
+import './lib/router/guard'
 import './styles/theme.css'
 import { useAppStore } from '@/lib/store/modules/app'
 

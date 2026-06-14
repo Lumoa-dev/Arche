@@ -129,8 +129,7 @@ function estimateDuration(post: BlogPost): string {
           class="scroll-card"
           @click="emit('open', item)"
         >
-          <PostCard
-            mode="cover"
+          <PostCardForCover
             :post="item.post"
             :meta-progress="item.progress ?? 0"
             :meta-duration="estimateDuration(item.post)"

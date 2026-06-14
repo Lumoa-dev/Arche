@@ -5,7 +5,11 @@ import { NPagination, useMessage } from 'naive-ui'
 import { getBlogPostsApi, type BlogPost } from '@/components/logic/api/blog'
 import { withFallback, blogMockData } from '@/lib/services/mock'
 import { useUserStore } from '@/lib/store/modules/user'
-import { PostCard, HeroCarousel, TrendingTags, WatchHistoryStack } from '@/components/widgets'
+import { HeroCarousel, TrendingTags, WatchHistoryStack } from '@/components/widgets'
+import PostCardForCompact from '@/components/widgets/blog/PostCardForCompact.vue'
+import ArPage from '@/components/ui/ArPage.vue'
+import ArVBox from '@/components/ui/ArVBox.vue'
+import ArHBox from '@/components/ui/ArHBox.vue'
 import { ensurePostsCovers } from '@/components/logic/useCoverLazyGenerator'
 import type { WatchHistoryItem } from '@/components/widgets/blog/WatchHistoryStack.vue'
 
@@ -137,122 +141,70 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="home-page">
-    <!-- ── Zone 1: 轮播图 ── -->
-    <HeroCarousel v-if="hotPosts.length > 0" :posts="hotPosts" :interval="HOT_ROTATE_INTERVAL_MS" />
-
-    <!-- ── Zone 2: 过渡区 · 热门标签云 ── -->
-    <TrendingTags
-      v-if="trendingTags.length > 0"
-      :tags="trendingTags"
-      @select="handleTagSelect"
-      @create="handleCreate"
-    />
-
-    <!-- ── Zone 3: 观看历史（仅登录态） ── -->
-    <WatchHistoryStack
-      v-if="historyItems.length > 0 && userStore.isLoggedIn"
-      :items="historyItems"
-      @open="handleHistoryOpen"
-    />
-
-    <!-- ── Zone 4: 内容卡片网格 ── -->
-    <section v-if="posts.length > 0" class="post-section">
-      <div class="section-head">
-        <h3>推荐内容</h3>
-      </div>
-      <div v-if="posts.length === 0" class="empty">暂无内容</div>
-      <div v-else class="post-grid">
-        <div
-          v-for="(post, index) in posts"
-          :key="post.id"
-          class="grid-item"
-          :style="{ animationDelay: `${index * 60}ms` }"
-        >
-          <PostCard :post="post" mode="compact" @open="openPost(post)" />
-        </div>
-      </div>
-    </section>
-
-    <div v-if="total > 12" class="pager">
-      <NPagination
-        :page="page"
-        :item-count="total"
-        :page-size="12"
-        @update:page="(val: number) => (page = val)"
+  <ArPage
+    maxWidth="1440px"
+    padding="0 var(--content-padding) var(--spacing-lg)"
+    style="margin: 0 auto"
+  >
+    <ArVBox gap="var(--section-gap)">
+      <!-- Zone 1: 轮播图 -->
+      <HeroCarousel
+        v-if="hotPosts.length > 0"
+        :posts="hotPosts"
+        :interval="HOT_ROTATE_INTERVAL_MS"
       />
-    </div>
-  </div>
+
+      <!-- Zone 2: 热门标签云 -->
+      <TrendingTags
+        v-if="trendingTags.length > 0"
+        :tags="trendingTags"
+        @select="handleTagSelect"
+        @create="handleCreate"
+      />
+
+      <!-- Zone 3: 观看历史 -->
+      <WatchHistoryStack
+        v-if="historyItems.length > 0 && userStore.isLoggedIn"
+        :items="historyItems"
+        @open="handleHistoryOpen"
+      />
+
+      <!-- Zone 4: 推荐内容 -->
+      <ArVBox v-if="posts.length > 0" gap="var(--spacing-md)">
+        <h3
+          style="
+            margin: 0;
+            font-size: 18px;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+          "
+        >
+          推荐内容
+        </h3>
+        <ArHBox wrap gap="var(--spacing-md)">
+          <div v-for="(post, index) in posts" :key="post.id" style="flex: 1; min-width: 200px">
+            <PostCardForCompact :post="post" :delay="index * 60" @open="openPost(post)" />
+          </div>
+        </ArHBox>
+      </ArVBox>
+
+      <!-- 空状态 -->
+      <div
+        v-if="posts.length === 0"
+        style="color: var(--text-tertiary); padding: var(--spacing-md) 0"
+      >
+        暂无内容
+      </div>
+
+      <!-- 分页 -->
+      <ArHBox v-if="total > 12" justify="center" style="padding-top: var(--spacing-sm)">
+        <NPagination
+          :page="page"
+          :item-count="total"
+          :page-size="12"
+          @update:page="(val: number) => (page = val)"
+        />
+      </ArHBox>
+    </ArVBox>
+  </ArPage>
 </template>
-
-<style scoped>
-.home-page {
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--section-gap);
-  padding: 0 var(--content-padding) var(--spacing-lg);
-  font-family: var(--font-sans);
-}
-
-.post-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.section-head h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-}
-
-/* ── CSS Grid 弹性网格 ── */
-.post-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--spacing-md);
-}
-
-.grid-item {
-  animation: grid-in 0.5s var(--ease-out-smooth) both;
-}
-
-@keyframes grid-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.pager {
-  display: flex;
-  justify-content: center;
-  padding-top: var(--spacing-sm);
-}
-
-.empty {
-  color: var(--text-tertiary);
-  padding: var(--spacing-md) 0;
-}
-
-/* ── 响应式 ── */
-@media (max-width: 700px) {
-  .post-grid {
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  }
-}
-
-@media (max-width: 520px) {
-  .post-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import ArInput from '@/components/ui/ArInput.vue'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArTag from '@/components/ui/ArTag.vue'
-import RichTextEditor from './RichTextEditor.vue'
 import type { BlogPost, CreatePostPayload, UpdatePostPayload } from '@/components/logic/api'
 
 const props = withDefaults(
@@ -134,7 +133,12 @@ defineExpose({
     <!-- 内容 -->
     <div class="editor-field">
       <label class="field-label">正文</label>
-      <RichTextEditor v-model="content" placeholder="开始写下你的想法……" />
+      <textarea
+        v-model="content"
+        class="field-textarea editor-textarea"
+        placeholder="开始写下你的想法……"
+        rows="16"
+      />
     </div>
 
     <!-- 标签 -->
@@ -242,6 +246,12 @@ defineExpose({
 
 .field-textarea::placeholder {
   color: var(--text-quaternary);
+}
+
+.editor-textarea {
+  min-height: 320px;
+  font-family: var(--font-mono, var(--font-sans));
+  line-height: 1.7;
 }
 
 .tag-input-row {

@@ -24,9 +24,8 @@ function handleSelect(post: BlogPost) {
 <template>
   <ArCarousel3D :items="posts" :interval="interval" @select="handleSelect">
     <template #card="{ item: post, showOverlay }">
-      <PostCard
+      <PostCardForShowcase
         :post="post"
-        mode="showcase"
         :show-overlay="showOverlay"
         @open="emit('open', post)"
       />
