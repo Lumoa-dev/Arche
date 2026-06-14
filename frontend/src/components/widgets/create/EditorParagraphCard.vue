@@ -173,19 +173,25 @@ function stripHtml(html: string): string {
     </div>
   </div>
 
-    <!-- 右侧拖拽手柄 -->
+    <!-- 右侧拖拽轨道（窄条，悬停浮现） -->
     <div
-      class="drag-handle"
+      class="drag-rail"
       draggable="true"
       title="拖拽排序"
       @dragstart="handleDragStart"
       @dragend="handleDragEnd"
     >
-      <svg width="14" height="18" viewBox="0 0 14 18" fill="currentColor" opacity="0.35">
-        <circle cx="4" cy="3" r="1.5" /><circle cx="10" cy="3" r="1.5" />
-        <circle cx="4" cy="9" r="1.5" /><circle cx="10" cy="9" r="1.5" />
-        <circle cx="4" cy="15" r="1.5" /><circle cx="10" cy="15" r="1.5" />
+      <!-- 手柄图标（竖直六点） -->
+      <svg class="drag-rail__icon" width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="3" cy="4" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="9" cy="4" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="3" cy="10" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="3" cy="16" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="9" cy="16" r="1.5" fill="currentColor" stroke="none" />
       </svg>
+      <!-- 轨道装饰线（拖拽时浮现） -->
+      <div class="drag-rail__track" />
     </div>
   </div>
 </template>
@@ -240,29 +246,78 @@ function stripHtml(html: string): string {
   min-width: 0;
 }
 
-/* ── 拖拽手柄（右侧） ── */
+/* ── 拖拽轨道（右侧窄条） ── */
 
-.drag-handle {
+.drag-rail {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  width: 20px;
   flex-shrink: 0;
   cursor: grab;
   color: var(--text-tertiary);
-  transition: color var(--transition-fast), background var(--transition-fast);
-  border-left: 1px solid var(--border-color);
+  border-left: 1px solid transparent;
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   user-select: none;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    width var(--transition-fast);
 }
 
-.drag-handle:hover {
-  color: var(--text-primary);
+/* 默认隐藏，只有 hover 卡片时才露出 */
+.drag-rail__icon {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.drag-rail__track {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: transparent;
+  border-radius: 1px;
+  transition: background var(--transition-fast);
+}
+
+.paragraph-card:hover .drag-rail {
+  border-left-color: var(--border-color);
   background: var(--surface-hover-color);
 }
 
-.drag-handle:active {
+.paragraph-card:hover .drag-rail__icon {
+  opacity: 0.5;
+}
+
+.drag-rail:hover .drag-rail__icon {
+  opacity: 0.8;
+  color: var(--text-primary);
+}
+
+.drag-rail:active {
   cursor: grabbing;
+}
+
+/* 拖拽中：轨道高亮，显示竖线导轨 */
+.paragraph-card--dragging .drag-rail {
+  background: var(--primary-light-color, rgba(102, 126, 234, 0.08));
+  border-left-color: var(--primary-color);
+}
+
+.paragraph-card--dragging .drag-rail__icon {
+  opacity: 0.8;
+  color: var(--primary-color);
+}
+
+.paragraph-card--dragging .drag-rail__track {
+  background: var(--primary-color);
+  opacity: 0.3;
 }
 
 /* ── 控制栏 ── */
