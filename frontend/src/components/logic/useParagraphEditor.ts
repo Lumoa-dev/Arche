@@ -28,7 +28,6 @@ export interface EditorParagraph {
   caption?: string // 媒体说明文字
 }
 
-
 /** 编辑器完整状态 */
 export interface EditorState {
   postId: string | null // null = 新建
@@ -214,11 +213,13 @@ export function useParagraphEditor() {
     title.value = ''
     subtitles.value = []
     introduction.value = ''
-    paragraphs.value = [{
-      uid: generateUid(),
-      type: 'text',
-      content: ''
-    }]
+    paragraphs.value = [
+      {
+        uid: generateUid(),
+        type: 'text',
+        content: ''
+      }
+    ]
     coverUrl.value = ''
     tags.value = []
     requiredLevel.value = 5
@@ -242,10 +243,7 @@ export function useParagraphEditor() {
         ...(p.caption ? { caption: p.caption } : {})
       }))
 
-      const introductionData =
-        introduction.value.trim().length > 0
-          ? introduction.value
-          : undefined
+      const introductionData = introduction.value.trim().length > 0 ? introduction.value : undefined
 
       const payload: CreatePostPayload = {
         title: title.value.trim(),

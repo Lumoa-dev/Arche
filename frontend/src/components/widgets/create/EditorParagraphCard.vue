@@ -6,7 +6,6 @@
  * 左侧拖拽手柄（仅上下拖拽），右侧浮出控制栏含预览切换按钮。
  */
 import { ref } from 'vue'
-import ArDropIndicator from '@/components/ui/ArDropIndicator.vue'
 import CardToolbar from './CardToolbar.vue'
 import RichTextEditor from './RichTextEditor.vue'
 import EditorImageUploader from './EditorImageUploader.vue'
@@ -31,11 +30,8 @@ const emit = defineEmits<{
   'update:caption': [uid: string, caption: string]
   ready: [uid: string, editor: Editor]
   focus: [uid: string, editor: Editor]
-  dropOn: [draggedUid: string, targetUid: string]
 }>()
 
-const isDragOver = ref(false)
-const isDragging = ref(false)
 const isPreview = ref(false)
 
 function onTypeChange(type: ParagraphType) {
@@ -44,39 +40,6 @@ function onTypeChange(type: ParagraphType) {
 
 function togglePreview() {
   isPreview.value = !isPreview.value
-}
-
-/* ── 拖拽 ── */
-
-function handleDragStart(e: DragEvent) {
-  e.dataTransfer?.setData('text/plain', props.paragraph.uid)
-  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
-  isDragging.value = true
-}
-
-function handleDragEnd() {
-  isDragging.value = false
-  isDragOver.value = false
-}
-
-function handleDragOver(e: DragEvent) {
-  e.preventDefault()
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
-  isDragOver.value = true
-}
-
-function handleDragLeave() {
-  isDragOver.value = false
-}
-
-function handleDrop(e: DragEvent) {
-  e.preventDefault()
-  isDragOver.value = false
-  isDragging.value = false
-  const draggedUid = e.dataTransfer?.getData('text/plain')
-  if (draggedUid && draggedUid !== props.paragraph.uid) {
-    emit('dropOn', draggedUid, props.paragraph.uid)
-  }
 }
 
 function stripHtml(html: string): string {
@@ -89,14 +52,8 @@ function stripHtml(html: string): string {
 <template>
   <div
     class="paragraph-card"
-    :class="{
-      'paragraph-card--drag-over': isDragOver,
-      'paragraph-card--dragging': isDragging,
-      'paragraph-card--preview': isPreview
-    }"
+    :class="{ 'paragraph-card--preview': isPreview }"
   >
-    <!-- 拖拽放置指示线 -->
-    <ArDropIndicator v-if="isDragOver" label="移动到此" />
 
     <!-- 卡片主体（flex row: 内容区 + 右侧操作栏） -->
     <div class="paragraph-card__inner">
@@ -126,52 +83,57 @@ function stripHtml(html: string): string {
               @ready="(ed: Editor) => emit('ready', paragraph.uid, ed)"
               @focus="(uid: string, ed: Editor) => emit('focus', uid, ed)"
             />
-          <EditorImageUploader
-            v-else-if="paragraph.type === 'image'"
-            :media-url="paragraph.media_url || ''"
-            :caption="paragraph.caption || ''"
-            @update:media-url="emit('update:mediaUrl', paragraph.uid, $event)"
-            @update:caption="emit('update:caption', paragraph.uid, $event)"
-          />
-          <EditorVideoUrlInput
-            v-else-if="paragraph.type === 'video'"
-            :media-url="paragraph.media_url || ''"
-            @update:media-url="emit('update:mediaUrl', paragraph.uid, $event)"
-          />
-          <EditorCodeEditor
-            v-else-if="paragraph.type === 'code'"
-            :content="paragraph.content"
-            @update:content="emit('update:content', paragraph.uid, $event)"
-          />
-          <div v-else-if="paragraph.type === 'separator'" style="padding: 12px 24px">
-            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 0" />
-          </div>
-          <div v-else-if="paragraph.type === 'table'" style="padding: 24px; text-align: center; color: var(--text-tertiary)">
-            表格编辑（即将支持）
-          </div>
-        </template>
+            <EditorImageUploader
+              v-else-if="paragraph.type === 'image'"
+              :media-url="paragraph.media_url || ''"
+              :caption="paragraph.caption || ''"
+              @update:media-url="emit('update:mediaUrl', paragraph.uid, $event)"
+              @update:caption="emit('update:caption', paragraph.uid, $event)"
+            />
+            <EditorVideoUrlInput
+              v-else-if="paragraph.type === 'video'"
+              :media-url="paragraph.media_url || ''"
+              @update:media-url="emit('update:mediaUrl', paragraph.uid, $event)"
+            />
+            <EditorCodeEditor
+              v-else-if="paragraph.type === 'code'"
+              :content="paragraph.content"
+              @update:content="emit('update:content', paragraph.uid, $event)"
+            />
+            <div v-else-if="paragraph.type === 'separator'" style="padding: 12px 24px">
+              <hr style="border: none; border-top: 1px solid var(--border-color); margin: 0" />
+            </div>
+            <div
+              v-else-if="paragraph.type === 'table'"
+              style="padding: 24px; text-align: center; color: var(--text-tertiary)"
+            >
+              表格编辑（即将支持）
+            </div>
+          </template>
 
-        <!-- 预览模式 -->
-        <template v-else>
-          <div class="paragraph-preview">
-            <p v-if="paragraph.type === 'text' || paragraph.type === 'heading'">
-              {{ stripHtml(paragraph.content) || '（空段落）' }}
-            </p>
-            <div v-else-if="paragraph.type === 'image'" class="preview-media">
-              <img v-if="paragraph.media_url" :src="paragraph.media_url" alt="" />
-              <span v-else>（图片占位）</span>
+          <!-- 预览模式 -->
+          <template v-else>
+            <div class="paragraph-preview">
+              <p v-if="paragraph.type === 'text' || paragraph.type === 'heading'">
+                {{ stripHtml(paragraph.content) || '（空段落）' }}
+              </p>
+              <div v-else-if="paragraph.type === 'image'" class="preview-media">
+                <img v-if="paragraph.media_url" :src="paragraph.media_url" alt="" />
+                <span v-else>（图片占位）</span>
+              </div>
+              <div v-else-if="paragraph.type === 'video'" class="preview-media">
+                <span>{{ paragraph.media_url ? '🎬 视频' : '（视频占位）' }}</span>
+              </div>
+              <code v-else-if="paragraph.type === 'code'">{{
+                paragraph.content || '（代码块）'
+              }}</code>
+              <span v-else-if="paragraph.type === 'separator'">━━━ 分隔线 ━━━</span>
+              <span v-else>{{ '（' + paragraph.type + '）' }}</span>
             </div>
-            <div v-else-if="paragraph.type === 'video'" class="preview-media">
-              <span>{{ paragraph.media_url ? '🎬 视频' : '（视频占位）' }}</span>
-            </div>
-            <code v-else-if="paragraph.type === 'code'">{{ paragraph.content || '（代码块）' }}</code>
-            <span v-else-if="paragraph.type === 'separator'">━━━ 分隔线 ━━━</span>
-            <span v-else>{{ '（' + paragraph.type + '）' }}</span>
-          </div>
-        </template>
+          </template>
+        </div>
       </div>
     </div>
-  </div>
 
     <!-- 右侧拖拽轨道（窄条，悬停浮现） -->
     <div
@@ -182,7 +144,16 @@ function stripHtml(html: string): string {
       @dragend="handleDragEnd"
     >
       <!-- 手柄图标（竖直六点） -->
-      <svg class="drag-rail__icon" width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <svg
+        class="drag-rail__icon"
+        width="12"
+        height="20"
+        viewBox="0 0 12 20"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+      >
         <circle cx="3" cy="4" r="1.5" fill="currentColor" stroke="none" />
         <circle cx="9" cy="4" r="1.5" fill="currentColor" stroke="none" />
         <circle cx="3" cy="10" r="1.5" fill="currentColor" stroke="none" />
@@ -198,6 +169,7 @@ function stripHtml(html: string): string {
 
 <style scoped>
 .paragraph-card {
+  display: flex;
   position: relative;
   margin-bottom: var(--spacing-md);
   border-radius: var(--radius-md);
@@ -212,21 +184,6 @@ function stripHtml(html: string): string {
 .paragraph-card:hover {
   border-color: var(--border-hover-color, rgba(0, 0, 0, 0.12));
   box-shadow: var(--card-shadow-glass);
-}
-
-.paragraph-card--dragging {
-  opacity: 0.4;
-}
-
-.paragraph-card--drag-over {
-  border-color: var(--primary-color);
-  box-shadow: var(--card-shadow-glass);
-  /* 「开合」效果：被悬停的卡片上方让出空间给指示线 */
-  padding-top: 32px;
-  transition:
-    padding-top 0.2s ease,
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
 }
 
 .paragraph-card--preview {
@@ -304,18 +261,24 @@ function stripHtml(html: string): string {
   cursor: grabbing;
 }
 
-/* 拖拽中：轨道高亮，显示竖线导轨 */
-.paragraph-card--dragging .drag-rail {
+/* SortableJS 拖拽中的 ghost 样式 */
+.sortable-ghost {
+  opacity: 0.4;
+  border-color: var(--primary-color);
+  box-shadow: var(--card-shadow-glass);
+}
+
+.sortable-ghost .drag-rail {
   background: var(--primary-light-color, rgba(102, 126, 234, 0.08));
   border-left-color: var(--primary-color);
 }
 
-.paragraph-card--dragging .drag-rail__icon {
+.sortable-ghost .drag-rail__icon {
   opacity: 0.8;
   color: var(--primary-color);
 }
 
-.paragraph-card--dragging .drag-rail__track {
+.sortable-ghost .drag-rail__track {
   background: var(--primary-color);
   opacity: 0.3;
 }

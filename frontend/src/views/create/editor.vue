@@ -7,6 +7,7 @@
  */
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import draggable from 'vuedraggable'
 import ArVBox from '@/components/ui/ArVBox.vue'
 import EditorToolbar from '@/components/widgets/create/EditorToolbar.vue'
 import EditorBody from '@/components/widgets/create/EditorBody.vue'
@@ -150,28 +151,39 @@ function toggleCover() {
         @update:model-value="editor.updateIntroduction($event)"
       />
 
-      <!-- 段落卡片列表 -->
-      <EditorParagraphCard
-        v-for="(para, idx) in editor.paragraphs.value"
-        :key="para.uid"
-        :paragraph="para"
-        :can-move-up="idx > 0"
-        :can-move-down="idx < editor.paragraphs.value.length - 1"
-        @update:type="(uid: string, type: any) => editor.setParagraphType(uid, type)"
-        @move-up="(uid: string) => editor.moveParagraphUp(uid)"
-        @move-down="(uid: string) => editor.moveParagraphDown(uid)"
-        @delete="(uid: string) => editor.removeParagraph(uid)"
-        @drop-on="(draggedUid: string, targetUid: string) => editor.moveParagraphTo(draggedUid, targetUid)"
-        @update:content="
-          (uid: string, content: string) => editor.updateParagraphContent(uid, content)
-        "
-        @update:media-url="(uid: string, url: string) => editor.updateParagraphMediaUrl(uid, url)"
-        @update:caption="
-          (uid: string, caption: string) => editor.updateParagraphCaption(uid, caption)
-        "
-        @ready="handleParagraphReady"
-        @focus="handleEditorFocus"
-      />
+      <!-- 段落卡片列表（SortableJS 拖拽排序） -->
+      <draggable
+        v-model="editor.paragraphs.value"
+        item-key="uid"
+        handle=".drag-rail"
+        direction="vertical"
+        :animation="200"
+        ghost-class="sortable-ghost"
+        :force-fallback="true"
+        fallback-tolerance="5"
+        @end="() => {}"
+      >
+        <template #item="{ element: para, index: idx }">
+          <EditorParagraphCard
+            :paragraph="para"
+            :can-move-up="idx > 0"
+            :can-move-down="idx < editor.paragraphs.value.length - 1"
+            @update:type="(uid: string, type: any) => editor.setParagraphType(uid, type)"
+            @move-up="(uid: string) => editor.moveParagraphUp(uid)"
+            @move-down="(uid: string) => editor.moveParagraphDown(uid)"
+            @delete="(uid: string) => editor.removeParagraph(uid)"
+            @update:content="
+              (uid: string, content: string) => editor.updateParagraphContent(uid, content)
+            "
+            @update:media-url="(uid: string, url: string) => editor.updateParagraphMediaUrl(uid, url)"
+            @update:caption="
+              (uid: string, caption: string) => editor.updateParagraphCaption(uid, caption)
+            "
+            @ready="handleParagraphReady"
+            @focus="handleEditorFocus"
+          />
+        </template>
+      </draggable>
     </EditorBody>
   </ArVBox>
 </template>

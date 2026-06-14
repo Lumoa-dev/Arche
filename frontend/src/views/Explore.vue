@@ -50,7 +50,10 @@ const convertBlogPostToExploreItem = (post: BlogPost, index: number): ExploreIte
     likes: post.likes || 0,
     favorites: Math.max(1, Math.round((post.likes || 0) * 0.65)),
     content: post.introduction ? post.introduction.replace(/<[^>]+>/g, '').trim() : '',
-    excerpt: (post.introduction ? post.introduction.replace(/<[^>]+>/g, '').trim() : '').slice(0, 60),
+    excerpt: (post.introduction ? post.introduction.replace(/<[^>]+>/g, '').trim() : '').slice(
+      0,
+      60
+    ),
     cover: gradientCovers[index % gradientCovers.length] ?? ''
   }
 }
