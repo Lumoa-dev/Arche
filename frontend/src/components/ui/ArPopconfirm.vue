@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { ArButton } from '@/components/ui'
+import ArButton from '@/components/ui/ArButton.vue'
 
 type ButtonType = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 type PopconfirmPlacement = 'top' | 'bottom'

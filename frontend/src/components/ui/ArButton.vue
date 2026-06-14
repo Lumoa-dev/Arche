@@ -207,18 +207,18 @@ function handleClick(e: MouseEvent) {
 
 /* ── danger ── */
 .ar-button--danger {
-  background-color: var(--error-color);
-  color: #fff;
-  border-color: var(--error-color);
+  background-color: var(--color-danger);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-danger);
 }
 .ar-button--danger:hover:not(.is-disabled) {
-  background-color: #a82e20;
-  border-color: #a82e20;
+  background-color: #c43a3a;
+  border-color: #c43a3a;
   box-shadow: var(--shadow-md);
 }
 .ar-button--danger:active:not(.is-disabled) {
-  background-color: #8a1a1a;
-  border-color: #8a1a1a;
+  background-color: #a82e20;
+  border-color: #a82e20;
 }
 
 /* ── spinner ── */

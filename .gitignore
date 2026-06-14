@@ -17,9 +17,6 @@ venv/
 
 # Trae IDE (track rules/skills/specs only)
 .trae/*
-!.trae/rules
-!.trae/skills
-!.trae/specs
 
 # Environment files (never commit secrets)
 .env
