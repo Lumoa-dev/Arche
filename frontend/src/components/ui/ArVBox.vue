@@ -4,6 +4,7 @@
  *
  * 类比 Qt 的 QVBoxLayout。子项默认纵向排列，
  * 配合 ArSpacer 可实现 Qt 风格的 stretch 控制。
+ * 直接作为 flex container，支持 style/class 透传。
  */
 withDefaults(
   defineProps<{

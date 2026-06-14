@@ -20,11 +20,13 @@ import { Image } from '@tiptap/extension-image'
 const props = defineProps<{
   modelValue: string
   placeholder?: string
+  uid?: string // 段落 uid，用于焦点追踪
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
   ready: [editor: Editor]
+  focus: [uid: string, editor: Editor]
 }>()
 
 const editor = useEditor({
@@ -32,9 +34,8 @@ const editor = useEditor({
   extensions: [
     StarterKit.configure({
       heading: { levels: [1, 2, 3, 4] },
-      codeBlock: false // 代码块走独立卡片
+      codeBlock: false
     }),
-    // 注：StarterKit 已包含 Underline，不重复添加
     TextStyle,
     FontFamily,
     Color,
@@ -50,8 +51,11 @@ const editor = useEditor({
     const html = ed.getHTML()
     emit('update:modelValue', html)
   },
-  onSelectionUpdate: () => {
-    // 选中变化时通知父组件（顶部工具栏联动）
+  onSelectionUpdate: ({ editor: ed }) => {
+    // 选中变化 = 编辑器获得焦点，通知父组件
+    if (props.uid) {
+      emit('focus', props.uid, ed)
+    }
   },
   onCreate: ({ editor: ed }) => {
     emit('ready', ed)

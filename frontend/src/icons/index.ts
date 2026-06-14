@@ -33,14 +33,18 @@ export {
 
 /* ── 编辑器专用 ── */
 export {
+  ChatbubbleOutline,
   CodeSlashOutline,
   ImageOutline,
-  VideocamOutline,
-  SaveOutline,
-  SendOutline,
-  ArrowUndoOutline,
-  ArrowRedoOutline,
   ListOutline,
   ColorPaletteOutline,
-  ColorFillOutline
+  RemoveOutline,
+  SaveOutline,
+  SendOutline,
+  TextOutline,
+  ArrowUndoOutline,
+  ArrowRedoOutline,
+  VideocamOutline
 } from '@vicons/ionicons5'
+
+export type { }

@@ -29,6 +29,7 @@ const emit = defineEmits<{
   'update:mediaUrl': [uid: string, url: string]
   'update:caption': [uid: string, caption: string]
   ready: [uid: string, editor: Editor]
+  focus: [uid: string, editor: Editor]
 }>()
 
 function onTypeChange(type: ParagraphType) {
@@ -53,9 +54,11 @@ function onTypeChange(type: ParagraphType) {
     <!-- 文本 / 标题 -->
     <RichTextEditor
       v-if="paragraph.type === 'text' || paragraph.type === 'heading'"
+      :uid="paragraph.uid"
       :model-value="paragraph.content"
       @update:model-value="emit('update:content', paragraph.uid, $event)"
       @ready="(ed: Editor) => emit('ready', paragraph.uid, ed)"
+      @focus="(uid: string, ed: Editor) => emit('focus', uid, ed)"
     />
 
     <!-- 图片 -->

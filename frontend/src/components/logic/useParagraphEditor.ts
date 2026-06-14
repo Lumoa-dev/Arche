@@ -227,7 +227,11 @@ export function useParagraphEditor() {
     title.value = ''
     subtitles.value = []
     introduction.value = []
-    paragraphs.value = []
+    paragraphs.value = [{
+      uid: generateUid(),
+      type: 'text',
+      content: ''
+    }]
     coverUrl.value = ''
     tags.value = []
     requiredLevel.value = 5

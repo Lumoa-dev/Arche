@@ -25,6 +25,8 @@ const editor = useParagraphEditor()
 /** 各段落 uid → TipTap editor 实例映射（供工具栏联动） */
 const editorMap = ref<Record<string, Editor>>({})
 const hasActiveEditor = computed(() => Object.keys(editorMap.value).length > 0)
+/** 当前聚焦的编辑器实例 */
+const activeEditor = ref<Editor | null>(null)
 
 const isEditing = computed(() => !!route.query.postId)
 
@@ -62,6 +64,45 @@ function handleParagraphReady(uid: string, ed: Editor) {
   editorMap.value[uid] = ed
 }
 
+function handleEditorFocus(uid: string, ed: Editor) {
+  activeEditor.value = ed
+}
+
+/**
+ * 执行工具栏格式化命令
+ * 直接调用当前聚焦编辑器对应的 TipTap 命令
+ */
+function execCommand(cmd: string) {
+  const ed = activeEditor.value
+  if (!ed) return
+  const chain = ed.chain().focus()
+  // 常用排版命令映射
+  const cmdMap: Record<string, () => void> = {
+    toggleBold: () => chain.toggleBold().run(),
+    toggleItalic: () => chain.toggleItalic().run(),
+    toggleUnderline: () => chain.toggleUnderline().run(),
+    toggleStrike: () => chain.toggleStrike().run(),
+    toggleCode: () => chain.toggleCode().run(),
+    toggleBlockquote: () => chain.toggleBlockquote().run(),
+    toggleBulletList: () => chain.toggleBulletList().run(),
+    toggleOrderedList: () => chain.toggleOrderedList().run(),
+    setTextAlignLeft: () => chain.setTextAlign('left').run(),
+    setTextAlignCenter: () => chain.setTextAlign('center').run(),
+    setTextAlignRight: () => chain.setTextAlign('right').run(),
+    toggleHeading1: () => chain.toggleHeading({ level: 1 }).run(),
+    toggleHeading2: () => chain.toggleHeading({ level: 2 }).run(),
+    toggleHeading3: () => chain.toggleHeading({ level: 3 }).run(),
+    toggleHeading4: () => chain.toggleHeading({ level: 4 }).run(),
+    undo: () => chain.undo().run(),
+    redo: () => chain.redo().run(),
+    setColor: () => {
+      // 文字颜色：弹出取色器，暂用默认红色
+      chain.setColor('#b83a2a').run()
+    }
+  }
+  cmdMap[cmd]?.()
+}
+
 function toggleCover() {
   showCover.value = !showCover.value
 }
@@ -74,6 +115,7 @@ function toggleCover() {
       :has-active-editor="hasActiveEditor"
       :saving="editor.saving.value"
       :is-edit="isEditing"
+      :exec-command="execCommand"
       @cancel="handleCancel"
       @insert="(type: any) => editor.addParagraph(type)"
       @insert-separator="() => editor.addParagraph('separator')"
@@ -133,6 +175,7 @@ function toggleCover() {
           (uid: string, caption: string) => editor.updateParagraphCaption(uid, caption)
         "
         @ready="handleParagraphReady"
+        @focus="handleEditorFocus"
       />
     </EditorBody>
   </ArVBox>

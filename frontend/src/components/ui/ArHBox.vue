@@ -4,7 +4,7 @@
  *
  * 类比 Qt 的 QHBoxLayout。子项默认依次横向排列，
  * 配合 ArSpacer 可实现 Qt 风格的 stretch 控制。
- * 不使用多余 DOM 包裹，直接作为 flex container。
+ * 直接作为 flex container，支持 style/class 透传。
  */
 withDefaults(
   defineProps<{
