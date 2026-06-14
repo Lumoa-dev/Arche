@@ -249,10 +249,18 @@ function handleClick(e: Event) {
 /* ════════════════════════════════════════
    圆角档位
    ════════════════════════════════════════ */
-.ar-card--radius-none { border-radius: 0; }
-.ar-card--radius-sm   { border-radius: var(--radius-sm); }
-.ar-card--radius-md   { border-radius: var(--radius-lg); }
-.ar-card--radius-lg   { border-radius: var(--radius-xl); }
+.ar-card--radius-none {
+  border-radius: 0;
+}
+.ar-card--radius-sm {
+  border-radius: var(--radius-sm);
+}
+.ar-card--radius-md {
+  border-radius: var(--radius-lg);
+}
+.ar-card--radius-lg {
+  border-radius: var(--radius-xl);
+}
 
 /* ════════════════════════════════════════
    内部区块 — 五区布局

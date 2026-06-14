@@ -47,9 +47,7 @@ const classes = computed(() => [
   `ar-button--${props.type}`,
   `ar-button--${props.size}`,
   // 纯图标按钮强制方型
-  props.icon || props.shape === 'square'
-    ? 'ar-button--square'
-    : `ar-button--${props.shape}`,
+  props.icon || props.shape === 'square' ? 'ar-button--square' : `ar-button--${props.shape}`,
   {
     'ar-button--icon': props.icon,
     'ar-button--loading': props.loading,
@@ -318,7 +316,11 @@ function handleClick(e: MouseEvent) {
 }
 
 @keyframes ar-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

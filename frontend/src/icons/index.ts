@@ -47,4 +47,4 @@ export {
   VideocamOutline
 } from '@vicons/ionicons5'
 
-export type { }
+export type {}

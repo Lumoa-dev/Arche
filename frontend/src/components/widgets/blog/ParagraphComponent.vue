@@ -43,15 +43,14 @@ function renderContent(text: string): string {
       <p>{{ paragraph.content }}</p>
     </blockquote>
     <figure v-else-if="paragraph.type === 'video'" class="paragraph-video">
-      <iframe
-        :src="paragraph.media_url"
-        frameborder="0"
-        allowfullscreen
-        loading="lazy"
-      />
+      <iframe :src="paragraph.media_url" frameborder="0" allowfullscreen loading="lazy" />
       <figcaption v-if="paragraph.caption">{{ paragraph.caption }}</figcaption>
     </figure>
-    <div v-else-if="paragraph.type === 'table'" class="paragraph-text" v-html="renderContent(paragraph.content)" />
+    <div
+      v-else-if="paragraph.type === 'table'"
+      class="paragraph-text"
+      v-html="renderContent(paragraph.content)"
+    />
     <hr v-else-if="paragraph.type === 'separator'" class="paragraph-separator" />
     <h3 v-else-if="paragraph.type === 'heading'" class="paragraph-heading">
       {{ paragraph.content }}
@@ -340,7 +339,7 @@ function renderContent(text: string): string {
   left: 0;
   right: 0;
   padding: 8px 12px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
   font-size: 13px;
   text-align: center;

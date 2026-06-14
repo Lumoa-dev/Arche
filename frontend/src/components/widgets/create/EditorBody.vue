@@ -59,10 +59,7 @@ function handleDrop(e: DragEvent) {
     @drop.prevent="handleDrop"
   >
     <!-- 内层的「纸面」— 居中、白底、阴影 -->
-    <div
-      class="editor-paper"
-      :class="{ 'editor-paper--drag-over': isDragOver }"
-    >
+    <div class="editor-paper" :class="{ 'editor-paper--drag-over': isDragOver }">
       <slot />
     </div>
   </div>
