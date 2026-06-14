@@ -113,6 +113,17 @@ export function useParagraphEditor() {
     }
   }
 
+  /** 拖拽移动段落：将 uid 移动到 targetUid 所在位置 */
+  function moveParagraphTo(uid: string, targetUid: string) {
+    if (uid === targetUid) return
+    const fromIdx = paragraphs.value.findIndex((p) => p.uid === uid)
+    const toIdx = paragraphs.value.findIndex((p) => p.uid === targetUid)
+    if (fromIdx === -1 || toIdx === -1) return
+    const [item] = paragraphs.value.splice(fromIdx, 1)
+    const adjustedTo = fromIdx < toIdx ? toIdx - 1 : toIdx
+    paragraphs.value.splice(adjustedTo, 0, item)
+  }
+
   /** 切换段落类型 */
   function setParagraphType(uid: string, type: ParagraphType) {
     const para = paragraphs.value.find((p) => p.uid === uid)
@@ -284,6 +295,7 @@ export function useParagraphEditor() {
     removeParagraph,
     moveParagraphUp,
     moveParagraphDown,
+    moveParagraphTo,
     setParagraphType,
     updateParagraphContent,
     updateParagraphMediaUrl,

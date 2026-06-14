@@ -161,6 +161,7 @@ function toggleCover() {
         @move-up="(uid: string) => editor.moveParagraphUp(uid)"
         @move-down="(uid: string) => editor.moveParagraphDown(uid)"
         @delete="(uid: string) => editor.removeParagraph(uid)"
+        @drop-on="(draggedUid: string, targetUid: string) => editor.moveParagraphTo(draggedUid, targetUid)"
         @update:content="
           (uid: string, content: string) => editor.updateParagraphContent(uid, content)
         "

@@ -6,7 +6,7 @@
  * 以流动式 inline 编辑区呈现，视觉上"长"在标题与正文之间。
  * 使用轻量 TipTap 编辑，与段落编辑器共享排版能力。
  */
-import { watch, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import { StarterKit } from '@tiptap/starter-kit'
 import { TextAlign } from '@tiptap/extension-text-align'
@@ -44,6 +44,13 @@ const editor = useEditor({
   }
 })
 
+const editorWrapper = ref<HTMLElement | null>(null)
+
+/** 点击标签时聚焦编辑器 */
+function focusEditor() {
+  editor.value?.commands.focus()
+}
+
 watch(
   () => props.modelValue,
   (val) => {
@@ -60,8 +67,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="intro-section">
-    <!-- 轻标签：纯文字标识 -->
-    <div class="intro-label">引言</div>
+    <!-- 标签：点击聚焦编辑器 -->
+    <div class="intro-label" @click="focusEditor">引言</div>
     <!-- 编辑区：无边框无背景，flow 在文档流中 -->
     <EditorContent :editor="editor" class="intro-editor-wrapper" />
   </div>
@@ -81,6 +88,11 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   margin-bottom: var(--spacing-xs);
   user-select: none;
+  cursor: pointer;
+}
+
+.intro-label:hover {
+  color: var(--text-secondary);
 }
 
 .intro-editor-wrapper {
