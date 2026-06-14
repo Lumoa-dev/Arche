@@ -35,6 +35,12 @@ const emit = defineEmits<{
   publish: []
   cancel: []
 }>()
+
+/** 拖拽插入：给 dataTransfer 写入段落类型 */
+function handleDragStart(type: ParagraphType, e: DragEvent) {
+  e.dataTransfer?.setData('text/plain', `paragraph:${type}`)
+  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy'
+}
 </script>
 
 <template>
@@ -313,42 +319,35 @@ const emit = defineEmits<{
 
     <!-- ── 插入 ── -->
     <div class="toolbar-group">
-      <ArButton
-        size="xs"
-        type="ghost"
-        icon
-        title="插入段落"
-        :disabled="!hasActiveEditor"
-        @click="emit('insert', 'text')"
-      >
-        <template #icon>
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M12 5v14" />
-            <path d="M5 12h14" />
-          </svg>
-        </template>
-      </ArButton>
-      <ArButton size="xs" type="ghost" icon title="插入图片" @click="emit('insert', 'image')">
-        <template #icon><ImageOutline /></template>
-      </ArButton>
-      <ArButton size="xs" type="ghost" icon title="插入视频" @click="emit('insert', 'video')">
-        <template #icon><VideocamOutline /></template>
-      </ArButton>
-      <ArButton size="xs" type="ghost" icon title="插入代码块" @click="emit('insert', 'code')">
-        <template #icon><CodeSlashOutline /></template>
-      </ArButton>
-      <ArButton size="xs" type="ghost" icon title="插入分隔线" @click="emit('insertSeparator')">
-        <template #icon><RemoveOutline /></template>
-      </ArButton>
+      <span draggable="true" @dragstart="handleDragStart('text', $event)" style="display:inline-flex" title="拖拽插入段落">
+        <ArButton size="xs" type="ghost" icon title="插入段落" :disabled="!hasActiveEditor" @click="emit('insert', 'text')">
+          <template #icon>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14" /><path d="M5 12h14" />
+            </svg>
+          </template>
+        </ArButton>
+      </span>
+      <span draggable="true" @dragstart="handleDragStart('image', $event)" style="display:inline-flex" title="拖拽插入图片">
+        <ArButton size="xs" type="ghost" icon title="插入图片" @click="emit('insert', 'image')">
+          <template #icon><ImageOutline /></template>
+        </ArButton>
+      </span>
+      <span draggable="true" @dragstart="handleDragStart('video', $event)" style="display:inline-flex" title="拖拽插入视频">
+        <ArButton size="xs" type="ghost" icon title="插入视频" @click="emit('insert', 'video')">
+          <template #icon><VideocamOutline /></template>
+        </ArButton>
+      </span>
+      <span draggable="true" @dragstart="handleDragStart('code', $event)" style="display:inline-flex" title="拖拽插入代码块">
+        <ArButton size="xs" type="ghost" icon title="插入代码块" @click="emit('insert', 'code')">
+          <template #icon><CodeSlashOutline /></template>
+        </ArButton>
+      </span>
+      <span draggable="true" @dragstart="handleDragStart('separator', $event)" style="display:inline-flex" title="拖拽插入分隔线">
+        <ArButton size="xs" type="ghost" icon title="插入分隔线" @click="emit('insertSeparator')">
+          <template #icon><RemoveOutline /></template>
+        </ArButton>
+      </span>
       <ArButton size="xs" type="ghost" icon title="设置封面" @click="emit('toggleCover')">
         <template #icon>
           <svg

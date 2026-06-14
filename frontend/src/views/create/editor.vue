@@ -15,7 +15,7 @@ import EditorCoverArea from '@/components/widgets/create/EditorCoverArea.vue'
 import EditorTitleArea from '@/components/widgets/create/EditorTitleArea.vue'
 import EditorIntroductionCard from '@/components/widgets/create/EditorIntroductionCard.vue'
 import EditorParagraphCard from '@/components/widgets/create/EditorParagraphCard.vue'
-import { useParagraphEditor } from '@/components/logic/useParagraphEditor'
+import { useParagraphEditor, type ParagraphType } from '@/components/logic/useParagraphEditor'
 import type { Editor } from '@tiptap/vue-3'
 
 const route = useRoute()
@@ -107,6 +107,15 @@ function execCommand(cmd: string) {
 function toggleCover() {
   showCover.value = !showCover.value
 }
+
+/** 处理从工具栏拖拽插入的段落 */
+function handleExternalDrop(evt: any) {
+  const raw = evt.element as string
+  if (typeof raw !== 'string' || !raw.startsWith('paragraph:')) return
+  const type = raw.replace('paragraph:', '') as ParagraphType
+  editor.paragraphs.value.splice(evt.newIndex, 1)
+  editor.addParagraph(type, evt.newIndex)
+}
 </script>
 
 <template>
@@ -159,8 +168,10 @@ function toggleCover() {
         direction="vertical"
         :animation="200"
         ghost-class="sortable-ghost"
+        group="editor-paragraphs"
         :force-fallback="true"
         fallback-tolerance="5"
+        @add="handleExternalDrop"
       >
         <template #item="{ element: para, index: idx }">
           <EditorParagraphCard
