@@ -100,6 +100,26 @@ class AuthService:
             settings = UserSettings(user_id=user_id)
             session.add(settings)
 
+            # 第一个用户（P0）预填所有页面权限
+            if is_first_user:
+                from backend.plugins.auth.models import PageComponentPermission
+
+                all_pages = [
+                    "home", "explore", "create", "assets", "scheduler",
+                    "profile", "posts", "creator",
+                    "console", "admin_users", "admin_content", "admin_ops",
+                    "admin_permissions", "tasks",
+                ]
+                for page_name in all_pages:
+                    session.add(
+                        PageComponentPermission(
+                            level=0,
+                            page_name=page_name,
+                            component_name="page",
+                            visible=True,
+                        )
+                    )
+
             await session.commit()
             await session.refresh(user)
 
