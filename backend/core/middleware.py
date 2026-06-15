@@ -130,6 +130,24 @@ def setup_security_headers(app: FastAPI) -> None:
     app.add_middleware(SecurityHeadersMiddleware)
 
 
+def get_real_ip(request: Request) -> str:
+    """获取客户端真实 IP。
+
+    优先级：X-Real-IP → X-Forwarded-For 首个 IP → request.client.host。
+    在 nginx 反代环境下，request.client.host 拿到的是容器内网 IP，
+    而 X-Real-IP 由 nginx 的 $remote_addr 注入，能反映真实客户端地址。
+    """
+    real_ip = request.headers.get("X-Real-IP", "")
+    if real_ip:
+        return real_ip
+
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+
+    return request.client.host if request.client else ""
+
+
 def get_current_user(request: Request) -> dict[str, Any] | None:
     """从 request.state 获取当前用户信息（由 auth 中间件注入）。"""
     return getattr(request.state, "user", None)

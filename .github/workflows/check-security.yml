@@ -1,21 +1,22 @@
-name: Security
+name: Check Security
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
-  # ── 变更检测 ──
-  changes:
+  # ── 找改动（判断跑哪些扫描） ──
+  find-changes:
     runs-on: ubuntu-latest
     outputs:
       languages: ${{ steps.build.outputs.languages }}
-      run-bandit: ${{ steps.build.outputs.bandit }}
+      run-py-scan: ${{ steps.build.outputs.run-py-scan }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Detect code changes
+      - name: Find changed code
         id: filter
         uses: dorny/paths-filter@v4.0.1
         with:
@@ -32,36 +33,36 @@ jobs:
               - 'frontend/tsconfig*.json'
               - 'frontend/vite.config.ts'
 
-      - name: Build language matrix
+      - name: Build language list
         id: build
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo 'languages=["python","javascript"]' >> $GITHUB_OUTPUT
-            echo "bandit=true" >> $GITHUB_OUTPUT
+            echo "run-py-scan=true" >> $GITHUB_OUTPUT
           else
             CHANGES='${{ steps.filter.outputs.changes }}'
             echo "languages=$CHANGES" >> $GITHUB_OUTPUT
 
             if echo "$CHANGES" | jq -e 'contains(["python"])' > /dev/null 2>&1; then
-              echo "bandit=true" >> $GITHUB_OUTPUT
+              echo "run-py-scan=true" >> $GITHUB_OUTPUT
             else
-              echo "bandit=false" >> $GITHUB_OUTPUT
+              echo "run-py-scan=false" >> $GITHUB_OUTPUT
             fi
           fi
 
-  # ── Bandit ──
-  bandit:
-    needs: [changes]
-    if: needs.changes.outputs.run-bandit == 'true'
+  # ── 扫 Python 安全 ──
+  scan-py:
+    needs: [find-changes]
+    if: needs.find-changes.outputs.run-py-scan == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v8.0.0
         with:
           enable-cache: true
-      - name: Install dependencies
+      - name: Install deps
         run: uv sync --frozen
-      - name: Run Bandit security scan
+      - name: Run security scan
         run: >
           uv run bandit -r backend/
           --skip B101,B311
@@ -69,13 +70,15 @@ jobs:
           --severity-level high
           --quiet
 
-  # ── CodeQL（按语言过滤） ──
-  codeql:
-    needs: [changes]
-    if: needs.changes.outputs.languages != '[]'
+  # ── 扫代码（CodeQL，PR 才跑） ──
+  scan-code:
+    needs: [find-changes]
+    if: |
+      needs.find-changes.outputs.languages != '[]' &&
+      github.event_name != 'push'
     strategy:
       matrix:
-        language: ${{ fromJSON(needs.changes.outputs.languages) }}
+        language: ${{ fromJSON(needs.find-changes.outputs.languages) }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -90,15 +93,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Initialize CodeQL
+      - name: Init scan
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
 
-      - name: Autobuild
+      - name: Auto build
         uses: github/codeql-action/autobuild@v4
 
-      - name: Perform CodeQL Analysis
+      - name: Run CodeQL scan
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
+

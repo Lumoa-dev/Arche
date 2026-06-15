@@ -1,0 +1,32 @@
+name: Test E2E
+
+on:
+  workflow_call:
+
+jobs:
+  test-e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.0.0
+        with:
+          enable-cache: true
+      - name: Install deps
+        run: uv sync --frozen
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps ${{ matrix.browser }}
+      - name: Start backend
+        run: |
+          uv run uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+          sleep 3
+      - name: Start frontend
+        working-directory: frontend
+        run: |
+          npm install
+          npm run dev -- --host 127.0.0.1 --port 5173 &
+          sleep 3
+      - name: Run E2E tests
+        run: uv run pytest backend/tests/e2e/ --browser=${{ matrix.browser }} --frontend-url=http://127.0.0.1:5173 --tb=short --no-header
