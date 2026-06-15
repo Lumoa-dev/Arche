@@ -31,11 +31,11 @@ async def get_health_status(request: Request):
         await service.cli_service._run_gh_command("GET", "/rate_limit", {})
         result["cli"]["available"] = True
     except Exception as e:
-        result["cli"]["error"] = str(e)
+        result["cli"]["error"] = str(e)  # type: ignore[assignment]
 
     # 测试 HTTP (跳过，因为可能超时)
     result["http"]["available"] = True
-    result["http"]["note"] = "HTTP 模式需手动测试"
+    result["http"]["note"] = "HTTP 模式需手动测试"  # type: ignore[assignment]
 
     return {
         "code": "ok",

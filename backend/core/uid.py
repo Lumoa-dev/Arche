@@ -14,7 +14,6 @@ from __future__ import annotations
 import re
 import uuid
 from dataclasses import dataclass
-from typing import Optional
 
 # ── 预注册前缀常量 ──
 SID_PREFIXES = {
@@ -80,7 +79,7 @@ def make_sid(
     return f"{prefix}-{formatted}"
 
 
-def parse_sid(sid: str) -> Optional[SidParts]:
+def parse_sid(sid: str) -> SidParts | None:
     """解析 SID 字符串，返回 SidParts；无法解析时返回 None。
 
     输入兼容以下格式：
@@ -119,7 +118,7 @@ def parse_sid(sid: str) -> Optional[SidParts]:
 
     # 3. 无前缀 → 尝试直接作为 UUID 或 raw hex 解析
     if prefix is None:
-        return _parse_as_raw_uuid(raw)
+        return _parse_as_raw_uuid(raw)  # type: ignore[func-returns-value]
 
     # 4. 有前缀，尝试提取二级分类
     #    规则：剩余部分的第一段如果是字母（且不是纯 hex），作为 category
@@ -145,7 +144,7 @@ def parse_sid(sid: str) -> Optional[SidParts]:
     return _build_sid_parts(prefix, category, raw_hex)
 
 
-def _parse_as_raw_uuid(raw: str) -> None:
+def _parse_as_raw_uuid(raw: str) -> None:  # noqa: ARG001
     """将无前缀的输入尝试解析为 UUID/hex。无前缀时返回 None，由调用方决定如何处理。"""
     return None
 
@@ -168,7 +167,7 @@ def _build_sid_parts(
     prefix: str | None,
     category: str | None,
     raw_hex: str,
-) -> Optional[SidParts]:
+) -> SidParts | None:
     """从解析片段构建 SidParts，失败时返回 None。"""
     if len(raw_hex) != 32:
         return None

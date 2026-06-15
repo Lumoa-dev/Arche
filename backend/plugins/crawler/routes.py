@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
-
 from fastapi import APIRouter, Query, Request
+from pydantic import BaseModel, Field
 
 from backend.core.container import ServiceContainer
 from backend.core.middleware import require_level

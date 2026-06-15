@@ -27,7 +27,7 @@ class SeedManager:
                 if url:
                     self.add_seed(url, source="env")
 
-    def add_seed(self, url: str, source: str = "manual") -> bool:
+    def add_seed(self, url: str, source: str = "manual") -> bool:  # noqa: ARG002
         """添加种子，返回是否成功。"""
         normalized = self._normalize(url)
         if not normalized:
@@ -68,7 +68,7 @@ class SeedManager:
                 return True
         return False
 
-    def add_to_blacklist(self, pattern: str, reason: str = "") -> None:
+    def add_to_blacklist(self, pattern: str, reason: str = "") -> None:  # noqa: ARG002
         """添加黑名单规则。"""
         if pattern not in self._blacklist:
             self._blacklist.append(pattern)
@@ -93,7 +93,7 @@ class SeedManager:
             return False
         return self.add_seed(url, source="sniff")
 
-    def discover_seeds_from_links(self, links: list[str], source_url: str) -> list[str]:
+    def discover_seeds_from_links(self, links: list[str], source_url: str) -> list[str]:  # noqa: ARG002
         """从页面链接中发现新种子。"""
         new_seeds = []
         for link in links:
@@ -124,7 +124,7 @@ class SeedManager:
             parsed = urlparse(url)
             if not parsed.scheme or not parsed.netloc:
                 return None
-            return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}{parsed.path.rstrip('/') or '/'}"
+            return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}{parsed.path.rstrip('/') or '/'}"  # noqa: E501
         except Exception:
             return None
 

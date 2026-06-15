@@ -22,7 +22,7 @@ class RequestStatsTracker:
     WINDOW_SECONDS = 60  # 统计窗口：1 分钟
     MAX_PATH_HISTORY = 500  # _path_stats_history 最大条目数
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
 
         # 当前分钟的时间戳（秒级，取整到分钟）

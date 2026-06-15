@@ -15,12 +15,12 @@ if TYPE_CHECKING:
 
 class ConfigMgmtPlugin(BasePlugin):
     name = "config_mgmt"
-    requires = ["auth"]
+    requires = None
 
     def setup(self, app) -> None:
         app.include_router(router)
 
-    def register_services(self, container: "ServiceContainer") -> None:
+    def register_services(self, container: ServiceContainer) -> None:
         pass
 
     def on_startup(self) -> None:

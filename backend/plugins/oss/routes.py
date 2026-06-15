@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Request, UploadFile, File, Form, Query
+from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from fastapi.responses import StreamingResponse
 
 from backend.core.container import ServiceContainer
-from backend.core.middleware import require_user, require_level
-
+from backend.core.middleware import require_level, require_user
 
 router = APIRouter(prefix="/api/oss", tags=["oss"])
 
@@ -21,7 +20,7 @@ router = APIRouter(prefix="/api/oss", tags=["oss"])
 @require_level(5)
 async def upload_file(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     is_private: bool = Form(default=False),
 ):
     """用户上传文件（流式写入 + 限速）。"""
@@ -93,7 +92,7 @@ async def list_my_files(
 async def external_upload(
     tenant_id: str,
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
 ):
     """外部租户写入文件。"""
     require_user(request)

@@ -13,13 +13,14 @@ from backend.plugins.oss.settings import OssSettings
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+
     from backend.core.container import ServiceContainer
 
 # 导入模型、路由、服务，确保在 create_all 前注册
 from backend.plugins.oss.models import OSSFile, UserOSSQuota  # noqa: F401
+from backend.plugins.oss.rate_limiter import RateLimiterManager
 from backend.plugins.oss.routes import router
 from backend.plugins.oss.services import StorageService
-from backend.plugins.oss.rate_limiter import RateLimiterManager
 
 logger = logging.getLogger(__name__)
 
@@ -27,18 +28,18 @@ logger = logging.getLogger(__name__)
 class OSSPlugin(BasePlugin):
     name = "oss"
     version = "0.2.0"
-    requires = []
-    optional = ["auth"]
+    requires = None
+    optional = ["auth"]  # noqa: RUF012
 
     def __init__(self):
         self._eviction_job = None
         self._rate_limiter = None
 
-    def setup(self, app: "FastAPI") -> None:
+    def setup(self, app: FastAPI) -> None:
         """注册路由。"""
         app.include_router(router)
 
-    def register_services(self, container: "ServiceContainer") -> None:
+    def register_services(self, container: ServiceContainer) -> None:
         """注册限速器 + StorageService 到容器。"""
         # 注册限速器
         config = container.get("config")
@@ -47,7 +48,7 @@ class OSSPlugin(BasePlugin):
         )
         rate_limiter = RateLimiterManager(global_rate=global_rate)
 
-        def _oss_rate_limiter_factory(c):
+        def _oss_rate_limiter_factory(c):  # noqa: ARG001
             return rate_limiter
 
         container.register("oss_rate_limiter", _oss_rate_limiter_factory)

@@ -13,7 +13,7 @@ class CloudProvider(ABC):
 
     name: str = ""
 
-    def __init__(self, credentials: dict | None = None) -> None:
+    def __init__(self, credentials: dict | None = None) -> None:  # noqa: B027
         """初始化 Provider，传入认证凭据（具体字段由 Provider 定义）。"""
         pass
 

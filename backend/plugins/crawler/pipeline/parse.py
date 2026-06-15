@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 
-from backend.plugins.crawler.pipeline.base import BaseStage, CrawlItem
 from backend.plugins.crawler.link_extractor import extract_links
+from backend.plugins.crawler.pipeline.base import BaseStage, CrawlItem
 
 
 class ParseStage(BaseStage):

@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import re
 
-
 DEFAULT_LOG_PATTERN = r"epoch\s+(\d+).*?loss\s*[:=]\s*([\d.]+)"
 HUGGINGFACE_LOG_PATTERN = r'"loss"\s*:\s*([\d.]+).*?"epoch"\s*:\s*([\d.]+)'
 

@@ -5,12 +5,12 @@ Revises: 004_config_entries
 Create Date: 2026-04-24
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.types import TypeDecorator, String
+from sqlalchemy.types import String, TypeDecorator
 
 
 class _UUIDString(TypeDecorator):
@@ -26,9 +26,9 @@ class _UUIDString(TypeDecorator):
 
 
 revision: str = "005_cloud_workspace"
-down_revision: Union[str, None] = "004_config_entries"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "004_config_entries"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

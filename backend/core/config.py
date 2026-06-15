@@ -17,17 +17,17 @@ class PluginSettingsRegistry:
     """插件配置注册表。"""
 
     def __init__(self) -> None:
-        self._registry: dict[str, type["BaseSettings"]] = {}
+        self._registry: dict[str, type[BaseSettings]] = {}
 
-    def register(self, name: str, settings_class: type["BaseSettings"]) -> None:
+    def register(self, name: str, settings_class: type[BaseSettings]) -> None:
         """注册插件配置类。"""
         self._registry[name] = settings_class
 
-    def get(self, name: str) -> type["BaseSettings"] | None:
+    def get(self, name: str) -> type[BaseSettings] | None:
         """获取插件配置类。"""
         return self._registry.get(name)
 
-    def get_all(self) -> dict[str, type["BaseSettings"]]:
+    def get_all(self) -> dict[str, type[BaseSettings]]:
         """获取所有注册的插件配置。"""
         return dict(self._registry)
 
@@ -43,16 +43,16 @@ class ConfigManager:
     分层：.env 文件 < 环境变量 < 数据库（缓存）
     """
 
-    _instance: "ConfigManager | None" = None
+    _instance: ConfigManager | None = None
 
-    def __new__(cls, env_file: str = ".env") -> "ConfigManager":
+    def __new__(cls, env_file: str = ".env") -> ConfigManager:  # noqa: ARG004
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
+            cls._instance._initialized = False  # type: ignore[has-type]
         return cls._instance
 
     def __init__(self, env_file: str = ".env") -> None:
-        if self._initialized:
+        if self._initialized:  # type: ignore[has-type]
             return
         self._initialized = True
 
@@ -109,8 +109,10 @@ class ConfigManager:
             return None
         try:
             import asyncio
-            from backend.core.models import ConfigEntry
+
             from sqlalchemy import select
+
+            from backend.core.models import ConfigEntry
 
             async def _query():
                 async with factory() as session:
@@ -174,7 +176,7 @@ class ConfigManager:
         return self._plugin_registry
 
     def register_plugin_settings(
-        self, name: str, settings_class: type["BaseSettings"]
+        self, name: str, settings_class: type[BaseSettings]
     ) -> None:
         """注册插件配置类。"""
         self._plugin_registry.register(name, settings_class)

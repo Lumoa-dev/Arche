@@ -5,16 +5,16 @@ Revises: 006_monitor_templates
 Create Date: 2026-04-25
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # 版本标识符
 revision: str = "007_blog_favorites"
-down_revision: Union[str, None] = "006_monitor_templates"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "006_monitor_templates"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

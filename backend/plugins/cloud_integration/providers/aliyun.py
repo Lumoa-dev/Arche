@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import time
 
 from backend.core.middleware import AppError
@@ -56,7 +57,7 @@ class AliyunProvider(CloudProvider):
 
             if not self._access_key_id or not self._access_key_secret:
                 raise AppError(
-                    "阿里云 AccessKey 未配置，请设置 ALIYUN_ACCESS_KEY_ID 和 ALIYUN_ACCESS_KEY_SECRET",
+                    "阿里云 AccessKey 未配置，请设置 ALIYUN_ACCESS_KEY_ID 和 ALIYUN_ACCESS_KEY_SECRET",  # noqa: E501
                     code="aliyun_credentials_missing",
                     status_code=500,
                 )
@@ -82,7 +83,7 @@ class AliyunProvider(CloudProvider):
         """创建 ECS GPU 实例。"""
         if not self._security_group_id or not self._vswitch_id or not self._image_id:
             raise AppError(
-                "阿里云 ECS 创建失败：缺少必要配置（security_group_id / vswitch_id / image_id）",
+                "阿里云 ECS 创建失败：缺少必要配置（security_group_id / vswitch_id / image_id）",  # noqa: E501
                 code="aliyun_config_missing",
                 status_code=500,
             )
@@ -182,10 +183,8 @@ class AliyunProvider(CloudProvider):
         request.set_accept_format("json")
         request.set_InstanceId(instance_id)
 
-        try:
+        with contextlib.suppress(Exception):
             await _run_sync(self._do_action, request)
-        except Exception:
-            pass
         self._instances.pop(instance_id, None)
 
     async def get_instance_status(self, instance_id: str) -> dict:

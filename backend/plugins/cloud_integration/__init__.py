@@ -15,13 +15,20 @@ from backend.plugins.cloud_integration.settings import CloudIntegrationSettings
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+
     from backend.core.container import ServiceContainer
 
 # 导入模型，确保在 create_all 前注册到 Base
 from backend.plugins.cloud_integration.models import (
     TrainingCost as TrainingCost,
+)
+from backend.plugins.cloud_integration.models import (
     TrainingInstance as TrainingInstance,
+)
+from backend.plugins.cloud_integration.models import (
     TrainingJob as TrainingJob,
+)
+from backend.plugins.cloud_integration.models import (
     TrainingTaskStep as TrainingTaskStep,
 )
 from backend.plugins.cloud_integration.orchestrator import TrainingOrchestrator
@@ -35,18 +42,18 @@ _orchestrator_ref = None
 class CloudIntegrationPlugin(BasePlugin):
     name = "cloud_integration"
     version = "0.1.0"
-    requires = ["auth"]
-    optional = []
+    requires = None
+    optional = None
 
     def __init__(self):
         self._app = None
 
-    def setup(self, app: "FastAPI") -> None:
+    def setup(self, app: FastAPI) -> None:
         """注册路由。"""
         self._app = app
         app.include_router(router)
 
-    def register_services(self, container: "ServiceContainer") -> None:
+    def register_services(self, container: ServiceContainer) -> None:
         """注册 CloudTrainingService 和 TrainingOrchestrator 到容器。"""
         container.register("cloud_training", lambda c: CloudTrainingService(c))
         container.register("cloud_orchestrator", lambda c: TrainingOrchestrator(c))
@@ -61,7 +68,7 @@ class CloudIntegrationPlugin(BasePlugin):
             if orchestrator:
                 _orchestrator_ref = orchestrator
                 loop = asyncio.get_running_loop()
-                loop.create_task(orchestrator.start())
+                loop.create_task(orchestrator.start())  # noqa: RUF006
         except RuntimeError:
             pass
 
@@ -71,7 +78,7 @@ class CloudIntegrationPlugin(BasePlugin):
         if _orchestrator_ref:
             try:
                 loop = asyncio.get_running_loop()
-                loop.create_task(_orchestrator_ref.stop())
+                loop.create_task(_orchestrator_ref.stop())  # noqa: RUF006
             except RuntimeError:
                 pass
 

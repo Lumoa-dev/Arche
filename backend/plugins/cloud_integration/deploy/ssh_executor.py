@@ -68,7 +68,7 @@ class SSHExecutor:
         if kh_path.is_file():
             connect_kwargs["known_hosts"] = str(kh_path)
         else:
-            # 无 known_hosts 文件时与历史行为一致；生产请配置 SSH_KNOWN_HOSTS 或写入 ~/.ssh/known_hosts
+            # 无 known_hosts 文件时与历史行为一致；生产请配置 SSH_KNOWN_HOSTS 或写入 ~/.ssh/known_hosts  # noqa: E501
             connect_kwargs["known_hosts"] = None
 
         if key_path:
@@ -83,12 +83,12 @@ class SSHExecutor:
             self._connections[conn_key] = conn
             return conn
         except Exception as e:
-            raise SSHError(f"SSH 连接失败 ({host}:{port}): {e}")
+            raise SSHError(f"SSH 连接失败 ({host}:{port}): {e}")  # noqa: B904
 
     async def execute(
         self, conn_key: str, command: str | Sequence[str], timeout: int = 300
     ) -> str:
-        """执行远程命令。传入 argv 序列（list/tuple）时由 asyncssh 直接 exec，不经 shell。"""
+        """执行远程命令。传入 argv 序列（list/tuple）时由 asyncssh 直接 exec，不经 shell。"""  # noqa: E501
         conn = self._connections.get(conn_key)
         if not conn:
             raise SSHError(f"SSH 连接不存在: {conn_key}")
@@ -98,9 +98,9 @@ class SSHExecutor:
             stdout = result.stdout
             return stdout.decode() if isinstance(stdout, bytes) else (stdout or "")
         except asyncssh.Error as e:
-            raise SSHError(f"远程命令执行失败: {command!r}\n{str(e)}")
+            raise SSHError(f"远程命令执行失败: {command!r}\n{e!s}")  # noqa: B904
         except Exception as e:
-            raise SSHError(f"SSH 执行失败: {e}")
+            raise SSHError(f"SSH 执行失败: {e}")  # noqa: B904
 
     async def download(self, conn_key: str, remote_path: str, local_path: Path) -> None:
         """SFTP 下载远程文件。"""
@@ -115,7 +115,7 @@ class SSHExecutor:
             async with conn.start_sftp_client() as sftp:
                 await sftp.get(remote_path, str(local_path))
         except Exception as e:
-            raise SSHError(f"SFTP 下载失败: {remote_path} -> {local_path}: {e}")
+            raise SSHError(f"SFTP 下载失败: {remote_path} -> {local_path}: {e}")  # noqa: B904
 
     async def upload(self, conn_key: str, local_path: Path, remote_path: str) -> None:
         """SFTP 上传本地文件。"""
@@ -128,7 +128,7 @@ class SSHExecutor:
             async with conn.start_sftp_client() as sftp:
                 await sftp.put(str(local_path), remote_path)
         except Exception as e:
-            raise SSHError(f"SFTP 上传失败: {local_path} -> {remote_path}: {e}")
+            raise SSHError(f"SFTP 上传失败: {local_path} -> {remote_path}: {e}")  # noqa: B904
 
     async def list_remote_filenames(
         self, conn_key: str, remote_dir: str, pattern: str = "*"
@@ -143,7 +143,7 @@ class SSHExecutor:
             async with conn.start_sftp_client() as sftp:
                 raw = await sftp.listdir(remote_dir)
         except Exception as e:
-            raise SSHError(f"SFTP 列目录失败: {remote_dir}: {e}")
+            raise SSHError(f"SFTP 列目录失败: {remote_dir}: {e}")  # noqa: B904
 
         names = [n.decode() if isinstance(n, bytes) else str(n) for n in raw]
         names = [n for n in names if n not in (".", "..")]

@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import time
 
@@ -183,10 +184,8 @@ class ZhixingyunProvider(CloudProvider):
 
     async def delete_instance(self, instance_id: str) -> None:
         """删除实例：智云星 stop+refund 即释放，清除本地缓存。"""
-        try:
+        with contextlib.suppress(Exception):
             await self.stop_instance(instance_id)
-        except Exception:
-            pass
         self._instances.pop(instance_id, None)
 
     async def get_instance_status(self, instance_id: str) -> dict:

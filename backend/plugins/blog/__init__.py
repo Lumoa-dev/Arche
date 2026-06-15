@@ -14,16 +14,17 @@ from backend.plugins.blog.settings import BlogSettings
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+
     from backend.core.container import ServiceContainer
 
 # 导入模型，确保在 create_all 前注册到 Base
 from backend.plugins.blog.models import (  # noqa: F401
-    BlogPost,
     BlogComment,
     BlogLike,
+    BlogPost,
+    BlogPostTag,
     BlogReport,
     BlogTag,
-    BlogPostTag,
 )
 from backend.plugins.blog.routes import router
 from backend.plugins.blog.services import BlogService
@@ -32,18 +33,18 @@ from backend.plugins.blog.services import BlogService
 class BlogPlugin(BasePlugin):
     name = "blog"
     version = "0.1.0"
-    requires = []
-    optional = ["auth"]
+    requires = ["auth", "oss"]  # noqa: RUF012
+    optional = ["auth"]  # noqa: RUF012
 
     def __init__(self):
         self._app = None
 
-    def setup(self, app: "FastAPI") -> None:
+    def setup(self, app: FastAPI) -> None:
         """注册路由。"""
         self._app = app
         app.include_router(router)
 
-    def register_services(self, container: "ServiceContainer") -> None:
+    def register_services(self, container: ServiceContainer) -> None:
         """注册 BlogService 到容器。"""
         container.register("blog", lambda c: BlogService(c))
 

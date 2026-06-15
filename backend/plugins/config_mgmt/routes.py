@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
 from fastapi import APIRouter, Request
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from backend.core.middleware import require_level
@@ -221,9 +221,10 @@ async def delete_config(key: str, request: Request):
 @require_level(0)
 async def list_groups(request: Request):
     """列出所有配置分组。"""
+    from sqlalchemy import distinct
+
     from backend.core.container import ServiceContainer
     from backend.core.models import ConfigEntry
-    from sqlalchemy import distinct
 
     container: ServiceContainer = request.app.state.container
     config = container.get("config")

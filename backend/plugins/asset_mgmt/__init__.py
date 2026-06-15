@@ -13,6 +13,7 @@ from backend.core.plugin_registry import registry
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+
     from backend.core.container import ServiceContainer
 
 # 导入模型，确保在 create_all 前注册到 Base
@@ -24,18 +25,18 @@ from backend.plugins.asset_mgmt.services import AssetMgmtService
 class AssetMgmtPlugin(BasePlugin):
     name = "asset_mgmt"
     version = "0.1.0"
-    requires = ["auth", "blog", "oss", "crawler", "cloud_integration"]
-    optional = []
+    requires = None
+    optional = None
 
     def __init__(self):
         self._app = None
 
-    def setup(self, app: "FastAPI") -> None:
+    def setup(self, app: FastAPI) -> None:
         """注册路由。"""
         self._app = app
         app.include_router(router)
 
-    def register_services(self, container: "ServiceContainer") -> None:
+    def register_services(self, container: ServiceContainer) -> None:
         """注册 AssetMgmtService 到容器。"""
         container.register("asset_mgmt", lambda c: AssetMgmtService(c))
 

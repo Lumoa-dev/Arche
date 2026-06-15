@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy import or_, select
 
-from backend.core.uid import parse_sid, SidParts
+from backend.core.uid import SidParts, parse_sid
 
 
 class SearchService:
@@ -113,7 +113,7 @@ class SearchService:
                         "type": "post",
                         "sid": post.sid,
                         "label": post.title,
-                        "sublabel": f"发布于 {post.created_at.strftime('%Y-%m-%d') if post.created_at else ''}",
+                        "sublabel": f"发布于 {post.created_at.strftime('%Y-%m-%d') if post.created_at else ''}",  # noqa: E501
                         "url": f"/blog/{post.slug}",
                     }
                 )

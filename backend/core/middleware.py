@@ -42,7 +42,7 @@ class AuthError(AppError):
         super().__init__(message, code, status_code)
 
 
-class PermissionError(AppError):  # noqa: A001 — intentional shadow of builtin for domain clarity
+class PermissionError(AppError):
     def __init__(
         self,
         message: str = "权限不足",
@@ -73,21 +73,22 @@ def _format_validation_errors(errors: list[dict]) -> str:
 
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
-    async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:  # noqa: ARG001
         return error_response(exc.message, exc.code, exc.status_code, exc.data)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(
-        request: Request, exc: RequestValidationError
+        _request: Request,
+        exc: RequestValidationError,
     ) -> JSONResponse:
         errors = exc.errors()
-        message = _format_validation_errors(errors)
+        message = _format_validation_errors(errors)  # type: ignore[arg-type]
         return error_response(
             message, "validation_error", status.HTTP_422_UNPROCESSABLE_ENTITY
         )
 
     @app.exception_handler(Exception)
-    async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:  # noqa: ARG001
         logger.error(
             "Unhandled exception on %s %s",
             request.method,

@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from backend.plugins.cloud_integration.deploy.ssh_executor import SSHExecutor
 
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
 class ArtifactManager:
     """训练产物管理：SFTP 回传 + SHA256 校验。"""
 
-    def __init__(self, ssh_executor: "SSHExecutor"):
+    def __init__(self, ssh_executor: SSHExecutor):
         self._ssh = ssh_executor
 
     async def pull_artifacts(

@@ -14,7 +14,7 @@ class StepCommandBuilder:
 
     @staticmethod
     def install_system_deps() -> str:
-        return "apt-get update -qq && apt-get install -y -qq python3 python3-pip git curl >/dev/null 2>&1 && echo 'deps_installed'"
+        return "apt-get update -qq && apt-get install -y -qq python3 python3-pip git curl >/dev/null 2>&1 && echo 'deps_installed'"  # noqa: E501
 
     @staticmethod
     def clone_repo(

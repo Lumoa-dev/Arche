@@ -22,8 +22,8 @@ def get_provider(name: str, credentials: dict | None = None) -> CloudProvider:
 
 # 启动时自动注册
 def _auto_register():
-    from .mock import MockProvider
     from .aliyun import AliyunProvider
+    from .mock import MockProvider
     from .zhixingyun import ZhixingyunProvider
 
     register("mock", MockProvider)

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 
 class CircularDependencyError(Exception):
@@ -26,7 +27,7 @@ class ServiceContainer:
 
     def get(self, name: str) -> Any:
         if name in self._resolving:
-            cycle = " -> ".join(self._resolving + [name])
+            cycle = " -> ".join([*self._resolving, name])
             raise CircularDependencyError(f"循环依赖: {cycle}")
         if name not in self._factories:
             raise ServiceNotFoundError(f"服务 '{name}' 未注册")

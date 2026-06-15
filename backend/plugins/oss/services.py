@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-import urllib3
 import uuid
+from collections.abc import AsyncIterator
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator
+from typing import TYPE_CHECKING
 
-from sqlalchemy import func, select, true
+import urllib3
 from fastapi import UploadFile
+from sqlalchemy import func, select, true
 
 from backend.core.middleware import AppError, PermissionError
 
@@ -64,7 +66,7 @@ def _key(*parts: str) -> str:
 class StorageService:
     """对象存储服务：MinIO（本地）/ 阿里云 OSS（远程）统一接口。"""
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
         db = container.get("db")
         self.session_factory = db["session_factory"]
@@ -85,6 +87,7 @@ class StorageService:
 
         try:
             from minio import Minio
+
             from backend.plugins.oss.backends import MinIOBackend
 
             config = self.container.get("config")
@@ -135,11 +138,11 @@ class StorageService:
         logger.info(f"[OSS] 本地文件存储已就绪: {base_path.resolve()}")
         return self._local
 
-    def get_unified_storage(self) -> "UnifiedStorage":
+    def get_unified_storage(self) -> UnifiedStorage:
         """获取统一存储服务（OSS无感层）。"""
         if self._unified_storage is None:
-            self._unified_storage = UnifiedStorage(self)
-        return self._unified_storage
+            self._unified_storage = UnifiedStorage(self)  # type: ignore[assignment]
+        return self._unified_storage  # type: ignore[return-value]
 
     # --- 配额 ---
 
@@ -178,7 +181,7 @@ class StorageService:
         used = await self._get_used_bytes(user_id)
         if used + additional_bytes > quota:
             raise AppError(
-                f"存储空间不足（已用 {used / 1024**3:.2f}GB / 配额 {quota / 1024**3:.2f}GB）",
+                f"存储空间不足（已用 {used / 1024**3:.2f}GB / 配额 {quota / 1024**3:.2f}GB）",  # noqa: E501
                 code="quota_exceeded",
                 status_code=413,
             )
@@ -475,7 +478,7 @@ class StorageService:
                 content = b"".join(chunks)
 
                 async def content_stream() -> AsyncIterator[bytes]:
-                    yield content
+                    yield content  # noqa: B023
 
                 await aliyun.upload_stream(
                     oss_file.path, content_stream(), len(content)
@@ -593,7 +596,7 @@ class StorageService:
             }
 
     async def list_user_quotas(self, limit: int = 50, offset: int = 0) -> dict:
-        from backend.plugins.oss.models import UserOSSQuota, OSSFile
+        from backend.plugins.oss.models import OSSFile, UserOSSQuota
 
         async with self.session_factory() as session:
             result = await session.execute(
@@ -755,7 +758,7 @@ class UnifiedStorage:
         self.storage = storage_service
         self._minio = storage_service._get_minio()
         self._aliyun = storage_service._get_aliyun()
-        self._sync_queue = asyncio.Queue(maxsize=1000)
+        self._sync_queue = asyncio.Queue(maxsize=1000)  # type: ignore[var-annotated]
         self._sync_worker_task = None
         self._start_sync_worker()
 
@@ -773,7 +776,7 @@ class UnifiedStorage:
                     try:
 
                         async def stream():
-                            yield content
+                            yield content  # noqa: B023
 
                         await self._aliyun.upload_stream(
                             virtual_path, stream(), len(content)
@@ -786,7 +789,7 @@ class UnifiedStorage:
                         try:
 
                             async def stream():
-                                yield content
+                                yield content  # noqa: B023
 
                             await self._aliyun.upload_stream(
                                 virtual_path, stream(), len(content)
@@ -856,7 +859,7 @@ class UnifiedStorage:
 
             return content
         except Exception:
-            raise StorageError(f"文件不存在: {virtual_path}")
+            raise StorageError(f"文件不存在: {virtual_path}")  # noqa: B904
 
     async def delete(self, virtual_path: str) -> None:
         """
@@ -864,17 +867,13 @@ class UnifiedStorage:
         :param virtual_path: 虚拟路径
         """
         # 删除MinIO中的文件（忽略不存在错误）
-        try:
+        with contextlib.suppress(Exception):
             await self._minio.delete(virtual_path)
-        except Exception:
-            pass
 
         # 删除阿里云中的文件（忽略不存在错误）
         if self._aliyun:
-            try:
+            with contextlib.suppress(Exception):
                 await self._aliyun.delete(virtual_path)
-            except Exception:
-                pass
 
     async def exists(self, virtual_path: str) -> bool:
         """
@@ -887,10 +886,7 @@ class UnifiedStorage:
             return True
 
         # 再查阿里云
-        if self._aliyun and await self._aliyun.exists(virtual_path):
-            return True
-
-        return False
+        return bool(self._aliyun and await self._aliyun.exists(virtual_path))
 
     async def list(self, prefix: str = "") -> list[str]:
         """

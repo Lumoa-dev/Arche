@@ -12,7 +12,6 @@ from fastapi import APIRouter, Query, Request
 from backend.core.container import ServiceContainer
 from backend.core.middleware import require_level, require_user
 
-
 router = APIRouter(prefix="/api/assets", tags=["asset_mgmt"])
 
 

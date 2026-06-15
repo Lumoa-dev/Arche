@@ -81,7 +81,7 @@ class DeployWebhookPlugin(BasePlugin):
     name = "deploy_webhook"
     version = "0.1.0"
 
-    def setup(self, app: "FastAPI") -> None:
+    def setup(self, app: FastAPI) -> None:
         app.include_router(router)
 
 
