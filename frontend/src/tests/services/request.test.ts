@@ -118,7 +118,7 @@ vi.mock('axios', () => {
   }
 })
 
-vi.mock('@/utils/message', () => ({
+vi.mock('@/lib/utils/message', () => ({
   $message: { error: vi.fn() }
 }))
 
@@ -126,25 +126,25 @@ vi.mock('@/utils/message', () => ({
 // 2. 测试
 // ══════════════════════════════════════════════
 describe('request.ts', () => {
-  let get: typeof import('@/services/request').get
-  let post: typeof import('@/services/request').post
-  let put: typeof import('@/services/request').put
-  let del: typeof import('@/services/request').del
-  let upload: typeof import('@/services/request').upload
-  let cancelAllPendingRequests: typeof import('@/services/request').cancelAllPendingRequests
+  let get: typeof import('@/lib/services/request').get
+  let post: typeof import('@/lib/services/request').post
+  let put: typeof import('@/lib/services/request').put
+  let del: typeof import('@/lib/services/request').del
+  let upload: typeof import('@/lib/services/request').upload
+  let cancelAllPendingRequests: typeof import('@/lib/services/request').cancelAllPendingRequests
   let $message: { error: Mock }
   let AUTH_UNAUTHORIZED_EVENT: string
 
   beforeAll(async () => {
-    const mod = await import('@/services/request')
+    const mod = await import('@/lib/services/request')
     get = mod.get
     post = mod.post
     put = mod.put
     del = mod.del
     upload = mod.upload
     cancelAllPendingRequests = mod.cancelAllPendingRequests
-    $message = (await import('@/utils/message')).$message as unknown as { error: Mock }
-    AUTH_UNAUTHORIZED_EVENT = (await import('@/constants/auth')).AUTH_UNAUTHORIZED_EVENT
+    $message = (await import('@/lib/utils/message')).$message as unknown as { error: Mock }
+    AUTH_UNAUTHORIZED_EVENT = (await import('@/lib/constants/auth')).AUTH_UNAUTHORIZED_EVENT
   })
 
   beforeEach(() => {

@@ -12,15 +12,15 @@ const { mockGenerateTextCover, mockUploadOssFileApi, mockUpdatePostApi, mockFetc
   }
 )
 
-vi.mock('@/utils/generateTextCover', () => ({
+vi.mock('@/lib/utils/generateTextCover', () => ({
   generateTextCover: mockGenerateTextCover
 }))
 
-vi.mock('@/services/api/oss', () => ({
+vi.mock('@/lib/services/api/oss', () => ({
   uploadOssFileApi: mockUploadOssFileApi
 }))
 
-vi.mock('@/services/api/blog', () => ({
+vi.mock('@/lib/services/api/blog', () => ({
   updatePostApi: mockUpdatePostApi
 }))
 

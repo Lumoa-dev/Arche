@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/services/request', () => ({
+vi.mock('@/lib/services/request', () => ({
   get: vi.fn(),
   post: vi.fn(),
   put: vi.fn(),
@@ -13,8 +13,8 @@ beforeEach(() => {
 
 describe('blog API', () => {
   it('getBlogPostsApi 发送正确 URL 和方法', async () => {
-    const { getBlogPostsApi } = await import('@/services/api/blog')
-    const { get } = await import('@/services/request')
+    const { getBlogPostsApi } = await import('@/lib/services/api/blog')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({ items: [], total: 0 })
 
     await getBlogPostsApi({ page: 1, page_size: 20 })
@@ -22,8 +22,8 @@ describe('blog API', () => {
   })
 
   it('getPostBySlugApi 拼接正确路径', async () => {
-    const { getPostBySlugApi } = await import('@/services/api/blog')
-    const { get } = await import('@/services/request')
+    const { getPostBySlugApi } = await import('@/lib/services/api/blog')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({ id: '1', title: 'test' })
 
     await getPostBySlugApi('hello-world')
@@ -31,8 +31,8 @@ describe('blog API', () => {
   })
 
   it('getPostByIdApi 拼接正确路径', async () => {
-    const { getPostByIdApi } = await import('@/services/api/blog')
-    const { get } = await import('@/services/request')
+    const { getPostByIdApi } = await import('@/lib/services/api/blog')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({ id: '1' })
 
     await getPostByIdApi('abc-123')
@@ -40,8 +40,8 @@ describe('blog API', () => {
   })
 
   it('createPostApi 发送 POST 请求', async () => {
-    const { createPostApi } = await import('@/services/api/blog')
-    const { post } = await import('@/services/request')
+    const { createPostApi } = await import('@/lib/services/api/blog')
+    const { post } = await import('@/lib/services/request')
     vi.mocked(post).mockResolvedValue({ id: '1' })
 
     const payload = { title: 'Test', content: 'Hello', tags: ['tag1'] }
@@ -50,8 +50,8 @@ describe('blog API', () => {
   })
 
   it('updatePostApi 发送 PUT 请求', async () => {
-    const { updatePostApi } = await import('@/services/api/blog')
-    const { put } = await import('@/services/request')
+    const { updatePostApi } = await import('@/lib/services/api/blog')
+    const { put } = await import('@/lib/services/request')
     vi.mocked(put).mockResolvedValue({ id: '1' })
 
     await updatePostApi('post-1', { title: 'Updated' })
@@ -59,8 +59,8 @@ describe('blog API', () => {
   })
 
   it('deletePostApi 发送 DELETE 请求', async () => {
-    const { deletePostApi } = await import('@/services/api/blog')
-    const { del } = await import('@/services/request')
+    const { deletePostApi } = await import('@/lib/services/api/blog')
+    const { del } = await import('@/lib/services/request')
     vi.mocked(del).mockResolvedValue(undefined)
 
     await deletePostApi('post-1')
@@ -68,8 +68,8 @@ describe('blog API', () => {
   })
 
   it('getPostCommentsApi 拼接正确路径', async () => {
-    const { getPostCommentsApi } = await import('@/services/api/blog')
-    const { get } = await import('@/services/request')
+    const { getPostCommentsApi } = await import('@/lib/services/api/blog')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({ items: [], total: 0 })
 
     await getPostCommentsApi('post-1')
@@ -77,8 +77,8 @@ describe('blog API', () => {
   })
 
   it('likePostApi 发送正确请求', async () => {
-    const { likePostApi } = await import('@/services/api/blog')
-    const { post } = await import('@/services/request')
+    const { likePostApi } = await import('@/lib/services/api/blog')
+    const { post } = await import('@/lib/services/request')
     vi.mocked(post).mockResolvedValue(undefined)
 
     await likePostApi('post-1')
@@ -86,8 +86,8 @@ describe('blog API', () => {
   })
 
   it('getBlogTagsApi 发送正确请求', async () => {
-    const { getBlogTagsApi } = await import('@/services/api/blog')
-    const { get } = await import('@/services/request')
+    const { getBlogTagsApi } = await import('@/lib/services/api/blog')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({ items: [], total: 0 })
 
     await getBlogTagsApi()
@@ -95,8 +95,8 @@ describe('blog API', () => {
   })
 
   it('normalizePaginated 正确处理 items→list 转换', async () => {
-    const { getBlogPostsApi } = await import('@/services/api/blog')
-    const { get } = await import('@/services/request')
+    const { getBlogPostsApi } = await import('@/lib/services/api/blog')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({
       items: [{ id: '1', title: 'A', slug: 'a', content: '' }],
       total: 1
@@ -108,8 +108,8 @@ describe('blog API', () => {
   })
 
   it('batchApproveApi 发送正确请求', async () => {
-    const { batchApproveApi } = await import('@/services/api/blog')
-    const { post } = await import('@/services/request')
+    const { batchApproveApi } = await import('@/lib/services/api/blog')
+    const { post } = await import('@/lib/services/request')
     vi.mocked(post).mockResolvedValue(undefined)
 
     await batchApproveApi({ post_ids: ['1', '2'] })

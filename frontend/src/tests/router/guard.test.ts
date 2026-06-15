@@ -69,7 +69,7 @@ const helper = vi.hoisted(() => {
 })
 
 // ===== Mock 所有依赖 =====
-vi.mock('@/store/modules/user', () => ({
+vi.mock('@/lib/store/modules/user', () => ({
   useUserStore: vi.fn(() => ({
     get token() {
       return helper.getToken()
@@ -84,7 +84,7 @@ vi.mock('@/store/modules/user', () => ({
   }))
 }))
 
-vi.mock('@/store/modules/permission', () => ({
+vi.mock('@/lib/store/modules/permission', () => ({
   usePermissionStore: vi.fn(() => ({
     whiteList: ['/login', '/404', '/403'],
     get level() {
@@ -97,23 +97,23 @@ vi.mock('@/store/modules/permission', () => ({
   }))
 }))
 
-vi.mock('@/store', () => ({
+vi.mock('@/lib/store', () => ({
   resetAllStores: helper.mockResetAllStores
 }))
 
-vi.mock('@/utils/message', () => ({
+vi.mock('@/lib/utils/message', () => ({
   $message: { error: (...args: any[]) => helper.mockMessageError(...args) }
 }))
 
-vi.mock('@/services/request', () => ({
+vi.mock('@/lib/services/request', () => ({
   cancelAllPendingRequests: helper.mockCancelAllPendingRequests
 }))
 
-vi.mock('@/constants/auth', () => ({
+vi.mock('@/lib/constants/auth', () => ({
   AUTH_UNAUTHORIZED_EVENT: 'auth:unauthorized'
 }))
 
-vi.mock('@/router/index', () => ({
+vi.mock('@/lib/router/index', () => ({
   default: {
     currentRoute: { value: { path: '/', meta: {}, fullPath: '/' } },
     push: helper.mockRouterPush,

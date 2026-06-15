@@ -13,7 +13,7 @@ vi.mock('@/icons', async (importOriginal) => {
 
 describe('buildLayoutMenus', () => {
   it('按 layout 过滤并返回菜单项', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -39,7 +39,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('menu: false 的路由不加入菜单', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -60,7 +60,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('没有 title 的路由不加入菜单', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -75,7 +75,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('没有 meta 的路由不加入菜单', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -89,7 +89,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('解析 icon 并附加到菜单项', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -105,7 +105,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('无 icon 配置时 icon 为 undefined', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -120,7 +120,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('递归处理子路由', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -146,7 +146,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('子路由以 / 开头时直接拼接', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -168,7 +168,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('子路由 path 为空时继承父路径', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
@@ -190,7 +190,7 @@ describe('buildLayoutMenus', () => {
   })
 
   it('父路径以 / 结尾时正常拼接', async () => {
-    const { buildLayoutMenus } = await import('@/router/menu')
+    const { buildLayoutMenus } = await import('@/lib/router/menu')
 
     const routes: RouteRecordRaw[] = [
       {
