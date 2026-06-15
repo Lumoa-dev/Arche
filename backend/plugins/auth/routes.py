@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, Field
 
 from backend.core.container import ServiceContainer
-from backend.core.middleware import require_level, require_user
+from backend.core.middleware import get_real_ip, require_level, require_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -113,8 +113,8 @@ async def login(req: LoginRequest, request: Request):
     """用户登录，返回 JWT token。"""
     container: ServiceContainer = request.app.state.container
     auth_service = container.get("auth")
-    # 获取客户端 IP 用于限流
-    client_ip = request.client.host if request.client else ""
+    # 获取客户端真实 IP 用于限流
+    client_ip = get_real_ip(request)
     result = await auth_service.login(
         identity=req.identity,
         password=req.password,
