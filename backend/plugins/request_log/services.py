@@ -8,7 +8,8 @@ import time
 from datetime import date, datetime, timedelta
 
 from fastapi import Request, Response
-from sqlalchemy import delete as sa_delete, extract, select
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import extract, select
 from sqlalchemy import func as sa_func
 from starlette.middleware.base import BaseHTTPMiddleware
 

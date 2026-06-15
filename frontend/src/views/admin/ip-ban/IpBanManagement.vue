@@ -106,7 +106,7 @@ async function handleBan() {
     showBanDialog.value = false
     banIpInput.value = ''
     banReason.value = ''
-    banDuration.value = null
+    banDuration.value = -1
     await loadBans()
     await loadStats()
   } catch {
