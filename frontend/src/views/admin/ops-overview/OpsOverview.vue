@@ -61,14 +61,13 @@ const cards = [
     note: '暂未实现'
   },
   {
-    title: '日志管理',
+    title: 'IP 请求日志',
     icon: ServerOutline,
     stats: [
-      { label: '今日日志', value: '234 条' },
-      { label: '错误', value: '3 条' }
+      { label: '明细查询', value: '分页检索' },
+      { label: '行为分析', value: 'TOP IP / 趋势' }
     ],
-    disabled: true,
-    note: '暂未实现'
+    to: '/admin/ops/request-logs'
   }
 ]
 </script>
