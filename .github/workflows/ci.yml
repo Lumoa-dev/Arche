@@ -37,6 +37,9 @@ jobs:
   test-integration:
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/test-integration.yml
+    permissions:
+      contents: write
+      issues: write
 
   test-e2e:
     if: github.event_name != 'pull_request'

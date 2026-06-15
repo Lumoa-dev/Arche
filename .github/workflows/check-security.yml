@@ -41,7 +41,13 @@ jobs:
             echo "run-py-scan=true" >> $GITHUB_OUTPUT
           else
             CHANGES='${{ steps.filter.outputs.changes }}'
-            echo "languages=$CHANGES" >> $GITHUB_OUTPUT
+
+            # CodeQL 在 PR 事件必须始终返回结果（branch protection 要求）
+            if [ "$CHANGES" = "[]" ] && [ "${{ github.event_name }}" = "pull_request" ]; then
+              echo 'languages=["python"]' >> $GITHUB_OUTPUT
+            else
+              echo "languages=$CHANGES" >> $GITHUB_OUTPUT
+            fi
 
             if echo "$CHANGES" | jq -e 'contains(["python"])' > /dev/null 2>&1; then
               echo "run-py-scan=true" >> $GITHUB_OUTPUT
@@ -105,4 +111,3 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
-
