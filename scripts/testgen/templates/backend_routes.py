@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from scripts.testgen.scanner.backend import RouteInfo
 
 

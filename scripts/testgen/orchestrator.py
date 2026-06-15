@@ -1,9 +1,9 @@
-from pathlib import Path
 from dataclasses import dataclass
-from typing import Optional
+from pathlib import Path
 
-from scripts.testgen.cache import load as cache_load, save as cache_save
-from scripts.testgen.learner import learn_from_tests, enhance_with_patterns
+from scripts.testgen.cache import load as cache_load
+from scripts.testgen.cache import save as cache_save
+from scripts.testgen.learner import enhance_with_patterns, learn_from_tests
 
 SUPPORTED_PATTERNS = {
     "frontend_api": "services/api/*.ts",
@@ -65,7 +65,7 @@ class GenerateResult:
     file_type: str
 
 
-def detect_type(source_path: Path) -> Optional[str]:
+def detect_type(source_path: Path) -> str | None:
     """根据文件路径推断文件类型"""
     source_str = source_path.as_posix()
 

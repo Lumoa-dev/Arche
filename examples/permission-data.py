@@ -18,10 +18,9 @@ permission_levels = {
         "permission_id": "PL_001",
         "name": "",
         "rank": 0,
-
         # 三个维度的权限
-        "pages": [],        # 可访问的页面列表
-        "nav_items": [],    # 导航栏可见项列表
-        "actions": [],      # 可执行的行为列表
+        "pages": [],  # 可访问的页面列表
+        "nav_items": [],  # 导航栏可见项列表
+        "actions": [],  # 可执行的行为列表
     },
 }

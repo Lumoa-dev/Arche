@@ -1,4 +1,5 @@
 """Test if the /console route resolves correctly in the Vue app."""
+
 from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
@@ -6,7 +7,10 @@ with sync_playwright() as p:
     page = browser.new_page()
 
     console_errors = []
-    page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
+    page.on(
+        "console",
+        lambda msg: console_errors.append(msg.text) if msg.type == "error" else None,
+    )
 
     # Navigate to the app and try the /console route directly
     page.goto("http://localhost:5174/console")

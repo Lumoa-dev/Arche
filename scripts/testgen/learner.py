@@ -5,8 +5,8 @@
 """
 
 import re
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
 
 EXPECT_PATTERN = re.compile(
     r"expect\(([^)]+)\)\.([a-zA-Z]+)\(([^)]*)\)",

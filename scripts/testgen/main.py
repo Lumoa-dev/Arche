@@ -1,6 +1,6 @@
-import typer
 from pathlib import Path
-from typing import Optional
+
+import typer
 
 app = typer.Typer(
     name="testgen",
@@ -19,7 +19,7 @@ def generate(
     source: str = typer.Argument(
         ..., help="源文件路径，如 frontend/src/services/api/blog.ts"
     ),
-    output: Optional[str] = typer.Option(
+    output: str | None = typer.Option(
         None, "--output", "-o", help="输出路径，默认自动推断"
     ),
     dry_run: bool = typer.Option(
@@ -70,9 +70,7 @@ def batch_generate(
     directory: str = typer.Argument(
         ..., help="源码目录，如 frontend/src/services/api/"
     ),
-    output_dir: Optional[str] = typer.Option(
-        None, "--output-dir", "-o", help="输出目录"
-    ),
+    output_dir: str | None = typer.Option(None, "--output-dir", "-o", help="输出目录"),
     dry_run: bool = typer.Option(False, "--dry-run", "-n", help="仅预览"),
     force: bool = typer.Option(False, "--force", "-f", help="覆盖已有文件"),
 ):
@@ -136,10 +134,10 @@ def batch_generate(
 
 @app.command("clear-cache")
 def clear_cache(
-    source: Optional[str] = typer.Option(
+    source: str | None = typer.Option(
         None, "--source", "-s", help="仅清除指定源文件的缓存"
     ),
-    file_type: Optional[str] = typer.Option(
+    file_type: str | None = typer.Option(
         None, "--type", "-t", help="仅清除指定类型的缓存"
     ),
 ):
@@ -156,8 +154,9 @@ def learn(
     force: bool = typer.Option(False, "--force", "-f", help="强制重新学习"),
 ):
     """从现有测试文件中学习断言模式"""
+    from .cache import load as cache_load
+    from .cache import save as cache_save
     from .learner import learn_from_tests
-    from .cache import load as cache_load, save as cache_save
 
     root = Path.cwd()
     learned = None if force else cache_load(root / ".patterns", "learned")
@@ -180,7 +179,7 @@ def learn(
 @app.command("list-templates")
 def list_templates():
     """列出支持的文件类型和对应的模板"""
-    from scripts.testgen.orchestrator import SUPPORTED_PATTERNS, FILE_TYPE_LABELS
+    from scripts.testgen.orchestrator import FILE_TYPE_LABELS, SUPPORTED_PATTERNS
 
     typer.echo("支持的文件类型：")
     for type_id, pattern in SUPPORTED_PATTERNS.items():

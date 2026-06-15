@@ -34,12 +34,14 @@ def classify_action(method: str, path: str, status_code: int) -> str:
 
 # ── 跳过列表 ──
 
-_SKIP_PATHS = frozenset({
-    "/docs",
-    "/openapi.json",
-    "/redoc",
-    "/favicon.ico",
-})
+_SKIP_PATHS = frozenset(
+    {
+        "/docs",
+        "/openapi.json",
+        "/redoc",
+        "/favicon.ico",
+    }
+)
 
 _SKIP_PREFIXES = (
     "/static/",
@@ -278,9 +280,7 @@ class LogAggregationService:
             async with session_factory() as session:
                 cutoff = datetime.now() - timedelta(days=7)
                 count_subq = (
-                    select(RequestLog)
-                    .where(RequestLog.created_at < cutoff)
-                    .subquery()
+                    select(RequestLog).where(RequestLog.created_at < cutoff).subquery()
                 )
                 result = await session.execute(
                     select(sa_func.count()).select_from(count_subq)
