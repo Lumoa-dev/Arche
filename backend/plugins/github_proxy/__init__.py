@@ -14,6 +14,7 @@ from backend.plugins.github_proxy.settings import GitHubProxySettings
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+
     from backend.core.container import ServiceContainer
 
 from backend.plugins.github_proxy.routes import router
@@ -23,18 +24,16 @@ from backend.plugins.github_proxy.services import GitHubService
 class GithubProxyPlugin(BasePlugin):
     name = "github_proxy"
     version = "0.1.0"
-    requires = ["auth"]
-    optional = []
 
     def __init__(self):
         self._app = None
 
-    def setup(self, app: "FastAPI") -> None:
+    def setup(self, app: FastAPI) -> None:
         """注册路由。"""
         self._app = app
         app.include_router(router)
 
-    def register_services(self, container: "ServiceContainer") -> None:
+    def register_services(self, container: ServiceContainer) -> None:
         """注册 GitHubService 到容器。"""
         # 注册统一门面服务（主要使用这个）
         container.register("github", lambda c: GitHubService(c))
@@ -68,7 +67,7 @@ class GithubProxyPlugin(BasePlugin):
             return False
 
         # 后台检查，不阻塞启动
-        asyncio.create_task(_check_gh_cli())
+        asyncio.create_task(_check_gh_cli())  # noqa: RUF006
 
     def on_shutdown(self) -> None:
         pass

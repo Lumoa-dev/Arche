@@ -1,9 +1,6 @@
 <template>
   <div class="console-dashboard">
-    <div class="page-header">
-      <h1 class="page-title">控制台</h1>
-      <p class="page-desc">站点运行状态概览</p>
-    </div>
+    <ArPageHeader title="控制台" desc="站点运行状态概览" />
 
     <div class="dashboard-layout">
       <!-- ===== 左栏（主内容，可滚动） ===== -->
@@ -216,12 +213,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import {
   getDashboardApi,
   getNotificationsApi,
   type DashboardData,
   type NotificationItem
-} from '@/services/api/system'
+} from '@/components/logic/api/system'
 
 const router = useRouter()
 
@@ -434,23 +432,6 @@ const qpsYMax = computed(() => {
 <style scoped>
 .console-dashboard {
   max-width: 100%;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-title {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 2px;
-  color: var(--text-primary);
-}
-
-.page-desc {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  margin: 0;
 }
 
 /* ── 左右分栏 ── */

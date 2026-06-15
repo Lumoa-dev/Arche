@@ -5,7 +5,18 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Index, Integer, JSON, String, Text, func, text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+    text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -232,4 +243,39 @@ class NicknameBlacklist(Base):
     reason: Mapped[str | None] = mapped_column(String(256), nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class PageComponentPermission(Base):
+    """页面组件权限映射表。
+
+    按 Level 分组存储，定义每个 level 能看到的页面及页面内各组件的可见性。
+    数据结构语义：
+      { page_name: { component_name: visible (bool) } }
+    若某页面下任一组件 visible=True，则该页面可访问；
+    全部组件 visible=False 时，该页面不可访问。
+    """
+
+    __tablename__ = "page_component_permissions"
+    __table_args__ = (
+        UniqueConstraint(
+            "level",
+            "page_name",
+            "component_name",
+            name="uq_level_page_component",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    level: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    page_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    component_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    visible: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

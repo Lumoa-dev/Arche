@@ -22,7 +22,7 @@ class OssSettings(BaseSettings):
     MINIO_SECURE: bool = Field(default=False, description="MinIO 是否启用 TLS")
     OSS_STORAGE_DIR: str = Field(
         default="data/storage",
-        description="本地文件系统后端存储根目录（相对/绝对路径，开发环境无需 MinIO 时使用）",
+        description="本地文件系统后端存储根目录（相对/绝对路径，开发环境无需 MinIO 时使用）",  # noqa: E501
     )
 
     model_config = {"extra": "allow"}

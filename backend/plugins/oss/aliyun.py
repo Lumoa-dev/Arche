@@ -27,7 +27,7 @@ class CloudStorageError(AppError):
 class CloudStorageService:
     """阿里云 OSS 操作封装，通过 asyncio.to_thread 包装同步 SDK。"""
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         config = container.get("config")
         endpoint = config.get_required("OSS_ENDPOINT")
         access_key_id = config.get_required("OSS_ACCESS_KEY_ID")
@@ -59,7 +59,7 @@ class CloudStorageService:
         try:
             return await asyncio.to_thread(_do_upload)
         except oss2.exceptions.OssError as e:
-            raise CloudStorageError(f"阿里云 OSS 上传失败: {e}")
+            raise CloudStorageError(f"阿里云 OSS 上传失败: {e}")  # noqa: B904
 
     async def download(self, object_key: str, local_path: Path) -> Path:
         """从阿里云 OSS 下载文件到本地。
@@ -80,11 +80,11 @@ class CloudStorageService:
         try:
             return await asyncio.to_thread(_do_download)
         except oss2.exceptions.NoSuchKey:
-            raise AppError(
+            raise AppError(  # noqa: B904
                 "阿里云 OSS 文件不存在", code="cloud_file_not_found", status_code=404
             )
         except oss2.exceptions.OssError as e:
-            raise CloudStorageError(f"阿里云 OSS 下载失败: {e}")
+            raise CloudStorageError(f"阿里云 OSS 下载失败: {e}")  # noqa: B904
 
     async def download_bytes(self, object_key: str) -> bytes:
         """从阿里云 OSS 下载文件为字节。"""
@@ -101,11 +101,11 @@ class CloudStorageService:
         try:
             return await asyncio.to_thread(_do_download)
         except oss2.exceptions.NoSuchKey:
-            raise AppError(
+            raise AppError(  # noqa: B904
                 "阿里云 OSS 文件不存在", code="cloud_file_not_found", status_code=404
             )
         except oss2.exceptions.OssError as e:
-            raise CloudStorageError(f"阿里云 OSS 下载失败: {e}")
+            raise CloudStorageError(f"阿里云 OSS 下载失败: {e}")  # noqa: B904
 
     async def delete(self, object_key: str) -> None:
         """从阿里云 OSS 删除文件。"""
@@ -116,7 +116,7 @@ class CloudStorageService:
         try:
             await asyncio.to_thread(_do_delete)
         except oss2.exceptions.OssError as e:
-            raise CloudStorageError(f"阿里云 OSS 删除失败: {e}")
+            raise CloudStorageError(f"阿里云 OSS 删除失败: {e}")  # noqa: B904
 
     async def object_exists(self, object_key: str) -> bool:
         """检查 OSS 对象是否存在（HEAD 请求，不下载内容）。"""
@@ -144,4 +144,4 @@ class CloudStorageService:
         try:
             return await asyncio.to_thread(_do_list)
         except oss2.exceptions.OssError as e:
-            raise CloudStorageError(f"阿里云 OSS 列举失败: {e}")
+            raise CloudStorageError(f"阿里云 OSS 列举失败: {e}")  # noqa: B904

@@ -1,23 +1,40 @@
 <script setup lang="ts">
+/**
+ * ArButton — 通用按钮
+ *
+ * 规格系统：
+ * - 尺寸（size）：xs(22px) / sm(28px) / md(36px) / lg(44px)
+ * - 形状（shape）：rect(长方形) / square(正方形) / pill(胶囊)
+ * - 变体（type）：primary / secondary / outline / ghost / danger
+ *
+ * 纯图标按钮：设 icon=true + 用 #icon 插槽传 SVG，
+ * 图标尺寸会被按钮自动约束到当前尺寸的对应规格。
+ */
+
 import { computed } from 'vue'
 
 type ButtonType = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
-type ButtonSize = 'sm' | 'md' | 'lg'
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg'
+type ButtonShape = 'rect' | 'square' | 'pill'
 
 const props = withDefaults(
   defineProps<{
     type?: ButtonType
     size?: ButtonSize
+    /** 形状；rect=长方形 square=正方形 pill=胶囊 */
+    shape?: ButtonShape
+    /** 是否纯图标按钮（无文字），会自动 square */
+    icon?: boolean
     loading?: boolean
     disabled?: boolean
-    icon?: boolean
   }>(),
   {
     type: 'secondary',
     size: 'md',
+    shape: 'rect',
+    icon: false,
     loading: false,
-    disabled: false,
-    icon: false
+    disabled: false
   }
 )
 
@@ -29,6 +46,8 @@ const classes = computed(() => [
   'ar-button',
   `ar-button--${props.type}`,
   `ar-button--${props.size}`,
+  // 纯图标按钮强制方型
+  props.icon || props.shape === 'square' ? 'ar-button--square' : `ar-button--${props.shape}`,
   {
     'ar-button--icon': props.icon,
     'ar-button--loading': props.loading,
@@ -73,6 +92,15 @@ function handleClick(e: MouseEvent) {
 </template>
 
 <style scoped>
+/* ════════════════════════════════════════
+   ArButton — 按钮系统
+   设计原则：
+   - 悬停不上弹（扁平）
+   - ghost 悬停用中性灰而非品牌色
+   - 圆角统一按尺寸定级
+   - 图标按钮自动约束图标尺寸
+   ════════════════════════════════════════ */
+
 .ar-button {
   position: relative;
   display: inline-flex;
@@ -90,19 +118,11 @@ function handleClick(e: MouseEvent) {
     background-color var(--transition-normal),
     border-color var(--transition-normal),
     color var(--transition-normal),
-    box-shadow var(--transition-normal),
-    transform var(--transition-normal);
+    box-shadow var(--transition-normal);
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
-}
-
-.ar-button:hover:not(.is-disabled) {
-  transform: translateY(-1px);
-}
-
-.ar-button:active:not(.is-disabled) {
-  transform: translateY(0);
+  flex-shrink: 0;
 }
 
 .ar-button:focus-visible {
@@ -116,41 +136,97 @@ function handleClick(e: MouseEvent) {
   cursor: not-allowed;
 }
 
-/* ── icon mode ── */
-.ar-button--icon {
-  padding: 0;
+/* ════════════════════════════════════════
+   尺寸 & 圆角
+   ════════════════════════════════════════ */
+
+/* xs */
+.ar-button--xs {
+  height: 22px;
+  font-size: 11px;
+  border-radius: 4px;
+  padding: 0 8px;
+}
+.ar-button--xs .ar-button__icon {
+  width: 14px;
+  height: 14px;
 }
 
-/* ── sizes ── */
+/* sm */
 .ar-button--sm {
   height: 28px;
   font-size: 12px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   padding: 0 10px;
 }
-.ar-button--sm.ar-button--icon {
-  width: 28px;
+.ar-button--sm .ar-button__icon {
+  width: 16px;
+  height: 16px;
 }
 
+/* md */
 .ar-button--md {
   height: 36px;
   font-size: 14px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   padding: 0 16px;
 }
-.ar-button--md.ar-button--icon {
-  width: 36px;
+.ar-button--md .ar-button__icon {
+  width: 20px;
+  height: 20px;
 }
 
+/* lg */
 .ar-button--lg {
   height: 44px;
   font-size: 16px;
-  border-radius: var(--radius-md);
+  border-radius: 16px;
   padding: 0 24px;
 }
-.ar-button--lg.ar-button--icon {
-  width: 44px;
+.ar-button--lg .ar-button__icon {
+  width: 24px;
+  height: 24px;
 }
+
+/* ════════════════════════════════════════
+   形状 — square（正方形）
+   不设尺寸，字号决定内边距
+   ════════════════════════════════════════ */
+.ar-button--square {
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+/* pill 用大圆角 */
+.ar-button--pill {
+  border-radius: 9999px;
+}
+
+/* ════════════════════════════════════════
+   图标约束 — 强制 SVG 填满容器
+   ════════════════════════════════════════ */
+.ar-button--icon {
+  /* icon mode overrides padding from size */
+}
+
+.ar-button__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 穿透 slot：强制 SVG 按容器尺寸渲染 */
+.ar-button__icon :deep(svg) {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* ════════════════════════════════════════
+   变体
+   ════════════════════════════════════════ */
 
 /* ── primary ── */
 .ar-button--primary {
@@ -201,27 +277,32 @@ function handleClick(e: MouseEvent) {
   border-color: transparent;
 }
 .ar-button--ghost:hover:not(.is-disabled) {
-  background-color: var(--primary-light-color);
+  background-color: rgba(0, 0, 0, 0.06);
   color: var(--text-primary);
+}
+.ar-button--ghost:active:not(.is-disabled) {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* ── danger ── */
 .ar-button--danger {
-  background-color: var(--error-color);
-  color: #fff;
-  border-color: var(--error-color);
+  background-color: var(--color-danger);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-danger);
 }
 .ar-button--danger:hover:not(.is-disabled) {
-  background-color: #a82e20;
-  border-color: #a82e20;
+  background-color: #c43a3a;
+  border-color: #c43a3a;
   box-shadow: var(--shadow-md);
 }
 .ar-button--danger:active:not(.is-disabled) {
-  background-color: #8a1a1a;
-  border-color: #8a1a1a;
+  background-color: #a82e20;
+  border-color: #a82e20;
 }
 
-/* ── spinner ── */
+/* ════════════════════════════════════════
+   spinner
+   ════════════════════════════════════════ */
 .ar-button__spinner {
   display: inline-flex;
   align-items: center;
@@ -241,12 +322,5 @@ function handleClick(e: MouseEvent) {
   to {
     transform: rotate(360deg);
   }
-}
-
-/* ── icon slot ── */
-.ar-button__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>

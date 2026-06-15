@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useApiWithFallback } from '@/composables/useApiWithFallback'
+import { useApiWithFallback } from '@/lib/composables/useApiWithFallback'
 
 // withFallback 的内部逻辑依赖 $message，这里 mock 掉
 vi.mock('@/utils/message', () => ({
@@ -63,7 +63,7 @@ describe('useApiWithFallback', () => {
   })
 
   it('refresh() 过程中 loading 为 true', async () => {
-    let resolveFn!: (v: string) => void // eslint-disable-line no-unused-vars
+    let resolveFn!: (v: string) => void
     const fetcher = vi.fn().mockReturnValue(
       new Promise<string>((resolve) => {
         resolveFn = resolve

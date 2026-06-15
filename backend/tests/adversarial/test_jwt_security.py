@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import jwt
 import uuid
 from datetime import datetime, timedelta, timezone
+
+import jwt
 
 from backend.tests.adversarial.conftest import JWT_ALG_NONE_PAYLOAD, JWT_WRONG_SECRET
 

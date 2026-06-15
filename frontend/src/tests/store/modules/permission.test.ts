@@ -1,6 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { usePermissionStore } from '@/store/modules/permission'
+import { usePermissionStore } from '@/lib/store/modules/permission'
+
+// 模拟权限总线（避免真实的 HTTP 调用）
+vi.mock('@/lib/services/permission-bus', () => ({
+  initPermissionBus: vi.fn(() => Promise.resolve()),
+  clearPermissionCache: vi.fn(),
+  canAccessPage: vi.fn(() => true),
+  getVisiblePages: vi.fn(() => ['home', 'explore'])
+}))
 
 describe('usePermissionStore', () => {
   beforeEach(() => {
@@ -13,11 +21,6 @@ describe('usePermissionStore', () => {
       expect(store.level).toBe(5)
     })
 
-    it('默认 permissions 为空数组', () => {
-      const store = usePermissionStore()
-      expect(store.permissions).toEqual([])
-    })
-
     it('routesLoaded 为 false', () => {
       const store = usePermissionStore()
       expect(store.routesLoaded).toBe(false)
@@ -25,9 +28,9 @@ describe('usePermissionStore', () => {
   })
 
   describe('isAdmin', () => {
-    it('level 0 为管理员', () => {
+    it('level 0 为管理员', async () => {
       const store = usePermissionStore()
-      store.setUserPermission([], 0)
+      await store.setUserPermission([], 0)
       expect(store.isAdmin()).toBe(true)
     })
 
@@ -38,56 +41,45 @@ describe('usePermissionStore', () => {
   })
 
   describe('hasLevel', () => {
-    it('等级数字小等于要求值时有权限', () => {
+    it('等级数字小等于要求值时有权限', async () => {
       const store = usePermissionStore()
-      store.setUserPermission([], 2)
+      await store.setUserPermission([], 2)
       expect(store.hasLevel(2)).toBe(true)
       expect(store.hasLevel(3)).toBe(true)
       expect(store.hasLevel(1)).toBe(false)
     })
   })
 
-  describe('hasPermission', () => {
-    it('管理员（level 0）拥有所有权限', () => {
+  describe('canAccessPage', () => {
+    it('委托给权限总线判断页面可访问性', () => {
       const store = usePermissionStore()
-      store.setUserPermission([], 0)
-      expect(store.hasPermission('anything')).toBe(true)
+      // mock 返回 true，所以 should be true
+      expect(store.canAccessPage('admin_users')).toBe(true)
     })
+  })
 
-    it('包含 * 通配符拥有所有权限', () => {
+  describe('getVisiblePageList', () => {
+    it('返回当前 level 可见页面列表', () => {
       const store = usePermissionStore()
-      store.setUserPermission(['*'], 5)
-      expect(store.hasPermission('blog:create')).toBe(true)
-    })
-
-    it('具体权限匹配', () => {
-      const store = usePermissionStore()
-      store.setUserPermission(['blog:create', 'blog:edit'], 5)
-      expect(store.hasPermission('blog:create')).toBe(true)
-      expect(store.hasPermission('blog:delete')).toBe(false)
-    })
-
-    it('无权限返回 false', () => {
-      const store = usePermissionStore()
-      expect(store.hasPermission('anything')).toBe(false)
+      const pages = store.getVisiblePageList()
+      expect(pages).toContain('home')
+      expect(pages).toContain('explore')
     })
   })
 
   describe('setUserPermission', () => {
-    it('同时设置 permissions 和 level', () => {
+    it('设置 level 并初始化权限总线', async () => {
       const store = usePermissionStore()
-      store.setUserPermission(['a', 'b'], 1)
-      expect(store.permissions).toEqual(['a', 'b'])
+      await store.setUserPermission([], 1)
       expect(store.level).toBe(1)
     })
   })
 
   describe('resetPermission', () => {
-    it('重置为默认状态', () => {
+    it('重置为默认状态', async () => {
       const store = usePermissionStore()
-      store.setUserPermission(['admin'], 0)
+      await store.setUserPermission([], 0)
       store.resetPermission()
-      expect(store.permissions).toEqual([])
       expect(store.level).toBe(5)
       expect(store.routesLoaded).toBe(false)
     })

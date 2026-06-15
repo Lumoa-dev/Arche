@@ -24,7 +24,7 @@ class MockProvider(CloudProvider):
 
     name = "mock"
 
-    def __init__(self, credentials: dict | None = None):
+    def __init__(self, credentials: dict | None = None):  # noqa: ARG002
         self._instances: dict[str, dict] = {}
 
     def _get_rate(self, gpu_type: str) -> float:
@@ -108,7 +108,7 @@ class MockProvider(CloudProvider):
             "temperature_c": status["temperature"],
         }
 
-    async def get_cost(self, instance_id: str, start: str, end: str) -> float:
+    async def get_cost(self, instance_id: str, start: str, end: str) -> float:  # noqa: ARG002
         instance = self._instances.get(instance_id)
         if not instance:
             return 0.0

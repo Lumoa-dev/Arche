@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
 
 from backend.plugins.cloud_integration.providers.zhixingyun import (
     ZhixingyunProvider,

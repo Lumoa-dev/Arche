@@ -26,7 +26,6 @@ from .db import close_db, init_db
 from .middleware import register_error_handlers, setup_cors, setup_security_headers
 from .plugin_registry import registry
 
-
 _DEFAULT_CONFIG_SEED = [
     # (key, group, description, is_sensitive)
     ("MINIO_ENDPOINT", "minio", "MinIO 服务地址", False),
@@ -125,14 +124,14 @@ def _setup_logging() -> None:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         handlers.append("file")
-        logging_config["handlers"]["file"] = {
+        logging_config["handlers"]["file"] = {  # type: ignore[index]
             "class": "logging.FileHandler",
             "formatter": "default",
             "filename": str(log_path),
             "level": log_level,
             "encoding": "utf-8",
         }
-        logging_config["root"]["handlers"] = handlers
+        logging_config["root"]["handlers"] = handlers  # type: ignore[index]
 
     # 第三方库日志抑制：APScheduler 的调度日志（每秒执行/完成）只应在 WARNING 及以上输出
     logging_config["loggers"] = {
@@ -158,7 +157,7 @@ def create_app() -> FastAPI:
 
     _container_mod.container = container
 
-    def _config_factory(c):
+    def _config_factory(c):  # noqa: ARG001
         return config_manager
 
     container.register("config", _config_factory)
@@ -167,7 +166,7 @@ def create_app() -> FastAPI:
     database_url = config_manager.get_required("DATABASE_URL")
     engine, session_factory = init_db(database_url)
 
-    def _db_factory(c):
+    def _db_factory(c):  # noqa: ARG001
         return {"engine": engine, "session_factory": session_factory}
 
     container.register("db", _db_factory)
@@ -214,8 +213,9 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup():
         import asyncio
-        from alembic.config import Config as AlembicConfig
+
         from alembic import command
+        from alembic.config import Config as AlembicConfig
 
         # 运行数据库迁移
         migrations_dir = Path(__file__).resolve().parent.parent / "migrations"
@@ -226,19 +226,17 @@ def create_app() -> FastAPI:
         loop = asyncio.get_event_loop()
 
         def _run_migrations():
-            # 试验性阶段：直接 stamp 当前版本为 head，不执行迁移 SQL。
-            # 表结构由后续 ensure_tables() 兜底创建（`create_all` 本身是幂等的）。
-            # 等数据库中有实际数据后再改为 command.upgrade()。
-            command.stamp(alembic_cfg, "head")
+            # 自动迁移。改模型后执行 `alembic revision --autogenerate -m "xxx"`
+            command.upgrade(alembic_cfg, "head")
 
         await loop.run_in_executor(None, _run_migrations)
 
-        # 兜底：确保所有 ORM 模型对应的表已创建（处理缺少 migration 的场景）
+        # 兜底：确保所有 ORM 模型对应的表已创建（迁移未覆盖时使用，幂等）
         from .db import ensure_tables
 
         await ensure_tables()
 
-        # 校验数据库 schema
+        # 校验数据库 schema 是否与模型一致
         from .db import validate_schema
 
         await validate_schema()

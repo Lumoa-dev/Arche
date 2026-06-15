@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import HTTPException, Request
 import pytest
+from fastapi import HTTPException, Request
 
 from backend.plugins.monitor import routes
 from backend.plugins.monitor.models import MonitorTemplate
@@ -33,11 +33,11 @@ class MockSystemMonitorService:
         return {"bytes_sent": 1000, "bytes_recv": 2000}
 
     @staticmethod
-    def get_processes(sort_by="cpu_percent"):
+    def get_processes(sort_by="cpu_percent"):  # noqa: ARG004
         return {"items": [], "total": 0, "limit": 50}
 
     @staticmethod
-    def get_history(page=1, page_size=50):
+    def get_history(page=1, page_size=50):  # noqa: ARG004
         return {"items": [], "total": 0, "page": 1, "page_size": 50}
 
 
@@ -56,7 +56,7 @@ class MockContainer:
 
 class MockContainerNoMonitor:
     @staticmethod
-    def is_available(name):
+    def is_available(name):  # noqa: ARG004
         return False
 
     @staticmethod

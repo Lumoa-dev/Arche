@@ -3,10 +3,12 @@
 import logging
 import os
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi import FastAPI
-from backend.core import create_app, _setup_logging, _seed_default_config
+
+from backend.core import _seed_default_config, _setup_logging, create_app
 from backend.core.config import ConfigManager
 
 
@@ -170,8 +172,8 @@ class TestCreateApp:
         )
         self.mock_register_error_handlers = self.patcher_register_error_handlers.start()
 
-        self.patcher_alembic_stamp = patch("alembic.command.stamp")
-        self.mock_alembic_stamp = self.patcher_alembic_stamp.start()
+        self.patcher_alembic_upgrade = patch("alembic.command.upgrade")
+        self.mock_alembic_upgrade = self.patcher_alembic_upgrade.start()
 
         self.patcher_ensure_tables = patch("backend.core.db.ensure_tables")
         self.mock_ensure_tables = self.patcher_ensure_tables.start()
@@ -200,7 +202,7 @@ class TestCreateApp:
         self.patcher_registry_register_services.stop()
         self.patcher_setup_cors.stop()
         self.patcher_register_error_handlers.stop()
-        self.patcher_alembic_stamp.stop()
+        self.patcher_alembic_upgrade.stop()
         self.patcher_ensure_tables.stop()
         self.patcher_validate_schema.stop()
         self.patcher_seed_default_config.stop()
@@ -256,7 +258,7 @@ class TestCreateApp:
         await startup_hook()
 
         # 验证步骤执行顺序
-        self.mock_alembic_stamp.assert_called_once()  # 先运行迁移(stamp)
+        self.mock_alembic_upgrade.assert_called_once()  # 先运行迁移(upgrade)
         self.mock_ensure_tables.assert_called_once()  # 再兜底建表
         self.mock_validate_schema.assert_called_once()  # 然后校验schema
         self.mock_seed_default_config.assert_called_once()  # 然后初始化配置

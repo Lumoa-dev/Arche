@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { useForm } from '@/composables/useForm'
+import { useForm } from '@/lib/composables/useForm'
 
 describe('useForm', () => {
   it('初始状态：model 为初始值的拷贝，submitting 为 false，formRef 为 null', () => {

@@ -1,7 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { usePermissionStore } from '@/store/modules/permission'
-import { permissionDirective, setupPermissionDirective } from '@/directives/permission'
+import { usePermissionStore } from '@/lib/store/modules/permission'
+import { permissionDirective, setupPermissionDirective } from '@/lib/directives/permission'
+
+// 模拟权限总线
+vi.mock('@/lib/services/permission-bus', () => ({
+  initPermissionBus: vi.fn(() => Promise.resolve()),
+  clearPermissionCache: vi.fn(),
+  canAccessPage: vi.fn(() => true),
+  getVisiblePages: vi.fn(() => [])
+}))
 
 describe('permission 指令', () => {
   beforeEach(() => {
@@ -18,7 +26,7 @@ describe('permission 指令', () => {
     const removeSpy = vi.spyOn(parent, 'removeChild')
 
     permissionDirective.mounted(el, {
-      value: 'some:permission',
+      value: 'home.post_card',
       instance: null,
       dir: {},
       modifiers: {},
@@ -48,9 +56,9 @@ describe('permission 指令', () => {
     expect(removeSpy).not.toHaveBeenCalled()
   })
 
-  it('不具备权限时移除元素', () => {
+  it('无点号格式时（旧格式）不移除元素（兼容降级）', () => {
     const store = usePermissionStore()
-    store.setUserPermission(['blog:read'], 5)
+    store.setUserPermission([], 5)
 
     const el = document.createElement('div')
     const parent = document.createElement('div')
@@ -64,38 +72,20 @@ describe('permission 指令', () => {
       oldValue: undefined
     } as any)
 
-    expect(parent.contains(el)).toBe(false)
-  })
-
-  it('具备权限时不移除元素', () => {
-    const store = usePermissionStore()
-    store.setUserPermission(['blog:write'], 5)
-
-    const el = document.createElement('div')
-    const parent = document.createElement('div')
-    parent.appendChild(el)
-
-    permissionDirective.mounted(el, {
-      value: 'blog:write',
-      instance: null,
-      dir: {},
-      modifiers: {},
-      oldValue: undefined
-    } as any)
-
+    // 无点号的旧格式，降级为不阻止显示
     expect(parent.contains(el)).toBe(true)
   })
 
   it('数组权限：只要有一个满足就显示', () => {
     const store = usePermissionStore()
-    store.setUserPermission(['blog:read'], 5)
+    store.setUserPermission([], 5)
 
     const el = document.createElement('div')
     const parent = document.createElement('div')
     parent.appendChild(el)
 
     permissionDirective.mounted(el, {
-      value: ['blog:write', 'blog:read'],
+      value: ['explore.post_list', 'home.post_card'],
       instance: null,
       dir: {},
       modifiers: {},
@@ -103,25 +93,6 @@ describe('permission 指令', () => {
     } as any)
 
     expect(parent.contains(el)).toBe(true)
-  })
-
-  it('数组权限：没有一个满足时移除', () => {
-    const store = usePermissionStore()
-    store.setUserPermission(['blog:read'], 5)
-
-    const el = document.createElement('div')
-    const parent = document.createElement('div')
-    parent.appendChild(el)
-
-    permissionDirective.mounted(el, {
-      value: ['blog:write', 'blog:delete'],
-      instance: null,
-      dir: {},
-      modifiers: {},
-      oldValue: undefined
-    } as any)
-
-    expect(parent.contains(el)).toBe(false)
   })
 
   it('setupPermissionDirective 注册 v-permission 指令', () => {

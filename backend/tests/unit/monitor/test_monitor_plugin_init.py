@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
-from unittest.mock import MagicMock
 
 from backend.plugins.monitor import MonitorPlugin
 

@@ -14,6 +14,7 @@ from backend.plugins.system_monitor.settings import SystemMonitorSettings
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
+
     from backend.core.container import ServiceContainer
 
 from backend.plugins.system_monitor.routes import router
@@ -23,17 +24,15 @@ from backend.plugins.system_monitor.services import SystemMonitorService
 class SystemMonitorPlugin(BasePlugin):
     name = "system_monitor"
     version = "0.1.0"
-    requires = ["auth"]
-    optional = []
 
     def __init__(self):
         self._app = None
 
-    def setup(self, app: "FastAPI") -> None:
+    def setup(self, app: FastAPI) -> None:
         self._app = app
         app.include_router(router)
 
-    def register_services(self, container: "ServiceContainer") -> None:
+    def register_services(self, container: ServiceContainer) -> None:
         container.register("system_monitor", lambda c: SystemMonitorService(c))
         # 注册 API 请求统计追踪器
         from backend.plugins.system_monitor.stats import RequestStatsTracker

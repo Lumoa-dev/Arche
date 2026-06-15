@@ -6,7 +6,7 @@ from backend.tests.conftest import patch_container_service
 
 
 class TestParameterPollution:
-    PAYLOADS = [
+    PAYLOADS = [  # noqa: RUF012
         ("array_for_string", ["a", "b", "c"]),
         ("object_for_array", {"should": "be_array"}),
         ("null_for_required", None),
@@ -14,7 +14,7 @@ class TestParameterPollution:
         ("oversized_string", "x" * 10000),
     ]
 
-    EXTENDED_PAYLOADS = [
+    EXTENDED_PAYLOADS = [  # noqa: RUF012
         ("boolean_for_string", True),
         ("float_for_int", 3.14),
         ("empty_object", {}),
@@ -79,11 +79,11 @@ class TestParameterPollution:
                 "username": "testuser",
                 "password": "testpass123",
             }
-            if desc == "array_for_email":
-                payload["email"] = value
-            elif desc == "null_for_required":
-                payload["email"] = value
-            elif desc == "oversized_string":
+            if (
+                desc == "array_for_email"
+                or desc == "null_for_required"
+                or desc == "oversized_string"
+            ):
                 payload["email"] = value
 
             resp = await client.post(

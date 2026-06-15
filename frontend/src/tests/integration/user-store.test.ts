@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useUserStore } from '@/store/modules/user'
+import { useUserStore } from '@/lib/store/modules/user'
 
 // ── Mock API 层 ──
 const { mockLoginApi, mockLogoutApi, mockGetUserInfoApi, mockRefreshTokenApi } = vi.hoisted(() => ({
@@ -22,6 +22,13 @@ vi.mock('@/services/api/auth', () => ({
   logoutApi: mockLogoutApi,
   getUserInfoApi: mockGetUserInfoApi,
   refreshTokenApi: mockRefreshTokenApi
+}))
+
+vi.mock('@/lib/services/permission-bus', () => ({
+  initPermissionBus: vi.fn(() => Promise.resolve()),
+  clearPermissionCache: vi.fn(),
+  canAccessPage: vi.fn(() => true),
+  getVisiblePages: vi.fn(() => [])
 }))
 
 // 模拟 localStorage

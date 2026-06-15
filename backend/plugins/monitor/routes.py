@@ -86,7 +86,7 @@ async def get_template(template_id: str, request: Request) -> dict[str, Any]:
     try:
         tid = uuid.UUID(template_id)
     except ValueError:
-        raise HTTPException(status_code=404, detail="Template not found")
+        raise HTTPException(status_code=404, detail="Template not found")  # noqa: B904
     session_factory = get_session_factory()
     async with session_factory() as session:
         result = await session.execute(
@@ -112,7 +112,7 @@ async def update_template(
     try:
         tid = uuid.UUID(template_id)
     except ValueError:
-        raise HTTPException(status_code=404, detail="Template not found")
+        raise HTTPException(status_code=404, detail="Template not found")  # noqa: B904
     session_factory = get_session_factory()
     async with session_factory() as session:
         result = await session.execute(
@@ -146,7 +146,7 @@ async def delete_template(template_id: str, request: Request) -> dict[str, str]:
     try:
         tid = uuid.UUID(template_id)
     except ValueError:
-        raise HTTPException(status_code=404, detail="Template not found")
+        raise HTTPException(status_code=404, detail="Template not found")  # noqa: B904
     session_factory = get_session_factory()
     async with session_factory() as session:
         result = await session.execute(

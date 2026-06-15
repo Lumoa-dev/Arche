@@ -6,19 +6,19 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import logging
 import time
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
-import logging
-
 from backend.core.container import ServiceContainer
 from backend.plugins.crawler.models import CrawlRecord
 from backend.plugins.crawler.pipeline import (
+    ClassifyStage,
     CrawlItem,
     FetchStage,
     ParseStage,
-    ClassifyStage,
     QualityStage,
     StorageStage,
 )
@@ -59,10 +59,8 @@ class CrawlerOrchestrator:
         self._running = False
         if self._task:
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
             self._task = None
 
     async def _daemon_loop(self) -> None:
@@ -123,15 +121,15 @@ class CrawlerOrchestrator:
         # 抓取 → 解析 → 分类 → 质检 → 存储
         await self.url_scheduler.acquire(url)
         try:
-            item = await self.fetch_stage.process(item)
+            item = await self.fetch_stage.process(item)  # type: ignore[assignment]
             if item and not item.error:
-                item = await self.parse_stage.process(item)
+                item = await self.parse_stage.process(item)  # type: ignore[assignment]
             if item and not item.error:
-                item = await self.classify_stage.process(item)
+                item = await self.classify_stage.process(item)  # type: ignore[assignment]
             if item and not item.error:
-                item = await self.quality_stage.process(item)
+                item = await self.quality_stage.process(item)  # type: ignore[assignment]
             if item and item.quality_passed and not item.error:
-                item = await self.storage_stage.process(item)
+                item = await self.storage_stage.process(item)  # type: ignore[assignment]
                 if item:
                     self._save_record(item)
                     self._pages_crawled += 1
@@ -197,7 +195,7 @@ class CrawlerOrchestrator:
 
     async def get_recent_records(self, limit: int = 50) -> list[dict]:
         """获取最近抓取的记录列表。"""
-        from sqlalchemy import select, desc
+        from sqlalchemy import desc, select
 
         db = self.container.get("db")
         session_factory = db["session_factory"]
@@ -227,6 +225,7 @@ class CrawlerOrchestrator:
     async def get_record(self, record_id) -> dict | None:
         """获取单条记录详情。"""
         import uuid as _uuid
+
         from sqlalchemy import select
 
         db = self.container.get("db")
@@ -258,7 +257,7 @@ class CrawlerOrchestrator:
 
     async def get_stats(self) -> dict:
         """统计信息。"""
-        from sqlalchemy import select, func
+        from sqlalchemy import func, select
 
         db = self.container.get("db")
         session_factory = db["session_factory"]

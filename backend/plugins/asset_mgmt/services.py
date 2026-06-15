@@ -59,7 +59,7 @@ class AssetMgmtService:
             if asset_type is None or asset_type == "file":
                 from backend.plugins.oss.models import OSSFile
 
-                query = select(OSSFile).where(OSSFile.owner_id == owner_id)
+                query = select(OSSFile).where(OSSFile.owner_id == owner_id)  # type: ignore[assignment]
                 result = await session.execute(query)
                 for f in result.scalars().all():
                     assets.append(
@@ -83,7 +83,7 @@ class AssetMgmtService:
             if asset_type is None or asset_type == "training_job":
                 from backend.plugins.cloud_integration.models import TrainingJob
 
-                query = select(TrainingJob).where(TrainingJob.creator_id == owner_id)
+                query = select(TrainingJob).where(TrainingJob.creator_id == owner_id)  # type: ignore[assignment]
                 result = await session.execute(query)
                 for job in result.scalars().all():
                     assets.append(
@@ -142,12 +142,10 @@ class AssetMgmtService:
 
             # 时间范围过滤
             created_at = asset.get("created_at")
-            if date_from and created_at:
-                if created_at < date_from:
-                    continue
-            if date_to and created_at:
-                if created_at > date_to:
-                    continue
+            if date_from and created_at and created_at < date_from:
+                continue
+            if date_to and created_at and created_at > date_to:
+                continue
 
             results.append(asset)
 

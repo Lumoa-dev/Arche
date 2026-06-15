@@ -10,13 +10,13 @@ from sqlalchemy import func, select
 from backend.core.middleware import AppError
 
 from .models import (
-    TrainingJob,
-    TrainingInstance,
-    TrainingCost,
-    TrainingTaskStep,
-    Dataset,
-    CodeRepo,
     Artifact,
+    CodeRepo,
+    Dataset,
+    TrainingCost,
+    TrainingInstance,
+    TrainingJob,
+    TrainingTaskStep,
 )
 from .providers.registry import get_provider
 
@@ -90,7 +90,7 @@ class CloudTrainingService:
 
     # --- 任务状态机 ---
 
-    VALID_TRANSITIONS = {
+    VALID_TRANSITIONS = {  # noqa: RUF012
         "pending": {"running", "cancelled"},
         "running": {"completed", "failed", "cancelled"},
         "completed": set(),
@@ -451,7 +451,7 @@ class CloudTrainingService:
                 config={"gpu_type": gpu_type, "gpu_count": 1},
             )
         except Exception as e:
-            raise AppError(
+            raise AppError(  # noqa: B904
                 f"Provider 创建实例失败: {e}", code="provider_error", status_code=502
             )
 

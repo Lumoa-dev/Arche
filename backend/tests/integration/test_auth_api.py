@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from backend.tests.conftest import patch_container_service
 from backend.plugins.auth.services import AuthService
+from backend.tests.conftest import patch_container_service
 
 
 @pytest.fixture(autouse=True)

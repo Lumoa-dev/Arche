@@ -100,6 +100,36 @@ class AuthService:
             settings = UserSettings(user_id=user_id)
             session.add(settings)
 
+            # 第一个用户（P0）预填所有页面权限
+            if is_first_user:
+                from backend.plugins.auth.models import PageComponentPermission
+
+                all_pages = [
+                    "home",
+                    "explore",
+                    "create",
+                    "assets",
+                    "scheduler",
+                    "profile",
+                    "posts",
+                    "creator",
+                    "console",
+                    "admin_users",
+                    "admin_content",
+                    "admin_ops",
+                    "admin_permissions",
+                    "tasks",
+                ]
+                for page_name in all_pages:
+                    session.add(
+                        PageComponentPermission(
+                            level=0,
+                            page_name=page_name,
+                            component_name="page",
+                            visible=True,
+                        )
+                    )
+
             await session.commit()
             await session.refresh(user)
 
@@ -280,9 +310,9 @@ class AuthService:
         try:
             return jwt.decode(token, self.secret_key, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
-            raise AuthError("Token 已过期")
+            raise AuthError("Token 已过期")  # noqa: B904
         except jwt.InvalidTokenError:
-            raise AuthError("无效 Token")
+            raise AuthError("无效 Token")  # noqa: B904
 
     # --- 工具方法 ---
     def _user_to_dict(self, user) -> dict:
@@ -377,7 +407,7 @@ class AuthService:
 
             await session.commit()
             await session.refresh(settings)
-            return await self.get_user_settings(user_id)
+            return await self.get_user_settings(user_id)  # type: ignore[return-value]
 
     # --- 登录历史 ---
     async def get_login_history(
@@ -775,3 +805,84 @@ class AuthService:
             "by_level": by_level,
             "daily_trend": trend,
         }
+
+    # ── 页面组件权限管理 ──
+
+    async def get_page_permissions(self, level: int) -> dict[str, dict[str, bool]]:
+        """获取指定 level 的页面组件权限映射。
+
+        返回格式：{ page_name: { component_name: visible } }
+        """
+        from backend.plugins.auth.models import PageComponentPermission
+
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(PageComponentPermission).where(
+                    PageComponentPermission.level == level
+                )
+            )
+            rows = result.scalars().all()
+
+        mapping: dict[str, dict[str, bool]] = {}
+        for row in rows:
+            if row.page_name not in mapping:
+                mapping[row.page_name] = {}
+            mapping[row.page_name][row.component_name] = row.visible
+        return mapping
+
+    async def get_all_permission_levels(self) -> list[int]:
+        """获取所有已配置权限数据的 level 列表。"""
+        from backend.plugins.auth.models import PageComponentPermission
+
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(PageComponentPermission.level)
+                .distinct()
+                .order_by(PageComponentPermission.level)
+            )
+            return [row[0] for row in result.all()]
+
+    async def set_page_component(
+        self, level: int, page_name: str, component_name: str, visible: bool
+    ) -> None:
+        """设置单个页面组件的可见性。不存在则插入，存在则更新。"""
+        from backend.plugins.auth.models import PageComponentPermission
+
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(PageComponentPermission).where(
+                    PageComponentPermission.level == level,
+                    PageComponentPermission.page_name == page_name,
+                    PageComponentPermission.component_name == component_name,
+                )
+            )
+            row = result.scalar_one_or_none()
+            if row:
+                row.visible = visible
+            else:
+                row = PageComponentPermission(
+                    level=level,
+                    page_name=page_name,
+                    component_name=component_name,
+                    visible=visible,
+                )
+                session.add(row)
+            await session.commit()
+
+    async def set_page_defaults(
+        self, level: int, page_name: str, visible_default: bool
+    ) -> None:
+        """批量设置指定页面下所有组件的可见性。"""
+        from backend.plugins.auth.models import PageComponentPermission
+
+        async with self.session_factory() as session:
+            result = await session.execute(
+                select(PageComponentPermission).where(
+                    PageComponentPermission.level == level,
+                    PageComponentPermission.page_name == page_name,
+                )
+            )
+            rows = result.scalars().all()
+            for row in rows:
+                row.visible = visible_default
+            await session.commit()

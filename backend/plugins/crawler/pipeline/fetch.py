@@ -6,7 +6,6 @@ import httpx
 
 from backend.plugins.crawler.pipeline.base import BaseStage, CrawlItem
 
-
 MAX_HTML_BYTES = 512 * 1024
 
 # 保守请求头：保持普通 HTTP 访问形态，不模拟浏览器执行环境。
@@ -16,7 +15,7 @@ _HEADERS = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36"
     ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",  # noqa: E501
     "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
     "Accept-Encoding": "gzip, deflate",
     "Connection": "keep-alive",

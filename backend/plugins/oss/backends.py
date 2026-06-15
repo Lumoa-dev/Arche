@@ -5,14 +5,16 @@ from __future__ import annotations
 import io
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator
+from typing import TYPE_CHECKING
 
 CHUNK_SIZE = 64 * 1024
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from minio import Minio as MinioClient
+
     from backend.plugins.oss.aliyun import CloudStorageService
 
 
@@ -61,7 +63,7 @@ class StorageBackend(ABC):
 class MinIOBackend(StorageBackend):
     """本地 MinIO 对象存储后端（S3 兼容）。"""
 
-    def __init__(self, client: "MinioClient", bucket: str):
+    def __init__(self, client: MinioClient, bucket: str):
         self._client = client
         self._bucket = bucket
 
@@ -70,7 +72,10 @@ class MinIOBackend(StorageBackend):
             self._client.make_bucket(self._bucket)
 
     async def upload_stream(
-        self, key: str, stream: AsyncIterator[bytes], size: int
+        self,
+        key: str,
+        stream: AsyncIterator[bytes],
+        size: int,  # noqa: ARG002
     ) -> None:
         self._ensure_bucket()
 
@@ -126,11 +131,14 @@ class MinIOBackend(StorageBackend):
 class AliyunBackend(StorageBackend):
     """阿里云 OSS 存储后端（远程对象存储）。"""
 
-    def __init__(self, cloud_service: "CloudStorageService"):
+    def __init__(self, cloud_service: CloudStorageService):
         self._cloud = cloud_service
 
     async def upload_stream(
-        self, key: str, stream: AsyncIterator[bytes], size: int
+        self,
+        key: str,
+        stream: AsyncIterator[bytes],
+        size: int,  # noqa: ARG002
     ) -> None:
         chunks = [chunk async for chunk in stream]
         content = b"".join(chunks)
@@ -196,7 +204,7 @@ class LocalBackend(StorageBackend):
         chunks = [chunk async for chunk in stream]
         path.write_bytes(b"".join(chunks))
 
-    async def download(self, key: str) -> AsyncIterator[bytes]:
+    async def download(self, key: str) -> AsyncIterator[bytes]:  # type: ignore[override, misc]
         path = self._resolve(key)
         with open(path, "rb") as f:
             while True:

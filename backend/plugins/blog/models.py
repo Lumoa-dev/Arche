@@ -6,10 +6,10 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
     Integer,
-    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -39,8 +39,10 @@ class BlogPost(Base, HasSID):
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
     views: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     required_level: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
-    # 引言区域（结构化 JSON，含 abstract / background / purpose / key_points 等）
-    introduction: Mapped[dict | None] = mapped_column(JSON, nullable=True, default=None)
+    # 副标题（JSON 数组，如 ["副标题1", "副标题2"]）
+    subtitles: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
+    # 引言区域（富文本 Markdown 内容）
+    introduction: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     # 段落顺序（JSON 数组，如 ["PID_001", "PID_002"]，控制渲染顺序）
     paragraph_ids: Mapped[list | None] = mapped_column(
         JSON, nullable=True, default=None

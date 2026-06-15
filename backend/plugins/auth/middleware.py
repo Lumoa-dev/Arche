@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 
 import jwt
-
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -22,7 +21,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """JWT 认证中间件：解析 token 并注入 request.state.user。"""
 
     # 不需要认证的公开路由（仅注册和登录等身份端点）
-    PUBLIC_PATHS = {
+    PUBLIC_PATHS = {  # noqa: RUF012
         "/api/auth/register",
         "/api/auth/login",
         "/api/auth/refresh",
@@ -85,7 +84,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         user = mock_users.get(role, mock_users["user"])
         request.state.user = user
-        self._refresh_session(request, user["id"])
+        self._refresh_session(request, user["id"])  # type: ignore[arg-type]
         try:
             return await call_next(request)
         except Exception as e:

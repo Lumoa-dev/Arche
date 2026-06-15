@@ -6,8 +6,8 @@ import { AddOutline } from '@/icons'
 import { ArTable, ArPagination } from '@/components/ui'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArTag from '@/components/ui/ArTag.vue'
-import { PostCard } from '@/components/blog'
-import { deletePostApi, getMyPostsApi, type BlogPost } from '@/services/api'
+import PostCardForCompact from '@/components/widgets/blog/PostCardForCompact.vue'
+import { deletePostApi, getMyPostsApi, type BlogPost } from '@/components/logic/api'
 
 const message = useMessage()
 const router = useRouter()
@@ -56,10 +56,8 @@ const columns = [
     width: 400,
     render: (row: PostRow) =>
       h('div', { class: 'posts-title-cell' }, [
-        h(PostCard, {
-          post: toBlogPost(row),
-          layout: 'compact',
-          showExcerpt: false
+        h(PostCardForCompact, {
+          post: toBlogPost(row)
         })
       ])
   },
@@ -134,11 +132,11 @@ const fetchPosts = async () => {
 }
 
 const handleCreate = () => {
-  router.push('/posts/new')
+  router.push('/create/editor')
 }
 
 const handleEdit = (row: PostRow) => {
-  router.push(`/posts/${row.id}/edit`)
+  router.push(`/create/editor?postId=${row.id}`)
 }
 
 const confirmDelete = (row: PostRow) => {

@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    AsyncEngine,
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
@@ -18,8 +16,8 @@ class Base(DeclarativeBase):
 
 
 # 模块级变量，供 on_startup 等场景使用
-engine: Optional[AsyncEngine] = None
-session_factory: Optional[async_sessionmaker[AsyncSession]] = None
+engine: AsyncEngine | None = None
+session_factory: async_sessionmaker[AsyncSession] | None = None
 _initialized = False
 
 

@@ -155,14 +155,22 @@ cd frontend && npm run generate:api        # OpenAPI → TS types
 
 ### 5.5 Frontend Component Layers
 
-| Layer | Directory | Purpose |
-|-------|-----------|---------|
-| UI primitives | `src/components/ui/` | ArButton, ArCard, ArTable, ArInput, etc. |
-| Blog components | `src/components/blog/` | PostCard, PostEditor, CommentList, RichTextEditor, etc. |
-| Admin components | `src/components/admin/` | ModerationPanel, PostTable, UserTable, etc. |
+| Layer | Directory | Purpose | CSS Rule |
+|-------|-----------|---------|----------|
+| UI primitives | `src/components/ui/` | ArButton, ArCard, ArTable, ArInput, etc. | 大量 CSS — 高度完备的通用组件 |
+| Business components | `src/components/widgets/` | PostCard, PostEditor, CommentList, RichTextEditor, etc. | 少量 CSS — 业务场景固定规格 |
+| Pages | `src/views/` | 页面级组件 | **0 CSS** — 无任何 `<style>` 标签 |
 | Layouts | `src/layouts/` | BaseLayout, BlogShell, PlatformShell, ConsoleLayout, etc. |
 
-### 5.6 CI Pipeline
+### 5.6 Frontend CSS 红线规则
+
+- **页面 0 CSS**：禁止 `<style>` 标签，布局用 ArVBox / ArHBox 等基础布局组件
+- **业务组件少量 CSS**：仅限业务场景固定规格，不超过 20 行
+- **布局必须用 Ar 布局原语**：ArVBox / ArHBox / ArSpacer / ArGrid，禁止手写 flex/grid
+- **缺失组件须汇报**：基础组件不存在的 UI 模式须汇报后再决定，禁止用 CSS 临时实现
+- **CR 发现违规直接打回**
+
+### 5.7 CI Pipeline
 
 `backend-lint` → `backend-test` → `frontend-check` → `frontend-test` → `security-scan` → `gate` → (`build` → `deploy` + `tag-release`)
 

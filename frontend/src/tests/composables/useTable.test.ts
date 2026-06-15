@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { useTable } from '@/composables/useTable'
+import { useTable } from '@/lib/composables/useTable'
 
 describe('useTable', () => {
   it('初始状态：空列表、零总数、第一页、每页 10 条、未加载', () => {

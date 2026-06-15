@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import uuid
 
-from pydantic import BaseModel, Field
-
 from fastapi import APIRouter, Query, Request
+from pydantic import BaseModel, Field
 
 from backend.core.container import ServiceContainer
 from backend.core.middleware import require_level, require_user
-
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -79,6 +77,22 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(..., min_length=6, max_length=128, description="新密码")
 
 
+# --- 页面权限请求体 ---
+class SetPageComponentRequest(BaseModel):
+    level: int = Field(..., ge=0, le=10, description="用户等级")
+    page_name: str = Field(..., min_length=1, max_length=128, description="页面名称")
+    component_name: str = Field(
+        ..., min_length=1, max_length=128, description="组件名称"
+    )
+    visible: bool = Field(..., description="是否可见")
+
+
+class SetPageBatchRequest(BaseModel):
+    level: int = Field(..., ge=0, le=10, description="用户等级")
+    page_name: str = Field(..., min_length=1, max_length=128, description="页面名称")
+    visible: bool = Field(..., description="是否可见（页面下所有组件统一设置）")
+
+
 # --- 路由 ---
 @router.post("/register")
 async def register(req: RegisterRequest, request: Request):
@@ -138,8 +152,13 @@ async def logout(request: Request):
 
 @router.get("/me")
 async def get_me(request: Request):
-    """获取当前登录用户信息。"""
+    """获取当前登录用户信息（含页面组件权限映射）。"""
     user = require_user(request)
+    container: ServiceContainer = request.app.state.container
+    auth_service = container.get("auth")
+    user_level = user.get("level", 5)
+    page_permissions = await auth_service.get_page_permissions(user_level)
+    user["page_permissions"] = page_permissions
     return {"code": "ok", "message": "获取成功", "data": user}
 
 
@@ -323,3 +342,65 @@ async def get_user_stats(request: Request):
     auth_service = container.get("auth")
     result = await auth_service.get_user_stats()
     return {"code": "ok", "message": "获取成功", "data": result}
+
+
+# ── 页面组件权限管理 ──
+
+
+@router.get("/permissions/pages")
+async def get_page_permissions(
+    request: Request,
+    level: int | None = Query(
+        None, ge=0, le=10, description="用户等级，不传则用当前用户等级"
+    ),
+):
+    """获取指定 level 的页面组件权限映射。"""
+    container: ServiceContainer = request.app.state.container
+    auth_service = container.get("auth")
+
+    # 如果未指定 level，用当前用户的 level
+    if level is None:
+        user = require_user(request)
+        level = user.get("level", 5)
+
+    result = await auth_service.get_page_permissions(level)
+    return {"code": "ok", "message": "获取成功", "data": result}
+
+
+@router.get("/permissions/levels")
+@require_level(0)
+async def get_permission_levels(request: Request):
+    """获取所有已配置权限数据的 level 列表（P0）。"""
+    container: ServiceContainer = request.app.state.container
+    auth_service = container.get("auth")
+    result = await auth_service.get_all_permission_levels()
+    return {"code": "ok", "message": "获取成功", "data": result}
+
+
+@router.put("/permissions/pages")
+@require_level(0)
+async def set_page_component(req: SetPageComponentRequest, request: Request):
+    """设置单个页面组件的可见性（P0）。"""
+    container: ServiceContainer = request.app.state.container
+    auth_service = container.get("auth")
+    await auth_service.set_page_component(
+        level=req.level,
+        page_name=req.page_name,
+        component_name=req.component_name,
+        visible=req.visible,
+    )
+    return {"code": "ok", "message": "更新成功", "data": {}}
+
+
+@router.put("/permissions/pages/batch")
+@require_level(0)
+async def set_page_batch(req: SetPageBatchRequest, request: Request):
+    """批量设置指定页面下所有组件的可见性（P0）。"""
+    container: ServiceContainer = request.app.state.container
+    auth_service = container.get("auth")
+    await auth_service.set_page_defaults(
+        level=req.level,
+        page_name=req.page_name,
+        visible_default=req.visible,
+    )
+    return {"code": "ok", "message": "批量更新成功", "data": {}}

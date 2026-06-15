@@ -1,18 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useUserStore } from '@/store/modules/user'
-import { usePermissionStore } from '@/store/modules/permission'
-import type { UserInfo } from '@/services/api/auth'
+import { useUserStore } from '@/lib/store/modules/user'
+import { usePermissionStore } from '@/lib/store/modules/permission'
+import type { UserInfo } from '@/components/logic/api/auth'
 
 // 模拟 auth API
-vi.mock('@/services/api/auth', () => ({
+vi.mock('@/components/logic/api/auth', () => ({
   loginApi: vi.fn(),
   logoutApi: vi.fn(),
   refreshTokenApi: vi.fn(),
   getUserInfoApi: vi.fn()
 }))
 
-import { loginApi, logoutApi, refreshTokenApi, getUserInfoApi } from '@/services/api/auth'
+// 模拟权限总线
+vi.mock('@/lib/services/permission-bus', () => ({
+  initPermissionBus: vi.fn(() => Promise.resolve()),
+  clearPermissionCache: vi.fn(),
+  canAccessPage: vi.fn(() => true),
+  getVisiblePages: vi.fn(() => [])
+}))
+
+import { loginApi, logoutApi, refreshTokenApi, getUserInfoApi } from '@/components/logic/api/auth'
 
 describe('useUserStore', () => {
   beforeEach(() => {
@@ -92,16 +100,16 @@ describe('useUserStore', () => {
 
       const permissionStore = usePermissionStore()
       expect(permissionStore.isAdmin()).toBe(true)
-      expect(permissionStore.hasPermission('anything')).toBe(true)
+      expect(permissionStore.level).toBe(0)
     })
 
-    it('以 guest 角色登录后 permission 为空', async () => {
+    it('以 guest 角色登录后 permission 权限正确', async () => {
       const store = useUserStore()
       await store.loginAsRole('guest')
 
       const permissionStore = usePermissionStore()
       expect(permissionStore.isAdmin()).toBe(false)
-      expect(permissionStore.permissions).toEqual([])
+      expect(permissionStore.level).toBe(5)
     })
 
     it('未知角色抛出错误', async () => {
@@ -225,7 +233,6 @@ describe('useUserStore', () => {
 
       // 验证同步更新了 permission store
       const permissionStore = usePermissionStore()
-      expect(permissionStore.permissions).toEqual(['blog:read', 'blog:write'])
       expect(permissionStore.level).toBe(3)
     })
   })
@@ -292,15 +299,14 @@ describe('useUserStore', () => {
       expect(localStorage.getItem('userInfo')).toBeNull()
     })
 
-    it('清除后 permission store 也被重置', () => {
+    it('清除后 permission store 也被重置', async () => {
       const permissionStore = usePermissionStore()
-      permissionStore.setUserPermission(['admin'], 0)
+      await permissionStore.setUserPermission([], 0)
 
       const store = useUserStore()
       store.clearUserState()
 
       expect(permissionStore.isAdmin()).toBe(false)
-      expect(permissionStore.permissions).toEqual([])
       expect(permissionStore.level).toBe(5)
     })
   })

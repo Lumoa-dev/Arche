@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import uuid
 from datetime import datetime, timezone
-
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, text
@@ -76,7 +76,7 @@ class TrainingOrchestrator:
     PROGRESS_INTERVAL = 30  # 秒，训练中间隔读取日志
     MAX_RETRY: int = 3  # 每步最大重试次数
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
         self._running = False
         self._task: asyncio.Task | None = None
@@ -97,10 +97,8 @@ class TrainingOrchestrator:
         self._running = False
         if self._task:
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
         self._engine = None
         logger.info("训练编排器已停止")
 
@@ -623,7 +621,7 @@ class TrainingOrchestrator:
                 text(
                     "UPDATE training_task_steps SET "
                     "status = 'completed', completed_at = :now, result_data = :result "
-                    "WHERE job_id = :job_id AND step_name = :step AND status = 'running' "
+                    "WHERE job_id = :job_id AND step_name = :step AND status = 'running' "  # noqa: E501
                     "ORDER BY created_at DESC LIMIT 1"
                 ),
                 {
@@ -641,7 +639,7 @@ class TrainingOrchestrator:
             result = await session.execute(
                 text(
                     "SELECT retry_count FROM training_task_steps "
-                    "WHERE job_id = :job_id AND step_name = :step AND status = 'running' "
+                    "WHERE job_id = :job_id AND step_name = :step AND status = 'running' "  # noqa: E501
                     "ORDER BY created_at DESC LIMIT 1"
                 ),
                 {"job_id": str(job.id), "step": step_name},
@@ -665,7 +663,7 @@ class TrainingOrchestrator:
             )
             await session.commit()
             logger.warning(
-                f"任务 {job.id} 步骤 {step_name} 重试 {retry_count + 1}/{self.MAX_RETRY}: {error}"
+                f"任务 {job.id} 步骤 {step_name} 重试 {retry_count + 1}/{self.MAX_RETRY}: {error}"  # noqa: E501
             )
 
     async def _get_conn_key(self, job_id: uuid.UUID) -> str:

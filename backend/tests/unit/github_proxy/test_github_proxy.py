@@ -10,18 +10,17 @@ from __future__ import annotations
 
 import asyncio
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from backend.plugins.github_proxy.services import (
-    GitHubService,
-    GhCliService,
-    HttpProxyService,
-    GitHubProxyError,
-)
 from backend.core.middleware import AppError
-
+from backend.plugins.github_proxy.services import (
+    GhCliService,
+    GitHubProxyError,
+    GitHubService,
+    HttpProxyService,
+)
 
 # =============================================================================
 # GhCliService 行为测试
@@ -512,24 +511,26 @@ class TestGitHubServiceAutoFallback:
 
         import httpx
 
-        with patch.object(
-            service.http_service._client,
-            "request",
-            side_effect=httpx.ConnectError("http failed"),
-        ):
-            with patch(
+        with (
+            patch.object(
+                service.http_service._client,
+                "request",
+                side_effect=httpx.ConnectError("http failed"),
+            ),
+            patch(
                 "asyncio.create_subprocess_exec",
                 side_effect=FileNotFoundError("gh not found"),
-            ):
-                with pytest.raises(GitHubProxyError) as excinfo:
-                    await service.proxy_request(
-                        method="GET",
-                        path="/user",
-                        mode="auto",
-                    )
+            ),
+        ):
+            with pytest.raises(GitHubProxyError) as excinfo:
+                await service.proxy_request(
+                    method="GET",
+                    path="/user",
+                    mode="auto",
+                )
 
-                # 应该是 HTTP 的错误，因为是第一个失败的
-                assert "http" in str(excinfo.value).lower()
+            # 应该是 HTTP 的错误，因为是第一个失败的
+            assert "http" in str(excinfo.value).lower()
 
 
 # =============================================================================
@@ -552,24 +553,26 @@ class TestGitHubServiceRawContent:
             "headers": {"Content-Type": "text/plain"},
             "cached": False,
         }
-        with patch.object(
-            service.cli_service,
-            "proxy_raw_content",
-            return_value=mock_result,
-        ) as mock_cli:
-            with patch.object(
+        with (
+            patch.object(
+                service.cli_service,
+                "proxy_raw_content",
+                return_value=mock_result,
+            ) as mock_cli,
+            patch.object(
                 service.http_service,
                 "proxy_raw_content",
-            ) as mock_http:
-                result = await service.proxy_raw_content(
-                    path="owner/repo/main/file.txt",
-                    mode="cli",
-                )
+            ) as mock_http,
+        ):
+            result = await service.proxy_raw_content(
+                path="owner/repo/main/file.txt",
+                mode="cli",
+            )
 
-                assert result["mode"] == "cli"
-                assert result["data"] == b"cli content"
-                mock_cli.assert_called_once_with("owner/repo/main/file.txt")
-                mock_http.assert_not_called()  # HTTP 服务不应被调用
+            assert result["mode"] == "cli"
+            assert result["data"] == b"cli content"
+            mock_cli.assert_called_once_with("owner/repo/main/file.txt")
+            mock_http.assert_not_called()  # HTTP 服务不应被调用
 
     @pytest.mark.asyncio
     async def test_http_mode_uses_http_service(self, fake_container):
@@ -583,24 +586,26 @@ class TestGitHubServiceRawContent:
             "headers": {"Content-Type": "text/plain"},
             "cached": False,
         }
-        with patch.object(
-            service.http_service,
-            "proxy_raw_content",
-            return_value=mock_result,
-        ) as mock_http:
-            with patch.object(
+        with (
+            patch.object(
+                service.http_service,
+                "proxy_raw_content",
+                return_value=mock_result,
+            ) as mock_http,
+            patch.object(
                 service.cli_service,
                 "proxy_raw_content",
-            ) as mock_cli:
-                result = await service.proxy_raw_content(
-                    path="owner/repo/main/file.txt",
-                    mode="http",
-                )
+            ) as mock_cli,
+        ):
+            result = await service.proxy_raw_content(
+                path="owner/repo/main/file.txt",
+                mode="http",
+            )
 
-                assert result["mode"] == "http"
-                assert result["data"] == b"http content"
-                mock_http.assert_called_once_with("owner/repo/main/file.txt")
-                mock_cli.assert_not_called()  # CLI 服务不应被调用
+            assert result["mode"] == "http"
+            assert result["data"] == b"http content"
+            mock_http.assert_called_once_with("owner/repo/main/file.txt")
+            mock_cli.assert_not_called()  # CLI 服务不应被调用
 
     @pytest.mark.asyncio
     async def test_auto_mode_http_success_no_fallback(self, fake_container):
@@ -614,24 +619,26 @@ class TestGitHubServiceRawContent:
             "headers": {},
             "cached": False,
         }
-        with patch.object(
-            service.http_service,
-            "proxy_raw_content",
-            return_value=mock_http_result,
-        ) as mock_http:
-            with patch.object(
+        with (
+            patch.object(
+                service.http_service,
+                "proxy_raw_content",
+                return_value=mock_http_result,
+            ) as mock_http,
+            patch.object(
                 service.cli_service,
                 "proxy_raw_content",
-            ) as mock_cli:
-                result = await service.proxy_raw_content(
-                    path="owner/repo/main/file.txt",
-                    mode="auto",
-                )
+            ) as mock_cli,
+        ):
+            result = await service.proxy_raw_content(
+                path="owner/repo/main/file.txt",
+                mode="auto",
+            )
 
-                assert result["mode"] == "http"
-                assert result["data"] == b"http content"
-                mock_http.assert_called_once()
-                mock_cli.assert_not_called()  # 不需要降级到 CLI
+            assert result["mode"] == "http"
+            assert result["data"] == b"http content"
+            mock_http.assert_called_once()
+            mock_cli.assert_not_called()  # 不需要降级到 CLI
 
     @pytest.mark.asyncio
     async def test_auto_mode_http_failure_fallbacks_to_cli(self, fake_container):
@@ -761,7 +768,7 @@ class TestRateLimiting:
             return_value=mock_subprocess_success(mock_response),
         ):
             # 发送59个请求，不应触发限流
-            for i in range(59):
+            for _i in range(59):
                 result = await service.proxy_request(
                     "GET", "/user", {}, {}, None, user_id
                 )
@@ -780,7 +787,7 @@ class TestRateLimiting:
             return_value=mock_subprocess_success(mock_response),
         ):
             # 先发送60个请求，刚好达到上限
-            for i in range(60):
+            for _i in range(60):
                 result = await service.proxy_request(
                     "GET", "/user", {}, {}, None, user_id
                 )
@@ -807,7 +814,7 @@ class TestRateLimiting:
             return_value=mock_subprocess_success(mock_response),
         ):
             # 先发送60个请求，达到上限
-            for i in range(60):
+            for _i in range(60):
                 await service.proxy_request("GET", "/user", {}, {}, None, user_id)
 
             # 第61个请求触发限流
@@ -841,7 +848,7 @@ class TestRateLimiting:
             return_value=mock_response,
         ):
             # 发送60个请求，达到上限
-            for i in range(60):
+            for _i in range(60):
                 result = await service.proxy_request(
                     "GET", "/user", {}, {}, None, user_id
                 )
@@ -862,21 +869,23 @@ class TestGitHubServiceAdditionalMethods:
         service = GitHubService(fake_container)
 
         # Mock 两个服务的 clear_cache 方法
-        with patch.object(
-            service.http_service,
-            "clear_cache",
-            return_value=10,
-        ) as mock_http_clear:
-            with patch.object(
+        with (
+            patch.object(
+                service.http_service,
+                "clear_cache",
+                return_value=10,
+            ) as mock_http_clear,
+            patch.object(
                 service.cli_service,
                 "clear_cache",
                 return_value=5,
-            ) as mock_cli_clear:
-                result = service.clear_cache()
+            ) as mock_cli_clear,
+        ):
+            result = service.clear_cache()
 
-                assert result == {"http": 10, "cli": 5}
-                mock_http_clear.assert_called_once()
-                mock_cli_clear.assert_called_once()
+            assert result == {"http": 10, "cli": 5}
+            mock_http_clear.assert_called_once()
+            mock_cli_clear.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_close_closes_http_service(self, fake_container):

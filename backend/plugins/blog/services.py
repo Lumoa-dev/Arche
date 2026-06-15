@@ -8,20 +8,20 @@ import uuid
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from sqlalchemy import delete, func, select, text
 from fastapi import UploadFile
+from sqlalchemy import delete, func, select, text
 
 from backend.core.middleware import AppError
 
 from .models import (
-    BlogPost,
-    BlogParagraph,
     BlogComment,
+    BlogFavorite,
     BlogLike,
+    BlogParagraph,
+    BlogPost,
+    BlogPostTag,
     BlogReport,
     BlogTag,
-    BlogPostTag,
-    BlogFavorite,
     ModerationRecord,
     PostFile,
 )
@@ -347,7 +347,8 @@ class BlogService:
         self,
         author_id: uuid.UUID,
         title: str,
-        introduction: dict | None = None,
+        subtitles: list[str] | None = None,
+        introduction: str | None = None,
         paragraphs_data: list[dict] | None = None,
         tags: list[str] | None = None,
         cover_url: str | None = None,
@@ -409,6 +410,7 @@ class BlogService:
                 slug=slug,
                 cover_url=cover_url,
                 introduction=introduction,
+                subtitles=subtitles,
                 status="pending",
                 required_level=required_level,
             )
@@ -482,7 +484,8 @@ class BlogService:
         post_id: uuid.UUID,
         author_id: uuid.UUID,
         title: str | None = None,
-        introduction: dict | None = None,
+        subtitles: list[str] | None = None,
+        introduction: str | None = None,
         paragraphs_data: list[dict] | None = None,
         required_level: int | None = None,
         tags: list[str] | None = None,
@@ -508,6 +511,8 @@ class BlogService:
                 post.slug = await self.generate_slug(title, exclude_slug=post.slug)
             if introduction is not None:
                 post.introduction = introduction
+            if subtitles is not None:
+                post.subtitles = subtitles
             if cover_url is not None:
                 post.cover_url = cover_url
             if paragraphs_data is not None:
@@ -625,10 +630,17 @@ class BlogService:
     async def get_post_paragraphs(
         self,
         post_id: uuid.UUID,
+        user_level: int | None = None,
         limit: int | None = None,
         offset: int = 0,
     ) -> list[dict]:
         """获取帖子的段落列表，按 paragraph_ids 顺序返回。"""
+        post = await self.get_post_by_id(post_id)
+        # required_level 权限检查
+        if user_level is not None and not can_user_see_post(
+            post.required_level, user_level
+        ):
+            raise AppError("无权查看此帖子", code="permission_denied", status_code=403)
         async with self.session_factory() as session:
             post_result = await session.execute(
                 select(BlogPost.paragraph_ids).where(BlogPost.id == post_id)
@@ -670,12 +682,17 @@ class BlogService:
     async def list_comments(
         self,
         post_id: uuid.UUID,
+        user_level: int | None = None,
         page: int = 1,
         page_size: int = 50,
     ) -> dict:
         """获取评论列表（公开）。"""
-        # 验证帖子存在
-        await self.get_post_by_id(post_id)
+        # 验证帖子存在并检查权限
+        post = await self.get_post_by_id(post_id)
+        if user_level is not None and not can_user_see_post(
+            post.required_level, user_level
+        ):
+            raise AppError("无权查看此帖子", code="permission_denied", status_code=403)
 
         from backend.plugins.auth.models import User
 
@@ -771,10 +788,16 @@ class BlogService:
         self,
         post_id: uuid.UUID,
         paragraph_pid: str,
+        user_level: int | None = None,
         page: int = 1,
         page_size: int = 50,
     ) -> dict:
-        """获取段落评论列表。"""
+        """获取段落评论列表（按权限过滤 required_level）。"""
+        post = await self.get_post_by_id(post_id)
+        if user_level is not None and not can_user_see_post(
+            post.required_level, user_level
+        ):
+            raise AppError("无权查看此帖子", code="permission_denied", status_code=403)
         from backend.plugins.auth.models import User
 
         offset = (page - 1) * page_size
@@ -1292,8 +1315,15 @@ class BlogService:
             await session.delete(post_tag)
             await session.commit()
 
-    async def get_post_tags(self, post_id: uuid.UUID) -> list[dict]:
-        """获取帖子的所有标签。"""
+    async def get_post_tags(
+        self, post_id: uuid.UUID, user_level: int | None = None
+    ) -> list[dict]:
+        """获取帖子的所有标签（按权限过滤 required_level）。"""
+        post = await self.get_post_by_id(post_id)
+        if user_level is not None and not can_user_see_post(
+            post.required_level, user_level
+        ):
+            raise AppError("无权查看此帖子", code="permission_denied", status_code=403)
         async with self.session_factory() as session:
             result = await session.execute(
                 select(BlogTag)
@@ -1306,14 +1336,14 @@ class BlogService:
 
     # --- 文件导入 ---
 
-    ALLOWED_IMPORT_TYPES = {".md", ".txt", ".docx", ".html", ".htm"}
+    ALLOWED_IMPORT_TYPES = {".md", ".txt", ".docx", ".html", ".htm"}  # noqa: RUF012
 
     async def import_post(
         self,
         file: UploadFile,
-        author_id: uuid.UUID,
-        user_level: int = 5,
-        required_level: int = 5,
+        author_id: uuid.UUID,  # noqa: ARG002
+        user_level: int = 5,  # noqa: ARG002
+        required_level: int = 5,  # noqa: ARG002
         tags: list[str] | None = None,
     ) -> dict:
         """从文件导入帖子。"""
@@ -1395,7 +1425,7 @@ class BlogService:
         try:
             from docx import Document
         except ImportError:
-            raise AppError(
+            raise AppError(  # noqa: B904
                 "python-docx 未安装，无法解析 .docx 文件",
                 code="missing_dependency",
                 status_code=500,
@@ -1480,7 +1510,7 @@ class BlogService:
 
     async def list_favorites(
         self,
-        user_id: uuid.UUID,
+        user_id: uuid.UUID,  # noqa: ARG002
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
@@ -1803,7 +1833,7 @@ class BlogService:
         # 检查视频链接（检测 bilibili/youtube 链接格式）
         for match in re.finditer(r"\[([^\]]*)\]\((https?://[^)]+)\)", content):
             url = match.group(2)
-            if self._is_trusted_video_host(url):
+            if self._is_trusted_video_host(url):  # noqa: SIM102
                 if not self._validate_video_url(url):
                     errors.append(f"视频链接 '{url}' 格式无效")
         return errors
@@ -1918,6 +1948,7 @@ class BlogService:
             "title": post.title,
             "slug": post.slug,
             "cover_url": post.cover_url,
+            "subtitles": post.subtitles,
             "introduction": post.introduction,
             "paragraph_ids": post.paragraph_ids,
             "status": post.status,

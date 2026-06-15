@@ -9,14 +9,39 @@
       <NDialogProvider>
         <NNotificationProvider>
           <NLoadingBarProvider>
-            <RouterView v-slot="{ Component, route: r }">
-              <component :is="layoutMap[(r.meta.layout as string) || 'guest'] || GuestLayout">
-                <component
-                  :is="Component"
-                  :key="r.matched[0]?.path === '/console' ? '/console' : r.fullPath"
+            <div class="app-shell" :class="[`app-shell--${layoutMode}`]">
+              <AppHeader
+                v-if="showHeader"
+                :layout-mode="layoutMode"
+                @toggle-sidebar="handleToggleSidebar"
+              />
+
+              <div
+                class="app-body"
+                :class="[
+                  `app-body--${layoutMode}`,
+                  { 'sidebar-collapsed': appStore.sidebarCollapsed }
+                ]"
+              >
+                <AppSidebar
+                  v-if="showSidebar"
+                  :sidebar-items="sidebarItems"
+                  :mode="sidebarMode"
+                  :collapsed="appStore.sidebarCollapsed"
+                  @close="handleCloseSidebar"
                 />
-              </component>
-            </RouterView>
+
+                <main class="app-main">
+                  <RouterView />
+                </main>
+              </div>
+
+              <ArFooter v-if="showFooter" bordered>
+                <span>© 2025 Arche. All rights reserved.</span>
+                <ArDivider vertical />
+                <RouterLink to="/about">关于</RouterLink>
+              </ArFooter>
+            </div>
           </NLoadingBarProvider>
         </NNotificationProvider>
       </NDialogProvider>
@@ -26,6 +51,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   NConfigProvider,
   NMessageProvider,
@@ -37,11 +63,18 @@ import {
   dateZhCN,
   type GlobalThemeOverrides
 } from 'naive-ui'
-import { useAppStore } from '@/store/modules/app'
-import GuestLayout from '@/layouts/GuestLayout.vue'
-import UserLayout from '@/layouts/UserLayout.vue'
+import ArFooter from '@/components/ui/ArFooter.vue'
+import ArDivider from '@/components/ui/ArDivider.vue'
+import AppHeader from '@/components/widgets/common/AppHeader.vue'
+import AppSidebar from '@/components/widgets/common/AppSidebar.vue'
+import { useAppStore } from '@/lib/store/modules/app'
+import { usePermissionStore } from '@/lib/store/modules/permission'
+import { buildLayoutMenus } from '@/lib/router/menu'
+import { HomeOutline } from '@/icons'
 
+const route = useRoute()
 const appStore = useAppStore()
+const permissionStore = usePermissionStore()
 
 const themeOverrides: GlobalThemeOverrides = {
   common: {
@@ -127,13 +160,118 @@ const themeOverrides: GlobalThemeOverrides = {
   }
 }
 
-const layoutMap: Record<string, typeof GuestLayout> = {
-  guest: GuestLayout,
-  user: UserLayout
-}
+/** 当前布局模式，从路由 meta 读取 */
+const layoutMode = computed(() => {
+  return (route.meta.layout as 'guest' | 'user' | 'admin') || 'guest'
+})
+
+/** 是否显示顶部导航栏 */
+const showHeader = computed(() => {
+  return ['guest', 'user', 'admin'].includes(layoutMode.value)
+})
+
+/** 是否显示侧边栏 */
+const showSidebar = computed(() => {
+  if (layoutMode.value === 'guest') return sidebarItems.value.length > 0
+  return ['user', 'admin'].includes(layoutMode.value)
+})
+
+/** 是否显示页脚 */
+const showFooter = computed(() => {
+  return layoutMode.value === 'guest'
+})
+
+/** 侧边栏模式映射 */
+const sidebarMode = computed<'thin' | 'normal' | 'grouped'>(() => {
+  const modeMap: Record<string, 'thin' | 'normal' | 'grouped'> = {
+    guest: 'thin',
+    user: 'normal',
+    admin: 'grouped'
+  }
+  return modeMap[layoutMode.value] || 'thin'
+})
+
+/** 当前布局模式的侧边栏条目 */
+const sidebarItems = computed(() => {
+  if (layoutMode.value === 'guest') return []
+
+  // user 模式：从权限路由构建菜单
+  if (layoutMode.value === 'user') {
+    const menus = buildLayoutMenus(permissionStore.routes, 'user')
+    const homeMenu = { title: '首页', path: '/', icon: HomeOutline }
+    return [homeMenu, ...menus]
+  }
+
+  // admin 模式：从权限路由构建菜单
+  if (layoutMode.value === 'admin') {
+    const menus = buildLayoutMenus(permissionStore.routes, 'admin')
+    return menus
+  }
+
+  return []
+})
 
 // 主题切换
 const theme = computed(() => {
   return appStore.theme === 'dark' ? darkTheme : null
 })
+
+/** 切换侧边栏折叠状态 */
+const handleToggleSidebar = () => {
+  appStore.toggleSidebar()
+}
+
+/** 移动端关闭侧边栏 */
+const handleCloseSidebar = () => {
+  if (appStore.isMobile) {
+    appStore.setSidebarCollapsed(true)
+  }
+}
 </script>
+
+<style scoped>
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-gradient-light);
+  color: var(--text-primary);
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  padding-top: 56px;
+}
+
+.app-main {
+  flex: 1;
+  padding: var(--content-padding);
+  min-width: 0;
+  transition: margin-left var(--transition-slow) var(--ease-out-spring);
+}
+
+/* Guest 模式：侧边栏宽度 180px */
+.app-body--guest .app-main {
+  margin-left: 0;
+}
+
+/* User/Admin 模式：侧边栏宽度 240px */
+.app-body--user .app-main,
+.app-body--admin .app-main {
+  margin-left: 240px;
+}
+
+/* 折叠时：侧边栏宽度 64px */
+.app-body--user.sidebar-collapsed .app-main,
+.app-body--admin.sidebar-collapsed .app-main {
+  margin-left: 64px;
+}
+
+/* 移动端：无侧边栏外边距 */
+@media (max-width: 992px) {
+  .app-main {
+    margin-left: 0 !important;
+  }
+}
+</style>

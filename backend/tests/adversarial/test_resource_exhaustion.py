@@ -50,8 +50,9 @@ class TestResourceExhaustion:
 
     async def test_large_file_upload_rejected(self, client, auth_headers, db_container):
         """超大文件上传应被拒绝。"""
-        from backend.tests.conftest import patch_container_service
         from unittest.mock import AsyncMock
+
+        from backend.tests.conftest import patch_container_service
 
         # 使用 mock storage 避免依赖 MinIO
         mock_storage = AsyncMock()

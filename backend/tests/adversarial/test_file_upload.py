@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock
 
-from backend.tests.conftest import patch_container_service
+import pytest
+
 from backend.plugins.oss.services import ALLOWED_MIME_TYPES
+from backend.tests.conftest import patch_container_service
 
 
 def _validate_mime(content_type):

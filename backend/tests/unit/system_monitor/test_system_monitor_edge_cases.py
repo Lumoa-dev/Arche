@@ -97,9 +97,7 @@ class TestContainerDetection:
             def exists(self):
                 if self._path == "/.dockerenv":
                     return False
-                if self._path == "/proc/1/cgroup":
-                    return True
-                return False
+                return self._path == "/proc/1/cgroup"
 
             def read_text(self, **kwargs):
                 if self._path == "/proc/1/cgroup":

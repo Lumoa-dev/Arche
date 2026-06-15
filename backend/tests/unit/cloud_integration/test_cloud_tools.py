@@ -20,7 +20,7 @@ class TestStepCommandBuilder:
     def test_training_related_commands(self):
         assert "nohup python3 train.py" in StepCommandBuilder.start_training("train.py")
         assert "kill -0 123" in StepCommandBuilder.check_process("123")
-        assert "tail -n 20 /tmp/x.log" == StepCommandBuilder.tail_log("/tmp/x.log", 20)
+        assert StepCommandBuilder.tail_log("/tmp/x.log", 20) == "tail -n 20 /tmp/x.log"
 
 
 class TestLogParser:

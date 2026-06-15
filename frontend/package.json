@@ -10,6 +10,7 @@
     "lint:fix": "eslint . --ext .vue,.js,.ts,.jsx,.tsx --fix",
     "format": "prettier --write .",
     "type-check": "vue-tsc --noEmit",
+    "collect:css": "node scripts/collect-css.mjs",
     "generate:api": "node scripts/generate-api-types.mjs",
     "generate:api:check": "node scripts/generate-api-types.mjs && git diff --exit-code src/services/api/generated.d.ts",
     "test": "vitest",
@@ -31,6 +32,7 @@
     "@vicons/ionicons5": "^0.13.0",
     "axios": "^1.15.2",
     "dompurify": "^3.4.10",
+    "echarts": "^6.1.0",
     "marked": "^18.0.5",
     "naive-ui": "^2.44.1",
     "pinia": "^3.0.4",
@@ -43,6 +45,8 @@
     }
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "@rushstack/eslint-patch": "^1.16.1",
     "@types/dompurify": "^3.0.5",
     "@types/node": "^24.12.2",

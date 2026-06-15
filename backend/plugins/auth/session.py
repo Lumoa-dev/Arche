@@ -28,7 +28,7 @@ DEFAULT_ONLINE_TIMEOUT = 900  # 15 分钟
 class UserSessionTracker:
     """线程安全的在线用户追踪器（单机内存版）。"""
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
         config = container.get("config")
         timeout_str = config.get("ONLINE_TIMEOUT_SECONDS", str(DEFAULT_ONLINE_TIMEOUT))

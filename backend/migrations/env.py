@@ -13,32 +13,32 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 sys.path.insert(0, "")  # 保证项目根目录在 sys.path
 from backend.core.db import Base
 from backend.core.models import ConfigEntry  # noqa: F401
+from backend.plugins.asset_mgmt.models import AssetIndex  # noqa: F401
 
 # 导入所有模型（让 Base.metadata 包含全部表）
-from backend.plugins.auth.models import User  # noqa: F401
+from backend.plugins.auth.models import PageComponentPermission, User  # noqa: F401
 from backend.plugins.blog.models import (  # noqa: F401
-    BlogPost,
-    BlogParagraph,
     BlogComment,
+    BlogFavorite,
     BlogLike,
+    BlogParagraph,
+    BlogPost,
+    BlogPostTag,
     BlogReport,
     BlogTag,
-    BlogPostTag,
-    BlogFavorite,
+)
+from backend.plugins.cloud_integration.models import (  # noqa: F401
+    Artifact,
+    CodeRepo,
+    Dataset,
+    TrainingCost,
+    TrainingInstance,
+    TrainingJob,
+    TrainingTaskStep,
 )
 from backend.plugins.crawler.models import CrawlRecord  # noqa: F401
-from backend.plugins.oss.models import OSSFile, UserOSSQuota  # noqa: F401
-from backend.plugins.cloud_integration.models import (  # noqa: F401
-    TrainingJob,
-    TrainingInstance,
-    TrainingCost,
-    TrainingTaskStep,
-    Dataset,
-    CodeRepo,
-    Artifact,
-)
-from backend.plugins.asset_mgmt.models import AssetIndex  # noqa: F401
 from backend.plugins.monitor.models import MonitorTemplate  # noqa: F401
+from backend.plugins.oss.models import OSSFile, UserOSSQuota  # noqa: F401
 
 config = context.config
 

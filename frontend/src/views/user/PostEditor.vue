@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { PostEditor } from '@/components/blog'
+import PostEditor from '@/components/widgets/create/PostEditor.vue'
 import {
   createPostApi,
   updatePostApi,
@@ -10,9 +10,9 @@ import {
   type BlogPost,
   type CreatePostPayload,
   type UpdatePostPayload
-} from '@/services/api'
-import { uploadOssFileApi } from '@/services/api/oss'
-import { generateTextCover } from '@/utils/generateTextCover'
+} from '@/components/logic/api'
+import { uploadOssFileApi } from '@/components/logic/api/oss'
+import { generateTextCover } from '@/lib/utils/generateTextCover'
 
 const route = useRoute()
 const router = useRouter()

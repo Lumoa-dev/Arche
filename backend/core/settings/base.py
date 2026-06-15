@@ -42,7 +42,7 @@ def create_plugin_settings(
         field_definitions[field_name] = (field_type, default)
 
     # 动态创建模型，继承自PluginSettingsBase
-    settings_class = create_model(
+    settings_class = create_model(  # type: ignore[call-overload]
         f"{name.title().replace('_', '')}Settings",
         __base__=PluginSettingsBase,
         **field_definitions,

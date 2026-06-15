@@ -14,8 +14,8 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    func,
     TypeDecorator,
+    func,
 )
 from sqlalchemy.dialects.postgresql import JSON as PG_JSON
 from sqlalchemy.orm import Mapped, mapped_column
@@ -88,12 +88,12 @@ class UUIDString(TypeDecorator):
             return dialect.type_descriptor(PG_UUID(as_uuid=True))
         return dialect.type_descriptor(String(36))
 
-    def process_bind_param(self, value: Any, dialect):
+    def process_bind_param(self, value: Any, dialect):  # noqa: ARG002
         if value is None:
             return None
         return str(value) if isinstance(value, uuid.UUID) else value
 
-    def process_result_value(self, value: Any, dialect):
+    def process_result_value(self, value: Any, dialect):  # noqa: ARG002
         if value is None:
             return None
         return uuid.UUID(value) if isinstance(value, str) else value

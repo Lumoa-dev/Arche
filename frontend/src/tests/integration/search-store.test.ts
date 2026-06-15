@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useSearchStore } from '@/store/modules/search'
+import { useSearchStore } from '@/lib/store/modules/search'
 
 // ── Mock API 层 ──
 const { mockGetSuggestions } = vi.hoisted(() => ({

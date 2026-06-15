@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class SystemMonitorService:
     MAX_HISTORY = 300
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
         config = container.get("config")
         interval = config.get("MONITOR_COLLECT_INTERVAL", "10")

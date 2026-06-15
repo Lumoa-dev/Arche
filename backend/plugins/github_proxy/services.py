@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import json
 import time
@@ -63,7 +64,7 @@ class GhCliService:
     - 完整支持所有 GitHub API
     """
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
         config = container.get("config")
         self.github_token = config.get_required("GITHUB_TOKEN")
@@ -211,11 +212,11 @@ class GhCliService:
             if proc is not None and proc.returncode is None:
                 proc.kill()
                 await proc.wait()
-            raise GitHubProxyError(
+            raise GitHubProxyError(  # noqa: B904
                 "gh 命令执行超时", code="gh_timeout", status_code=504
             )
         except FileNotFoundError:
-            raise GitHubProxyError(
+            raise GitHubProxyError(  # noqa: B904
                 "未找到 gh 命令，请先安装 GitHub CLI: https://cli.github.com/",
                 code="gh_not_installed",
                 status_code=500,
@@ -224,8 +225,8 @@ class GhCliService:
             # 已经是 GitHubProxyError，直接抛出，不重新包装
             raise
         except Exception as e:
-            raise GitHubProxyError(
-                f"gh 命令执行失败: {str(e)}", code="gh_error", status_code=500
+            raise GitHubProxyError(  # noqa: B904
+                f"gh 命令执行失败: {e!s}", code="gh_error", status_code=500
             )
 
     async def proxy_request(
@@ -233,7 +234,7 @@ class GhCliService:
         method: str,
         path: str,
         query_params: dict | None = None,
-        headers: dict | None = None,
+        headers: dict | None = None,  # noqa: ARG002
         body: bytes | None = None,
         user_id: str | None = None,
     ) -> dict:
@@ -259,10 +260,8 @@ class GhCliService:
         # 解析 body (bytes -> dict)
         body_dict = None
         if body and body.strip():
-            try:
+            with contextlib.suppress(json.JSONDecodeError, UnicodeDecodeError):
                 body_dict = json.loads(body.decode("utf-8"))
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                pass
 
         result = await self._run_gh_command(
             method=method,
@@ -351,7 +350,7 @@ class GhCliService:
 class HttpProxyService:
     """GitHub API HTTP 反向代理服务：转发请求、缓存响应、注入 Token、限流。"""
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
         config = container.get("config")
         self.github_token = config.get_required("GITHUB_TOKEN")
@@ -467,11 +466,11 @@ class HttpProxyService:
                 content=body,
             )
         except httpx.TimeoutException:
-            raise GitHubProxyError(
+            raise GitHubProxyError(  # noqa: B904
                 "GitHub API 请求超时", code="github_timeout", status_code=504
             )
         except httpx.ConnectError:
-            raise GitHubProxyError(
+            raise GitHubProxyError(  # noqa: B904
                 "无法连接 GitHub", code="github_connect_error", status_code=502
             )
 
@@ -514,11 +513,11 @@ class HttpProxyService:
             try:
                 response = await client.get(f"{self.raw_base_url}/{path.lstrip('/')}")
             except httpx.TimeoutException:
-                raise GitHubProxyError(
+                raise GitHubProxyError(  # noqa: B904
                     "GitHub 静态资源请求超时", code="github_timeout", status_code=504
                 )
             except httpx.ConnectError:
-                raise GitHubProxyError(
+                raise GitHubProxyError(  # noqa: B904
                     "无法连接 GitHub", code="github_connect_error", status_code=502
                 )
 
@@ -575,7 +574,7 @@ class GitHubService:
     - cli: 仅使用 CLI
     """
 
-    def __init__(self, container: "ServiceContainer"):
+    def __init__(self, container: ServiceContainer):
         self.container = container
         config = container.get("config")
         self.default_mode = config.get("GITHUB_DEFAULT_MODE", "auto")

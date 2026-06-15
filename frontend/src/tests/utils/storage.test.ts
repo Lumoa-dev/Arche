@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { localStorageUtil, sessionStorageUtil } from '@/utils/storage'
+import { localStorageUtil, sessionStorageUtil } from '@/lib/utils/storage'
 
 // 每个测试前清除存储
 beforeEach(() => {

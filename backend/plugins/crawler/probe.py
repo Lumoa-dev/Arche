@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import httpx
 from urllib.parse import urlparse
+
+import httpx
 
 # 功能性页面的 URL 路径特征
 _FUNCTIONAL_PATTERNS = [
@@ -57,7 +58,7 @@ class ProbeService:
                         "AppleWebKit/537.36 (KHTML, like Gecko) "
                         "Chrome/120.0.0.0 Safari/537.36"
                     ),
-                    "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.5",
+                    "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.5",  # noqa: E501
                     "Accept-Encoding": "gzip, deflate",
                 },
             )

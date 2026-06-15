@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import pytest
 
-
 XSS_PAYLOADS = [
     "<script>alert(1)</script>",
     "<img src=x onerror=alert(1)>",
@@ -56,10 +55,11 @@ JWT_WRONG_SECRET = (
 @pytest.fixture
 async def adversarial_app(db_container):
     from fastapi import FastAPI
+
     from backend.core.middleware import (
         register_error_handlers,
-        setup_security_headers,
         setup_cors,
+        setup_security_headers,
     )
     from backend.plugins.auth.middleware import AuthMiddleware
 
@@ -71,10 +71,10 @@ async def adversarial_app(db_container):
 
     from backend.plugins.auth.routes import router as auth_router
     from backend.plugins.blog.routes import router as blog_router
-    from backend.plugins.oss.routes import router as oss_router
-    from backend.plugins.search.routes import router as search_router
     from backend.plugins.config_mgmt.routes import router as config_router
     from backend.plugins.crawler.routes import router as crawler_router
+    from backend.plugins.oss.routes import router as oss_router
+    from backend.plugins.search.routes import router as search_router
 
     app.include_router(auth_router)
     app.include_router(blog_router)
@@ -95,7 +95,7 @@ async def adversarial_app(db_container):
 
 @pytest.fixture
 async def client(adversarial_app):
-    from httpx import AsyncClient, ASGITransport
+    from httpx import ASGITransport, AsyncClient
 
     async with AsyncClient(
         transport=ASGITransport(app=adversarial_app), base_url="http://test"

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from backend.tests.conftest import patch_container_service
 from backend.tests.adversarial.conftest import PATH_TRAVERSAL_PAYLOADS
+from backend.tests.conftest import patch_container_service
 
 
 class TestPathTraversal:

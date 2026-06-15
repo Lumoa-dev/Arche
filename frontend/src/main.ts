@@ -1,12 +1,11 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
-import pinia from './store'
-import { setupDirectives } from './directives'
-import './router/guard'
-import './style.css'
+import router from './lib/router'
+import pinia from './lib/store'
+import { setupDirectives } from './lib/directives'
+import './lib/router/guard'
 import './styles/theme.css'
-import { useAppStore } from '@/store/modules/app'
+import { useAppStore } from '@/lib/store/modules/app'
 
 const app = createApp(App)
 

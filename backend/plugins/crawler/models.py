@@ -16,7 +16,7 @@ class CrawlRecord(Base, HasSID):
 
     __tablename__ = "crawl_records"
 
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # type: ignore[assignment]
     url = Column(String(2048), nullable=False)
     title = Column(String(512), nullable=True)
     content_type = Column(

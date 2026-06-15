@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import uuid
 
+from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from pydantic import BaseModel, Field
 
-from fastapi import APIRouter, Query, Request, UploadFile, File, Form
-
 from backend.core.container import ServiceContainer
-from backend.core.middleware import require_level, require_user, get_current_user
+from backend.core.middleware import get_current_user, require_level, require_user
 
 router = APIRouter(prefix="/api/blog", tags=["blog"])
 
@@ -17,8 +16,9 @@ router = APIRouter(prefix="/api/blog", tags=["blog"])
 # --- 请求体模型 ---
 class CreatePostRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=256, description="标题")
-    introduction: dict | None = Field(
-        None, description="引言 JSON（含 abstract, background, purpose, key_points 等）"
+    subtitles: list[str] | None = Field(None, description="副标题列表")
+    introduction: str | None = Field(
+        None, max_length=10000, description="引言（Markdown 富文本）"
     )
     paragraphs: list[dict] | None = Field(
         None, description="段落列表，每项含 content/type/heading/media_url/caption"
@@ -35,7 +35,10 @@ class CreatePostRequest(BaseModel):
 
 class UpdatePostRequest(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=256, description="标题")
-    introduction: dict | None = Field(None, description="引言 JSON")
+    subtitles: list[str] | None = Field(None, description="副标题列表")
+    introduction: str | None = Field(
+        None, max_length=10000, description="引言（Markdown 富文本）"
+    )
     paragraphs: list[dict] | None = Field(None, description="段落列表")
     cover_url: str | None = Field(None, max_length=1024, description="封面图片 URL")
     required_level: int | None = Field(
@@ -137,6 +140,7 @@ async def create_post(req: CreatePostRequest, request: Request):
     result = await blog_service.create_post(
         author_id=author_id,
         title=req.title,
+        subtitles=req.subtitles,
         introduction=req.introduction,
         paragraphs_data=req.paragraphs,
         tags=req.tags,
@@ -185,6 +189,7 @@ async def update_post(post_id: str, req: UpdatePostRequest, request: Request):
         post_id=uuid.UUID(post_id),
         author_id=author_id,
         title=req.title,
+        subtitles=req.subtitles,
         introduction=req.introduction,
         paragraphs_data=req.paragraphs,
         cover_url=req.cover_url,
@@ -221,13 +226,16 @@ async def get_comments(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
 ):
-    """评论列表（公开）。"""
+    """评论列表（公开，按权限过滤帖子的 required_level）。"""
     container: ServiceContainer = request.app.state.container
     blog_service = container.get("blog")
+    user = get_current_user(request)
+    user_level = user["level"] if user else None
     result = await blog_service.list_comments(
         post_id=uuid.UUID(post_id),
         page=page,
         page_size=page_size,
+        user_level=user_level,
     )
     return {"code": "ok", "message": "获取成功", "data": result}
 
@@ -262,13 +270,16 @@ async def get_post_paragraphs(
     ),
     offset: int = Query(0, ge=0, description="跳过的段落数（可选）"),
 ):
-    """获取帖子的段落列表（按 paragraph_ids 顺序返回）。"""
+    """获取帖子的段落列表（按权限过滤 required_level）。"""
     container: ServiceContainer = request.app.state.container
     blog_service = container.get("blog")
+    user = get_current_user(request)
+    user_level = user["level"] if user else None
     result = await blog_service.get_post_paragraphs(
         post_id=uuid.UUID(post_id),
         limit=limit,
         offset=offset,
+        user_level=user_level,
     )
     return {"code": "ok", "message": "获取成功", "data": result}
 
@@ -282,14 +293,17 @@ async def get_paragraph_comments(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
 ):
-    """段落评论列表（公开）。"""
+    """段落评论列表（公开，按权限过滤 required_level）。"""
     container: ServiceContainer = request.app.state.container
     blog_service = container.get("blog")
+    user = get_current_user(request)
+    user_level = user["level"] if user else None
     result = await blog_service.get_paragraph_comments(
         post_id=uuid.UUID(post_id),
         paragraph_pid=paragraph_pid,
         page=page,
         page_size=page_size,
+        user_level=user_level,
     )
     return {"code": "ok", "message": "获取成功", "data": result}
 
@@ -526,7 +540,7 @@ async def create_report(req: CreateReportRequest, request: Request):
 @router.post("/import")
 async def import_post(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
     required_level: int = Form(default=5),
     tags: str = Form(default=""),
 ):
@@ -555,7 +569,7 @@ async def import_post(
 @router.post("/upload-file")
 async def upload_post_file(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(...),  # noqa: B008
 ):
     """上传 TXT/MD 文件创建帖子（需登录）。"""
     user = require_user(request)
@@ -623,10 +637,12 @@ async def get_posts_by_tag(
 
 @router.get("/posts/{post_id}/tags")
 async def get_post_tags(post_id: str, request: Request):
-    """获取帖子标签（公开）。"""
+    """获取帖子标签（公开，按权限过滤 required_level）。"""
     container: ServiceContainer = request.app.state.container
     blog_service = container.get("blog")
-    tags = await blog_service.get_post_tags(uuid.UUID(post_id))
+    user = get_current_user(request)
+    user_level = user["level"] if user else None
+    tags = await blog_service.get_post_tags(uuid.UUID(post_id), user_level=user_level)
     return {"code": "ok", "message": "获取成功", "data": {"tags": tags}}
 
 

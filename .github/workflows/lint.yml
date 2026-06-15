@@ -20,6 +20,8 @@ jobs:
         run: uv run ruff format --check backend/
       - name: Custom lint rules
         run: uv run python scripts/lint_rules.py --fail backend/
+      - name: Type-check (mypy)
+        run: uv run mypy backend/
 
   # ── 前端 lint + format + type-check ──
   frontend:

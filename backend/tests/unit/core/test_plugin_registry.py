@@ -1,16 +1,20 @@
 """PluginRegistry 插件注册表测试。"""
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi import FastAPI
-from backend.core.plugin_registry import (
-    PluginRegistry,
-    DependencyError,
-    registry as global_registry,
-    discover_plugins,
-)
+
 from backend.core.base_plugin import BasePlugin
 from backend.core.container import ServiceContainer
+from backend.core.plugin_registry import (
+    DependencyError,
+    PluginRegistry,
+    discover_plugins,
+)
+from backend.core.plugin_registry import (
+    registry as global_registry,
+)
 
 
 class TestPluginRegistry:
@@ -77,7 +81,7 @@ class TestPluginRegistry:
 
         class PluginB(BasePlugin):
             name = "plugin-b"
-            requires = ["plugin-a"]  # 依赖A
+            requires = ["plugin-a"]  # 依赖A  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 called_order.append("plugin-b")
@@ -109,7 +113,7 @@ class TestPluginRegistry:
 
         class PluginB(BasePlugin):
             name = "plugin-b"
-            requires = ["plugin-a"]
+            requires = ["plugin-a"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 pass
@@ -144,7 +148,7 @@ class TestPluginRegistry:
 
         class PluginB(BasePlugin):
             name = "plugin-b"
-            requires = ["plugin-a"]
+            requires = ["plugin-a"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 pass
@@ -202,7 +206,7 @@ class TestPluginRegistry:
 
         class PluginB(BasePlugin):
             name = "plugin-b"
-            requires = ["plugin-a"]
+            requires = ["plugin-a"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 pass
@@ -227,7 +231,7 @@ class TestPluginRegistry:
 
         class PluginA(BasePlugin):
             name = "plugin-a"
-            requires = ["plugin-b"]  # 依赖不存在的B
+            requires = ["plugin-b"]  # 依赖不存在的B  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 pass
@@ -246,7 +250,7 @@ class TestPluginRegistry:
 
         class PluginA(BasePlugin):
             name = "plugin-a"
-            optional = ["plugin-b"]  # 可选依赖不存在的B
+            optional = ["plugin-b"]  # 可选依赖不存在的B  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 nonlocal called
@@ -271,7 +275,7 @@ class TestPluginRegistry:
 
         class PluginB(BasePlugin):
             name = "plugin-b"
-            optional = ["plugin-a"]  # 可选依赖A
+            optional = ["plugin-a"]  # 可选依赖A  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 called_order.append("plugin-b")
@@ -292,14 +296,14 @@ class TestPluginRegistry:
 
         class PluginA(BasePlugin):
             name = "plugin-a"
-            requires = ["plugin-b"]
+            requires = ["plugin-b"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 pass
 
         class PluginB(BasePlugin):
             name = "plugin-b"
-            requires = ["plugin-a"]
+            requires = ["plugin-a"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 pass
@@ -332,21 +336,21 @@ class TestPluginRegistry:
 
         class PluginB(BasePlugin):
             name = "plugin-b"
-            requires = ["plugin-a"]
+            requires = ["plugin-a"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 called_order.append("B")
 
         class PluginC(BasePlugin):
             name = "plugin-c"
-            requires = ["plugin-b"]
+            requires = ["plugin-b"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 called_order.append("C")
 
         class PluginD(BasePlugin):
             name = "plugin-d"
-            requires = ["plugin-a", "plugin-c"]
+            requires = ["plugin-a", "plugin-c"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 called_order.append("D")
