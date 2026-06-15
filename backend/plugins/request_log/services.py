@@ -8,7 +8,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from fastapi import Request, Response
-from sqlalchemy import extract, select
+from sqlalchemy import delete as sa_delete, extract, select
 from sqlalchemy import func as sa_func
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -288,7 +288,7 @@ class LogAggregationService:
                 total = result.scalar() or 0
 
                 await session.execute(
-                    RequestLog.__table__.delete().where(RequestLog.created_at < cutoff)
+                    sa_delete(RequestLog).where(RequestLog.created_at < cutoff)
                 )
                 await session.commit()
                 logger.info("请求日志 TTL 清理完成，删除 %d 条", total)

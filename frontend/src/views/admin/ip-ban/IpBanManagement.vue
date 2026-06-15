@@ -38,7 +38,7 @@ const stats = ref<IpBanStats>({
 const showBanDialog = ref(false)
 const banIpInput = ref('')
 const banReason = ref('')
-const banDuration = ref<number | null>(null)
+const banDuration = ref<number>(-1)
 const banSubmitting = ref(false)
 
 const selectedBanIds = ref<number[]>([])
@@ -56,7 +56,7 @@ const isActiveFilterOptions = [
 ]
 
 const durationOptions = [
-  { label: '永久', value: null },
+  { label: '永久', value: -1 },
   { label: '10 分钟', value: 10 },
   { label: '30 分钟', value: 30 },
   { label: '1 小时', value: 60 },
@@ -202,7 +202,7 @@ const columns = [
         </template>
         搜索
       </ArButton>
-      <ArButton v-if="selectedBanIds.length > 0" type="warning" @click="handleBatchUnban">
+      <ArButton v-if="selectedBanIds.length > 0" type="danger" @click="handleBatchUnban">
         <template #icon>
           <NIcon><ShieldCheckmarkOutline /></NIcon>
         </template>
@@ -212,26 +212,26 @@ const columns = [
 
     <div class="stats-row">
       <ArTag>总计: {{ stats.total_bans }}</ArTag>
-      <ArTag type="error">活跃: {{ stats.active_bans }}</ArTag>
-      <ArTag type="warning">自动: {{ stats.auto_bans }}</ArTag>
-      <ArTag type="info">手动: {{ stats.manual_bans }}</ArTag>
-      <ArTag type="success">今日新增: {{ stats.today_bans }}</ArTag>
+      <ArTag color="red">活跃: {{ stats.active_bans }}</ArTag>
+      <ArTag color="yellow">自动: {{ stats.auto_bans }}</ArTag>
+      <ArTag color="blue">手动: {{ stats.manual_bans }}</ArTag>
+      <ArTag color="green">今日新增: {{ stats.today_bans }}</ArTag>
     </div>
 
     <ArTable :columns="columns" :data="bans" :loading="loading" row-key="id">
       <template #cell-ban_type="{ row }">
-        <ArTag :type="row.ban_type === 'auto' ? 'warning' : 'info'">
+        <ArTag :color="row.ban_type === 'auto' ? 'yellow' : 'blue'">
           {{ row.ban_type === 'auto' ? '自动' : '手动' }}
         </ArTag>
       </template>
       <template #cell-is_active="{ row }">
-        <ArTag :type="row.is_active ? 'error' : 'default'">
+        <ArTag :color="row.is_active ? 'red' : 'default'">
           {{ row.is_active ? '封禁中' : '已解封' }}
         </ArTag>
       </template>
       <template #cell-actions="{ row }">
         <div style="display: flex; gap: 8px">
-          <ArButton v-if="row.is_active" size="small" type="warning" @click="handleUnban(row.id)">
+          <ArButton v-if="row.is_active" size="sm" type="danger" @click="handleUnban(row.id)">
             解封
           </ArButton>
         </div>
@@ -242,7 +242,7 @@ const columns = [
       v-if="total > pageSize"
       :page="page"
       :page-size="pageSize"
-      :total="total"
+      :item-count="total"
       @update:page="
         page = $event
         loadBans()

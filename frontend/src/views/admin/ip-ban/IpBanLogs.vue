@@ -47,12 +47,12 @@ const columns = [
 
     <ArTable :columns="columns" :data="logs" :loading="loading" row-key="id">
       <template #cell-action="{ row }">
-        <ArTag :type="row.action === 'ban' ? 'error' : 'success'">
+        <ArTag :color="row.action === 'ban' ? 'red' : 'green'">
           {{ row.action === 'ban' ? '封禁' : '解封' }}
         </ArTag>
       </template>
       <template #cell-ban_type="{ row }">
-        <ArTag :type="row.ban_type === 'auto' ? 'warning' : 'info'">
+        <ArTag :color="row.ban_type === 'auto' ? 'yellow' : 'blue'">
           {{ row.ban_type === 'auto' ? '自动' : '手动' }}
         </ArTag>
       </template>
@@ -62,7 +62,7 @@ const columns = [
       v-if="total > pageSize"
       :page="page"
       :page-size="pageSize"
-      :total="total"
+      :item-count="total"
       @update:page="
         page = $event
         loadLogs()

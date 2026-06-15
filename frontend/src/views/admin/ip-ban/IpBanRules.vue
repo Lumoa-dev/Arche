@@ -103,7 +103,7 @@ const columns = [
           <ArSwitch v-model:checked="editForm.enabled" />
         </template>
         <template v-else>
-          <ArTag :type="row.enabled ? 'success' : 'default'">
+          <ArTag :color="row.enabled ? 'green' : 'default'">
             {{ row.enabled ? '已启用' : '已禁用' }}
           </ArTag>
         </template>
@@ -137,12 +137,12 @@ const columns = [
       <template #cell-actions="{ row }">
         <template v-if="editingRuleId === row.id">
           <div style="display: flex; gap: 8px">
-            <ArButton size="small" type="primary" @click="saveEdit(row.id)">保存</ArButton>
-            <ArButton size="small" @click="cancelEdit">取消</ArButton>
+            <ArButton size="sm" type="primary" @click="saveEdit(row.id)">保存</ArButton>
+            <ArButton size="sm" @click="cancelEdit">取消</ArButton>
           </div>
         </template>
         <template v-else>
-          <ArButton size="small" @click="startEdit(row)">编辑</ArButton>
+          <ArButton size="sm" @click="startEdit(row)">编辑</ArButton>
         </template>
       </template>
     </ArTable>
