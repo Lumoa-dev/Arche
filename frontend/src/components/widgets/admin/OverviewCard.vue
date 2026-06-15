@@ -1,18 +1,30 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { NIcon } from 'naive-ui'
+import { useRouter } from 'vue-router'
 
-defineProps<{
+const props = defineProps<{
   title: string
   icon?: Component
   to: string | null
+  disabled?: boolean
   stats: { label: string; value: string | number }[]
   note?: string
 }>()
+
+const router = useRouter()
+
+function handleClick() {
+  if (props.to) router.push(props.to)
+}
 </script>
 
 <template>
-  <div class="overview-card" @click="to && navigateTo(to)">
+  <div
+    class="overview-card"
+    :class="{ 'card-disabled': disabled || !to }"
+    @click="handleClick"
+  >
     <div class="card-header">
       <NIcon v-if="icon" size="22" class="card-icon"><component :is="icon" /></NIcon>
       <h3 class="card-title">{{ title }}</h3>
@@ -39,6 +51,14 @@ defineProps<{
 .overview-card:hover {
   border-color: var(--primary-color);
   transform: translateY(-1px);
+}
+.card-disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.card-disabled:hover {
+  border-color: var(--border-color);
+  transform: none;
 }
 .card-header {
   display: flex;
