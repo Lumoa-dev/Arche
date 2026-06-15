@@ -30,17 +30,12 @@ export const useUserStore = defineStore(
     ) => {
       const permissionStore = usePermissionStore()
       const userLevel = nextUserInfo.level ?? 5
-      const normalizedPermissions =
-        (nextUserInfo.permissions?.length ?? 0) > 0
-          ? nextUserInfo.permissions!
-          : userLevel === 0
-            ? ['*']
-            : []
 
       token.value = nextToken
       refreshToken.value = nextRefreshToken || null
       userInfo.value = nextUserInfo
-      permissionStore.setUserPermission(normalizedPermissions, userLevel)
+      // 初始化权限总线：从后端拉取页面组件映射
+      permissionStore.setUserPermission([], userLevel)
 
       localStorage.setItem('token', nextToken)
       if (nextRefreshToken) {
@@ -49,8 +44,7 @@ export const useUserStore = defineStore(
       localStorage.setItem(
         'userInfo',
         JSON.stringify({
-          ...nextUserInfo,
-          permissions: normalizedPermissions
+          ...nextUserInfo
         })
       )
     }
@@ -95,7 +89,7 @@ export const useUserStore = defineStore(
       const res = await getUserInfoApi()
       userInfo.value = res as UserInfo
       localStorage.setItem('userInfo', JSON.stringify(res))
-      usePermissionStore().setUserPermission(res.permissions, res.level ?? 5)
+      usePermissionStore().setUserPermission([], res.level ?? 5)
       return res
     }
 
@@ -174,10 +168,7 @@ export const useUserStore = defineStore(
         try {
           const parsedUserInfo = JSON.parse(savedUserInfo) as UserInfo
           userInfo.value = parsedUserInfo
-          usePermissionStore().setUserPermission(
-            parsedUserInfo.permissions,
-            parsedUserInfo.level ?? 5
-          )
+          usePermissionStore().setUserPermission([], parsedUserInfo.level ?? 5)
         } catch (e) {
           console.error('解析用户信息失败:', e)
           localStorage.removeItem('userInfo')

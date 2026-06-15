@@ -29,25 +29,6 @@ const onUnauthorized = () => {
 
 window.addEventListener(AUTH_UNAUTHORIZED_EVENT, onUnauthorized)
 
-const canAccessRoutePermission = (
-  permissionStore: ReturnType<typeof usePermissionStore>,
-  routePermission: unknown
-) => {
-  if (!routePermission) {
-    return true
-  }
-
-  if (typeof routePermission === 'string') {
-    return permissionStore.hasPermission(routePermission)
-  }
-
-  if (Array.isArray(routePermission)) {
-    return routePermission.some((permission) => permissionStore.hasPermission(String(permission)))
-  }
-
-  return true
-}
-
 // 解码 JWT payload 获取 exp 时间戳（秒）
 const getJwtExp = (token: string): number | null => {
   try {
@@ -119,26 +100,19 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // 如果权限路由尚未加载，初始化权限状态
-  if (!permissionStore.routesLoaded && userStore.userInfo) {
-    try {
-      // 根据用户角色生成可访问路由列表，admin 路由通过 addRoute 动态注册
-      await permissionStore.generateRoutes()
-    } catch {
-      // 生成路由失败，跳转到首页
-      $message.error('获取权限失败，请重新登录')
-      next({ path: '/' })
+  // 页面级权限检查：通过 pageName 查询权限总线
+  const requiredPageName = to.meta?.pageName as string | undefined
+  if (requiredPageName) {
+    // 确保权限总线已初始化
+    if (!permissionStore.canAccessPage(requiredPageName)) {
+      next({ path: '/403', query: { redirect: to.fullPath } })
       return
     }
   }
 
-  const requiredPermission = to.meta?.permission
+  // 兼容旧版 level 检查（过渡期保留）
   const requiredLevel = to.meta?.level as number | undefined
   if (requiredLevel !== undefined && !permissionStore.hasLevel(requiredLevel)) {
-    next({ path: '/403', query: { redirect: to.fullPath } })
-    return
-  }
-  if (!canAccessRoutePermission(permissionStore, requiredPermission)) {
     next({ path: '/403', query: { redirect: to.fullPath } })
     return
   }

@@ -1,12 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { RouteRecordRaw } from 'vue-router'
+import {
+  canAccessPage as busCanAccessPage,
+  initPermissionBus,
+  clearPermissionCache,
+  getVisiblePages
+} from '@/lib/services/permission-bus'
 
 export const usePermissionStore = defineStore(
   'permission',
   () => {
     const routes = ref<RouteRecordRaw[]>([])
-    const permissions = ref<string[]>([])
     const level = ref<number>(5) // P0=最高, P5=最低
     const routesLoaded = ref(false)
 
@@ -18,33 +23,32 @@ export const usePermissionStore = defineStore(
     // P等级检查：等级数字越小权限越高
     const hasLevel = (requiredLevel: number): boolean => level.value <= requiredLevel
 
-    const hasPermission = (permission: string): boolean => {
-      return (
-        level.value === 0 ||
-        permissions.value.includes('*') ||
-        permissions.value.includes(permission)
-      )
+    // 委托给权限总线：判断页面是否可访问
+    const canAccessPage = (pageName: string): boolean => {
+      return busCanAccessPage(pageName, level.value)
     }
 
-    const generateRoutes = async (): Promise<RouteRecordRaw[]> => {
-      routesLoaded.value = true
-      return []
+    // 获取当前 level 所有可见页面列表（用于动态菜单）
+    const getVisiblePageList = (): string[] => {
+      return getVisiblePages(level.value)
     }
 
-    const setPermissions = (perms: string[]) => {
-      permissions.value = perms
-    }
-
-    const setUserPermission = (perms: string[] = [], userLevel = 5) => {
-      permissions.value = perms
+    const setUserPermission = async (perms: string[] = [], userLevel = 5) => {
       level.value = userLevel
+      // 初始化权限总线：从后端拉取页面组件映射
+      try {
+        await initPermissionBus(userLevel)
+      } catch {
+        // 拉取失败时保持上次缓存，不影响已有页面渲染
+        console.warn('[PermissionBus] 初始化权限数据失败，使用缓存（如有）')
+      }
     }
 
     const resetPermission = () => {
       routes.value = []
-      permissions.value = []
       level.value = 5
       routesLoaded.value = false
+      clearPermissionCache()
     }
 
     const resetState = () => {
@@ -53,15 +57,13 @@ export const usePermissionStore = defineStore(
 
     return {
       routes,
-      permissions,
       level,
       routesLoaded,
       whiteList,
       isAdmin,
       hasLevel,
-      hasPermission,
-      generateRoutes,
-      setPermissions,
+      canAccessPage,
+      getVisiblePageList,
       setUserPermission,
       resetPermission,
       resetState

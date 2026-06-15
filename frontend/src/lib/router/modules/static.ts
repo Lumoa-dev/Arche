@@ -1,9 +1,9 @@
 import type { RouteRecordRaw } from 'vue-router'
-import Home from '@/views/Home.vue'
+import Home from '@/views/home/Home.vue'
 import Login from '@/views/auth/Login.vue'
 import Register from '@/views/auth/Register.vue'
-import PostDetail from '@/views/PostDetail.vue'
-import Explore from '@/views/Explore.vue'
+import PostDetail from '@/views/post-detail/PostDetail.vue'
+import Explore from '@/views/explore/Explore.vue'
 import About from '@/views/About.vue'
 import CreateIndex from '@/views/create/index.vue'
 import Assets from '@/views/Assets.vue'
@@ -11,7 +11,6 @@ import Scheduler from '@/views/Scheduler.vue'
 import GitHub from '@/views/GitHub.vue'
 import NotFound from '@/views/NotFound.vue'
 import Forbidden from '@/views/Forbidden.vue'
-import { API_PERMISSION } from '@/lib/constants/permissions'
 
 export const staticRoutes: RouteRecordRaw[] = [
   {
@@ -19,6 +18,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'Home',
     component: Home,
     meta: {
+      pageName: 'home',
       layout: 'guest',
       requiresAuth: false,
       searchScope: { type: 'post', placeholder: '搜索文章...', label: '文章' }
@@ -41,6 +41,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'Explore',
     component: Explore,
     meta: {
+      pageName: 'explore',
       layout: 'guest',
       requiresAuth: false,
       searchScope: { type: 'post', placeholder: '搜索文章标题或 ID...', label: '文章' }
@@ -57,6 +58,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'Create',
     component: CreateIndex,
     meta: {
+      pageName: 'create',
       title: '创作',
       layout: 'guest',
       requiresAuth: true,
@@ -68,6 +70,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'PostEditor',
     component: () => import('@/views/create/editor.vue'),
     meta: {
+      pageName: 'create',
       title: '编辑器',
       layout: 'guest',
       requiresAuth: true
@@ -78,6 +81,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'PostPreview',
     component: () => import('@/views/create/preview.vue'),
     meta: {
+      pageName: 'create',
       title: '预览',
       layout: 'guest',
       requiresAuth: true
@@ -88,6 +92,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'Assets',
     component: Assets,
     meta: {
+      pageName: 'assets',
       title: '素材库',
       layout: 'guest',
       requiresAuth: true,
@@ -99,6 +104,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'Scheduler',
     component: Scheduler,
     meta: {
+      pageName: 'scheduler',
       title: '调度器',
       layout: 'guest',
       requiresAuth: true,
@@ -122,10 +128,10 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'Profile',
     component: () => import('@/views/user/Profile.vue'),
     meta: {
+      pageName: 'profile',
       title: '个人中心',
       layout: 'guest',
       requiresAuth: true,
-      permission: API_PERMISSION.AUTH_ME,
       searchScope: { type: 'user', placeholder: '搜索个人内容...', label: '个人' }
     }
   },
@@ -134,10 +140,10 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'Posts',
     component: () => import('@/views/user/Posts.vue'),
     meta: {
+      pageName: 'posts',
       title: '我的文章',
       layout: 'guest',
       requiresAuth: true,
-      permission: API_PERMISSION.BLOG_POSTS_READ,
       searchScope: { type: 'post', placeholder: '搜索我的文章...', label: '文章' }
     }
   },
@@ -156,10 +162,10 @@ export const staticRoutes: RouteRecordRaw[] = [
     name: 'CreatorDashboard',
     component: () => import('@/views/user/CreatorDashboard.vue'),
     meta: {
+      pageName: 'creator',
       title: '创作者看板',
       layout: 'guest',
       requiresAuth: true,
-      permission: API_PERMISSION.BLOG_POSTS_READ,
       searchScope: { type: 'post', placeholder: '搜索创作内容...', label: '创作' }
     }
   },
@@ -186,6 +192,7 @@ export const staticRoutes: RouteRecordRaw[] = [
         name: 'Console',
         component: () => import('@/views/user/Console.vue'),
         meta: {
+          pageName: 'console',
           title: '控制台首页',
           searchScope: { type: 'console', placeholder: '搜索控制台功能或资源...', label: '控制台' }
         }
@@ -193,8 +200,9 @@ export const staticRoutes: RouteRecordRaw[] = [
       {
         path: '/admin/users',
         name: 'AdminUsers',
-        component: () => import('@/views/admin/UsersOverview.vue'),
+        component: () => import('@/views/admin/users-overview/UsersOverview.vue'),
         meta: {
+          pageName: 'admin_users',
           title: '用户管理',
           searchScope: { type: 'user', placeholder: '搜索用户...', label: '用户' }
         }
@@ -202,8 +210,9 @@ export const staticRoutes: RouteRecordRaw[] = [
       {
         path: '/admin/content',
         name: 'AdminContent',
-        component: () => import('@/views/admin/ContentOverview.vue'),
+        component: () => import('@/views/admin/content-overview/ContentOverview.vue'),
         meta: {
+          pageName: 'admin_content',
           title: '内容管理',
           searchScope: { type: 'content', placeholder: '搜索内容...', label: '内容' }
         }
@@ -211,8 +220,9 @@ export const staticRoutes: RouteRecordRaw[] = [
       {
         path: '/admin/ops',
         name: 'AdminOps',
-        component: () => import('@/views/admin/OpsOverview.vue'),
+        component: () => import('@/views/admin/ops-overview/OpsOverview.vue'),
         meta: {
+          pageName: 'admin_ops',
           title: '运维管理',
           searchScope: { type: 'ops', placeholder: '搜索运维资源...', label: '运维' }
         }
@@ -221,18 +231,19 @@ export const staticRoutes: RouteRecordRaw[] = [
       {
         path: '/admin/users/list',
         name: 'AdminUsersList',
-        component: () => import('@/views/admin/Users.vue'),
+        component: () => import('@/views/admin/users/Users.vue'),
         meta: {
+          pageName: 'admin_users',
           title: '用户列表',
-          permission: 'auth:users:list',
           searchScope: { type: 'user', placeholder: '搜索用户名、邮箱或 ID...', label: '用户' }
         }
       },
       {
         path: '/admin/users/assets',
         name: 'AdminUsersAssets',
-        component: () => import('@/views/admin/AssetsOverview.vue'),
+        component: () => import('@/views/admin/assets-overview/AssetsOverview.vue'),
         meta: {
+          pageName: 'admin_users',
           title: '资产管理',
           searchScope: { type: 'asset', placeholder: '搜索资产...', label: '资产' }
         }
@@ -240,28 +251,29 @@ export const staticRoutes: RouteRecordRaw[] = [
       {
         path: '/admin/content/moderation',
         name: 'AdminContentModeration',
-        component: () => import('@/views/admin/ModerationPosts.vue'),
+        component: () => import('@/views/admin/moderation-posts/ModerationPosts.vue'),
         meta: {
+          pageName: 'admin_content',
           title: '帖子审核',
-          permission: 'blog:posts:moderate',
           searchScope: { type: 'content', placeholder: '搜索待审核内容...', label: '审核' }
         }
       },
       {
         path: '/admin/ops/system',
         name: 'AdminOpsSystem',
-        component: () => import('@/views/admin/SystemMonitor.vue'),
+        component: () => import('@/views/admin/system-monitor/SystemMonitor.vue'),
         meta: {
+          pageName: 'admin_ops',
           title: '系统监控',
-          permission: 'system:read',
           searchScope: { type: 'ops', placeholder: '搜索系统指标...', label: '系统' }
         }
       },
       {
         path: '/admin/ops/storage',
         name: 'AdminOpsStorage',
-        component: () => import('@/views/admin/QuotaManagement.vue'),
+        component: () => import('@/views/admin/quota-management/QuotaManagement.vue'),
         meta: {
+          pageName: 'admin_ops',
           title: 'OSS 存储管理',
           searchScope: { type: 'asset', placeholder: '搜索存储资源...', label: '存储' }
         }
@@ -269,11 +281,22 @@ export const staticRoutes: RouteRecordRaw[] = [
       {
         path: '/admin/ops/config',
         name: 'AdminOpsConfig',
-        component: () => import('@/views/admin/ConfigAdmin.vue'),
+        component: () => import('@/views/admin/config-admin/ConfigAdmin.vue'),
         meta: {
+          pageName: 'admin_ops',
           title: '运行时配置',
-          permission: 'assets:read',
           searchScope: { type: 'ops', placeholder: '搜索配置项...', label: '配置' }
+        }
+      },
+      // 权限管理
+      {
+        path: '/admin/permissions',
+        name: 'AdminPermissions',
+        component: () => import('@/views/admin/permission-editor/PermissionEditor.vue'),
+        meta: {
+          pageName: 'admin_permissions',
+          title: '权限配置',
+          searchScope: { type: 'ops', placeholder: '搜索页面或组件...', label: '权限' }
         }
       }
     ]
@@ -282,8 +305,9 @@ export const staticRoutes: RouteRecordRaw[] = [
   {
     path: '/tasks',
     name: 'Tasks',
-    component: () => import('@/views/Tasks.vue'),
+    component: () => import('@/views/tasks/Tasks.vue'),
     meta: {
+      pageName: 'tasks',
       title: '托管任务',
       layout: 'guest',
       requiresAuth: true,
@@ -293,8 +317,9 @@ export const staticRoutes: RouteRecordRaw[] = [
   {
     path: '/tasks/crawler',
     name: 'TasksCrawler',
-    component: () => import('@/views/Tasks.vue'),
+    component: () => import('@/views/tasks/Crawler.vue'),
     meta: {
+      pageName: 'tasks',
       title: '爬虫管理',
       layout: 'guest',
       requiresAuth: true,
@@ -304,8 +329,9 @@ export const staticRoutes: RouteRecordRaw[] = [
   {
     path: '/tasks/cloud',
     name: 'TasksCloud',
-    component: () => import('@/views/Tasks.vue'),
+    component: () => import('@/views/tasks/Cloud.vue'),
     meta: {
+      pageName: 'tasks',
       title: '云训练管理',
       layout: 'guest',
       requiresAuth: true,
