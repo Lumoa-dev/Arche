@@ -187,7 +187,7 @@ jobs:
         run: npm audit --audit-level=moderate
       - name: Verify API types
         working-directory: frontend
-        run: test -f src/services/api/generated.d.ts && echo "API types OK"
+        run: test -f src/lib/services/api/generated.d.ts && echo "API types OK"
       - name: Run ${{ matrix.dir }} tests
         working-directory: frontend
         run: >
