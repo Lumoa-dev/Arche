@@ -17,7 +17,7 @@
  *     <div class="my-ghost">插入到第 {{ index }} 项</div>
  *   </template>
  */
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 
 type Axis = 'x' | 'y' | 'xy'
 type GhostPreset = 'line' | 'box' | 'none'
@@ -61,15 +61,6 @@ const containerRef = ref<HTMLElement | null>(null)
 const isDragging = ref(false)
 const dragIndex = ref(-1) // 被拖拽项的原始下标
 const dropIndex = ref(-1) // 当前落点下标（0 ~ length，length 表示末尾）
-const ghostStyle = reactive({
-  top: '0px',
-  left: '0px',
-  width: '0px',
-  height: '0px'
-})
-
-// 每项的 transform 偏移（用于让位动画）
-const itemTransforms = reactive<Record<number, string>>({})
 
 // ─── 拖拽过程中暂存的数据 ─────────────────────────────────
 
@@ -173,9 +164,6 @@ function startDrag(e: PointerEvent, index: number) {
   dragIndex.value = index
   dropIndex.value = index
 
-  // ghost 初始位置在当前项
-  updateGhostPosition(index)
-
   // 全局事件监听
   document.addEventListener('pointermove', onPointerMove)
   document.addEventListener('pointerup', onPointerUp)
@@ -192,7 +180,7 @@ function getItemElements(): HTMLElement[] {
   const container = containerRef.value
   if (!container) return []
   return Array.from(container.children).filter(
-    (el) => el instanceof HTMLElement && el.dataset.arSortableIndex !== undefined
+    (child) => child instanceof HTMLElement && child.dataset.arSortableIndex !== undefined
   ) as HTMLElement[]
 }
 
@@ -210,12 +198,10 @@ function flushDragMove() {
   rafId = 0
   updateClonePosition(pendingX, pendingY)
 
-  // 计算当前落点下标，只更新 ghost 提示线位置
+  // 计算当前落点下标
   const targetIndex = calcDropIndex(pendingX, pendingY)
   if (targetIndex !== dropIndex.value) {
     dropIndex.value = targetIndex
-    updateGhostPosition(targetIndex)
-    updateItemTransforms()
   }
 }
 
@@ -267,11 +253,6 @@ function cleanupDrag() {
   dragIndex.value = -1
   dropIndex.value = -1
 
-  // 清除让位动画
-  for (const key in itemTransforms) {
-    delete itemTransforms[key]
-  }
-
   if (rafId) {
     cancelAnimationFrame(rafId)
     rafId = 0
@@ -319,7 +300,7 @@ function calcDropIndex(cx: number, cy: number): number {
     // 计算鼠标 Y 坐标相对于每项的位置
     for (let i = 0; i < items.length; i++) {
       if (i === from) continue // 跳过自身
-      const rect = items[i].getBoundingClientRect()
+      const rect = items[i]!.getBoundingClientRect()
       const midY = rect.top + rect.height / 2
       if (cy < midY) return i
     }
@@ -331,7 +312,7 @@ function calcDropIndex(cx: number, cy: number): number {
   if (props.axis === 'x') {
     for (let i = 0; i < items.length; i++) {
       if (i === from) continue
-      const rect = items[i].getBoundingClientRect()
+      const rect = items[i]!.getBoundingClientRect()
       const midX = rect.left + rect.width / 2
       if (cx < midX) return i
     }
@@ -341,95 +322,11 @@ function calcDropIndex(cx: number, cy: number): number {
   // XY 轴：先从 Y 找，再从 X 找
   for (let i = 0; i < items.length; i++) {
     if (i === from) continue
-    const rect = items[i].getBoundingClientRect()
+    const rect = items[i]!.getBoundingClientRect()
     const midY = rect.top + rect.height / 2
     if (cy < midY) return i
   }
   return items.length
-}
-
-// ─── 常量 ──────────────────────────────────────────────────
-
-/** 卡片之间的默认间隙（当无法从 CSS 读取时回退） */
-const DEFAULT_CARD_GAP = 16
-
-// ─── Ghost 定位 ────────────────────────────────────────────
-
-/** 获取卡片之间的间隙（取 marginBottom 或 marginTop 中的非零值） */
-function getItemGap(): number {
-  const items = getItemElements()
-  if (items.length === 0) return DEFAULT_CARD_GAP
-  const card = items[0].querySelector('.paragraph-card') as HTMLElement | null
-  if (card) {
-    const cs = getComputedStyle(card)
-    const mb = parseFloat(cs.marginBottom)
-    if (!isNaN(mb) && mb > 0) return mb
-    const mt = parseFloat(cs.marginTop)
-    if (!isNaN(mt) && mt > 0) return mt
-  }
-  return DEFAULT_CARD_GAP
-}
-
-/** 计算两个相邻卡片之间的纵轴居中位置 */
-function updateGhostPosition(targetIndex: number) {
-  const items = getItemElements()
-  const container = containerRef.value
-  if (items.length === 0 || !container) return
-
-  const containerRect = container.getBoundingClientRect()
-  const gap = getItemGap()
-
-  if (targetIndex >= items.length) {
-    const lastRect = items[items.length - 1].getBoundingClientRect()
-    // 放到卡片底边 + 半个间隙的位置，落在间隙中间而不是卡片内部
-    ghostStyle.top = `${lastRect.bottom - containerRect.top + gap / 2}px`
-  } else if (targetIndex <= 0) {
-    const firstRect = items[0].getBoundingClientRect()
-    // 放到卡片顶边 - 半个间隙的位置
-    ghostStyle.top = `${firstRect.top - containerRect.top - gap / 2}px`
-  } else {
-    const prevRect = items[targetIndex - 1].getBoundingClientRect()
-    const currRect = items[targetIndex].getBoundingClientRect()
-    ghostStyle.top = `${(prevRect.bottom + currRect.top) / 2 - containerRect.top}px`
-  }
-
-  ghostStyle.left = '0px'
-  ghostStyle.width = `${containerRect.width}px`
-  ghostStyle.height = '2px'
-}
-
-// ─── 让位动画 ──────────────────────────────────────────────
-
-/** 获取一个 item 的外高度（含到下一项的间隙） */
-function getItemOuterHeight(item: HTMLElement): number {
-  return item.getBoundingClientRect().height
-}
-
-/** 根据 ghost 位置更新各 item 的 transform（让位弹开效果） */
-function updateItemTransforms() {
-  // 清除旧变换
-  for (const key in itemTransforms) {
-    delete itemTransforms[key]
-  }
-
-  const items = getItemElements()
-  const from = dragData.fromIndex
-  const to = dropIndex.value
-  if (from < 0 || to < 0 || items.length === 0 || from === to) return
-
-  if (to > from) {
-    // 向下拖：from+1 ~ to 之间的项逐个上移，在 to 位置腾出空位
-    for (let i = from + 1; i <= to && i < items.length; i++) {
-      const h = getItemOuterHeight(items[i])
-      if (h > 0) itemTransforms[i] = `translateY(-${h}px)`
-    }
-  } else {
-    // 向上拖：to ~ from-1 之间的项逐个下移，在 to 位置腾出空位
-    for (let i = to; i < from; i++) {
-      const h = getItemOuterHeight(items[i])
-      if (h > 0) itemTransforms[i] = `translateY(${h}px)`
-    }
-  }
 }
 
 // ─── 外部元素拖入（HTML5 Drag API） ─────────────────────
@@ -440,7 +337,7 @@ function calcExternalDropIndex(cx: number, cy: number): number {
   const items = getItemElements()
   if (items.length === 0) return 0
   for (let i = 0; i < items.length; i++) {
-    const rect = items[i].getBoundingClientRect()
+    const rect = items[i]!.getBoundingClientRect()
     if (props.axis === 'y') {
       if (cy < rect.top + rect.height / 2) return i
     } else if (props.axis === 'x') {
@@ -479,21 +376,31 @@ function onDrop(e: DragEvent) {
     @drop="onDrop"
     @pointerdown="onPointerDown"
   >
+    <template v-for="(item, index) in modelValue" :key="getItemKey(item, index)">
+      <!-- Ghost 始终在 DOM 中，平时隐藏，落点命中时展开 → 推挤两侧卡片让位 -->
+      <div
+        class="ar-sortable__ghost-zone"
+        :class="{
+          'ar-sortable__ghost-zone--active':
+            isDragging && index === dropIndex && dropIndex !== dragIndex
+        }"
+      >
+        <div class="ar-sortable__ghost-line" />
+      </div>
+      <div class="ar-sortable__item" :data-ar-sortable-index="index">
+        <slot name="item" :element="item" :index="index" />
+      </div>
+    </template>
+    <!-- 末尾 Ghost -->
     <div
-      v-for="(item, index) in modelValue"
-      :key="getItemKey(item, index)"
-      class="ar-sortable__item"
-      :data-ar-sortable-index="index"
-      :style="itemTransforms[index] ? { transform: itemTransforms[index] } : undefined"
+      v-if="modelValue.length > 0"
+      class="ar-sortable__ghost-zone"
+      :class="{
+        'ar-sortable__ghost-zone--active':
+          isDragging && dropIndex >= modelValue.length && dropIndex !== dragIndex
+      }"
     >
-      <slot name="item" :element="item" :index="index" />
-    </div>
-
-    <!-- Ghost 占位 — 拖拽中显示在落点位置 -->
-    <div v-if="isDragging" class="ar-sortable__ghost" :style="ghostStyle">
-      <slot name="ghost" :index="dropIndex">
-        <div class="ar-sortable__ghost-inner" :class="`ar-sortable__ghost-inner--${ghost}`" />
-      </slot>
+      <div class="ar-sortable__ghost-line" />
     </div>
   </div>
 </template>
@@ -507,13 +414,10 @@ function onDrop(e: DragEvent) {
 .ar-sortable__item {
   position: relative;
   z-index: 1;
-  transition: transform 150ms ease;
 }
 
-/* 拖拽中禁用 transition（避免与 getBoundingClientRect 形成反馈环路），
-   同时防止意外的鼠标交互影响 item 内部 */
+/* 拖拽中防止意外的鼠标交互影响 item 内部 */
 .ar-sortable--dragging .ar-sortable__item {
-  transition: none !important;
   pointer-events: none;
 }
 
@@ -529,32 +433,25 @@ function onDrop(e: DragEvent) {
   will-change: top, left;
 }
 
-/* ─── Ghost ─── */
+/* ─── Ghost 区域（常驻 DOM，展开时推挤卡片让位） ─── */
 
-.ar-sortable__ghost {
-  position: absolute;
-  z-index: 2;
+.ar-sortable__ghost-zone {
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
   pointer-events: none;
+  transition:
+    height 150ms ease,
+    opacity 150ms ease;
 }
 
-/* 预设：line — 水平虚线 */
-.ar-sortable__ghost-inner--line {
+.ar-sortable__ghost-zone--active {
+  height: 16px; /* = --spacing-md，卡片之间的间隙高度 */
+  opacity: 1;
+}
+
+.ar-sortable__ghost-line {
+  width: 100%;
   border-top: 2px dashed var(--primary-color);
-  height: 0;
-  margin: 0;
-}
-
-/* 预设：box — 虚线框 */
-.ar-sortable__ghost-inner--box {
-  border: 2px dashed var(--primary-color);
-  border-radius: var(--radius-md);
-  background: rgba(128, 128, 128, 0.04);
-  height: 100%;
-  box-sizing: border-box;
-}
-
-/* 预设：none — 透明 */
-.ar-sortable__ghost-inner--none {
-  height: 0;
 }
 </style>

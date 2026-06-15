@@ -1,10 +1,13 @@
 """ServiceContainer 依赖注入容器测试。"""
 
 import pytest
+
 from backend.core.container import (
-    ServiceContainer,
     CircularDependencyError,
+    ServiceContainer,
     ServiceNotFoundError,
+)
+from backend.core.container import (
     container as global_container,
 )
 

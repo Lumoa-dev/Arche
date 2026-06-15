@@ -3,6 +3,7 @@
 from typing import Any, cast
 
 from pydantic import Field
+
 from backend.core.settings.base import PluginSettingsBase, create_plugin_settings
 
 
@@ -16,8 +17,8 @@ class TestPluginSettingsBase:
             api_key: str = "default-key"
             enabled: bool = True
             limit: int = 100
-            hosts: list[str] = ["localhost", "127.0.0.1"]
-            config: dict = {"key": "value"}
+            hosts: list[str] = ["localhost", "127.0.0.1"]  # noqa: RUF012
+            config: dict = {"key": "value"}  # noqa: RUF012
             optional: str | None = None
             no_default: str  # 没有默认值的字段
 

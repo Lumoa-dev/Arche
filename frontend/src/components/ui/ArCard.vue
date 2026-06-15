@@ -38,7 +38,6 @@ const props = withDefaults(
     variant: 'glass',
     padding: 'md',
     radius: 'md',
-    shadow: undefined, // undefined = 按变体自动选择
     hoverable: false,
     disabled: false
   }

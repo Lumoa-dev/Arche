@@ -49,16 +49,16 @@ const activeId = computed(() => {
 })
 
 /** 转换为 ArNavItem 格式 */
-const flatItems = computed<ArNavItem[]>(() => {
+const flatItems = computed(() => {
   return props.sidebarItems.map((item) => ({
     id: item.path,
     label: item.title,
-    icon: item.icon
+    ...(item.icon ? { icon: item.icon } : {})
   }))
 })
 
 /** 分组模式下的条目（所有条目归入一个分组） */
-const groupedItems = computed<ArNavGroup[]>(() => {
+const groupedItems = computed(() => {
   if (props.mode !== 'grouped') return []
   return [
     {

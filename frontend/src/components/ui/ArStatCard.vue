@@ -21,7 +21,6 @@ const props = withDefaults(
     label: '',
     sublabel: '',
     trend: 'neutral',
-    formatter: undefined,
     size: 'md'
   }
 )

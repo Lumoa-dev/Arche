@@ -37,8 +37,7 @@
     "naive-ui": "^2.44.1",
     "pinia": "^3.0.4",
     "vue": "^3.5.32",
-    "vue-router": "^4.6.4",
-    "vuedraggable": "^4.1.0"
+    "vue-router": "^4.6.4"
   },
   "overrides": {
     "openapi-typescript": {
@@ -46,6 +45,8 @@
     }
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "@rushstack/eslint-patch": "^1.16.1",
     "@types/dompurify": "^3.0.5",
     "@types/node": "^24.12.2",

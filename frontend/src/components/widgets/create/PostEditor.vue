@@ -109,7 +109,7 @@ defineExpose({
       <ArInput
         v-model:value="title"
         placeholder="输入文章标题……"
-        size="large"
+        size="lg"
         :maxlength="120"
         show-count
       />
@@ -148,7 +148,7 @@ defineExpose({
         <ArInput
           v-model:value="tagInput"
           placeholder="输入标签后按 Enter 添加"
-          size="small"
+          size="sm"
           @keydown="handleTagKeydown"
         />
         <ArButton size="sm" type="secondary" @click="addTag">添加</ArButton>

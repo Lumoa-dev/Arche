@@ -10,9 +10,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-import pytest  # noqa: E402
-from unittest.mock import MagicMock, AsyncMock  # noqa: E402
+from unittest.mock import AsyncMock, MagicMock  # noqa: E402
 
+import pytest  # noqa: E402
 
 # =============================================================================
 # 自动 marker 分层 + 本地智能测试（按 diff 跳过）
@@ -163,7 +163,7 @@ def fake_container():
     container = MagicMock()
 
     class FakeConfig:
-        _values = {
+        _values = {  # noqa: RUF012
             "GITHUB_TOKEN": "test_token",
             "GITHUB_CACHE_TTL": 300,
             "GITHUB_TIMEOUT": 10,
@@ -209,19 +209,19 @@ async def module_db():
     返回: {"engine": engine, "session_factory": session_factory}
     """
     from sqlalchemy.ext.asyncio import (
-        create_async_engine,
         async_sessionmaker,
+        create_async_engine,
     )
     from sqlalchemy.pool import StaticPool
-    from backend.core.db import Base
 
     # 确保模型在 create_all 前已导入并注册到 Base.metadata
     from backend.core import models as _core_models  # noqa: F401
+    from backend.core.db import Base
     from backend.plugins.asset_mgmt import models as _asset_models  # noqa: F401
     from backend.plugins.auth import models as _auth_models  # noqa: F401
     from backend.plugins.blog import models as _blog_models  # noqa: F401
-    from backend.plugins.crawler import models as _crawler_models  # noqa: F401
     from backend.plugins.cloud_integration import models as _cloud_models  # noqa: F401
+    from backend.plugins.crawler import models as _crawler_models  # noqa: F401
     from backend.plugins.monitor import models as _monitor_models  # noqa: F401
     from backend.plugins.oss import models as _oss_models  # noqa: F401
 
@@ -246,6 +246,7 @@ async def module_db():
 async def in_memory_db(module_db):
     """函数级 fixture：每个测试结束后清理所有数据。"""
     from sqlalchemy.ext.asyncio import async_sessionmaker
+
     from backend.core.db import Base
 
     engine = module_db["engine"]
@@ -264,7 +265,7 @@ async def db_container(in_memory_db, fake_container):
     """带有真实内存数据库的 fake container。"""
 
     class FakeConfigWithDb:
-        _values = {
+        _values = {  # noqa: RUF012
             "GITHUB_TOKEN": "test_token",
             "GITHUB_CACHE_TTL": 300,
             "GITHUB_TIMEOUT": 10,
@@ -381,8 +382,9 @@ def patch_container_service(container, name: str, service):
 async def test_app(db_container):
     """创建真实的 FastAPI 测试应用，带内存数据库。"""
     from fastapi import FastAPI
-    from backend.core.plugin_registry import registry, discover_plugins
+
     from backend.core.middleware import register_error_handlers
+    from backend.core.plugin_registry import discover_plugins, registry
     from backend.plugins.auth.middleware import AuthMiddleware
 
     # 如果已有插件注册（单元测试已导入），不做 reset 以免丢失；
@@ -410,7 +412,7 @@ async def test_app(db_container):
 @pytest.fixture
 async def client(test_app):
     """HTTP 测试客户端。"""
-    from httpx import AsyncClient, ASGITransport
+    from httpx import ASGITransport, AsyncClient
 
     async with AsyncClient(
         transport=ASGITransport(app=test_app), base_url="http://test"
@@ -471,7 +473,7 @@ def crawler_sample_html():
       <head><title>Test Article</title></head>
       <body>
         <main>
-          <p>This is crawler sample content with enough characters for quality checks.</p>
+          <p>This is crawler sample content with enough characters for quality checks.</p>  # noqa: E501
           <a href="/next">Next</a>
           <a href="https://example.com/about">About</a>
         </main>

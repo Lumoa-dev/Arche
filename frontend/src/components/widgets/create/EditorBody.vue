@@ -67,8 +67,6 @@ function handleDrop(e: DragEvent) {
 
 <style scoped>
 .editor-desk {
-  flex: 1;
-  overflow-y: auto;
   /* 桌面背景延续页面渐变 */
 }
 

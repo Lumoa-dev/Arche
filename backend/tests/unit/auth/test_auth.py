@@ -8,14 +8,14 @@
 
 from __future__ import annotations
 
-import pytest
-import jwt
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from backend.plugins.auth.services import AuthService
-from backend.core.middleware import AppError, AuthError
+import jwt
+import pytest
 
+from backend.core.middleware import AppError, AuthError
+from backend.plugins.auth.services import AuthService
 
 # =============================================================================
 # 注册行为测试

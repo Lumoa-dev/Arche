@@ -3,10 +3,12 @@
 import logging
 import os
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi import FastAPI
-from backend.core import create_app, _setup_logging, _seed_default_config
+
+from backend.core import _seed_default_config, _setup_logging, create_app
 from backend.core.config import ConfigManager
 
 

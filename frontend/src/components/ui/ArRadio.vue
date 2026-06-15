@@ -15,8 +15,6 @@ const props = withDefaults(
     disabled?: boolean
   }>(),
   {
-    modelValue: undefined,
-    value: undefined,
     label: '',
     labelPosition: 'right',
     disabled: false

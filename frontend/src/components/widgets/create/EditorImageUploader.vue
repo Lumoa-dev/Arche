@@ -18,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const isDragOver = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 function handleFileSelected(file: File) {
   if (!file.type.startsWith('image/')) return
@@ -67,7 +68,7 @@ function handleDrop(e: DragEvent) {
       @dragover.prevent="isDragOver = true"
       @dragleave="isDragOver = false"
       @drop.prevent="handleDrop"
-      @click="$refs.fileInput?.click()"
+      @click="fileInput?.click()"
     >
       <div class="upload-hint">
         <p>点击或拖拽上传图片</p>

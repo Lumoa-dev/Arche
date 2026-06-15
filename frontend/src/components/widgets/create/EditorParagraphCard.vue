@@ -11,6 +11,8 @@ import RichTextEditor from './RichTextEditor.vue'
 import EditorImageUploader from './EditorImageUploader.vue'
 import EditorVideoUrlInput from './EditorVideoUrlInput.vue'
 import EditorCodeEditor from './EditorCodeEditor.vue'
+import EditorSeparatorCard from './EditorSeparatorCard.vue'
+import EditorHeadingCard from './EditorHeadingCard.vue'
 import type { Editor } from '@tiptap/vue-3'
 import type { EditorParagraph, ParagraphType } from '@/components/logic/useParagraphEditor'
 
@@ -47,14 +49,17 @@ function stripHtml(html: string): string {
   div.innerHTML = html
   return div.textContent || ''
 }
+
+/** 解析段标题等级：'H2' → 2, 'H3' → 3 */
+function parseLevel(heading?: string): number {
+  if (!heading) return 2
+  const m = heading.match(/H(\d)/)
+  return m ? parseInt(m[1]!) : 2
+}
 </script>
 
 <template>
-  <div
-    class="paragraph-card"
-    :class="{ 'paragraph-card--preview': isPreview }"
-  >
-
+  <div class="paragraph-card" :class="{ 'paragraph-card--preview': isPreview }">
     <!-- 卡片主体（flex row: 内容区 + 右侧操作栏） -->
     <div class="paragraph-card__inner">
       <!-- 内容区 -->
@@ -76,12 +81,18 @@ function stripHtml(html: string): string {
         <div class="paragraph-body">
           <template v-if="!isPreview">
             <RichTextEditor
-              v-if="paragraph.type === 'text' || paragraph.type === 'heading'"
+              v-if="paragraph.type === 'text'"
               :uid="paragraph.uid"
               :model-value="paragraph.content"
               @update:model-value="emit('update:content', paragraph.uid, $event)"
               @ready="(ed: Editor) => emit('ready', paragraph.uid, ed)"
               @focus="(uid: string, ed: Editor) => emit('focus', uid, ed)"
+            />
+            <EditorHeadingCard
+              v-else-if="paragraph.type === 'heading'"
+              :content="paragraph.content"
+              :level="parseLevel(paragraph.heading)"
+              @update:content="emit('update:content', paragraph.uid, $event)"
             />
             <EditorImageUploader
               v-else-if="paragraph.type === 'image'"
@@ -100,9 +111,7 @@ function stripHtml(html: string): string {
               :content="paragraph.content"
               @update:content="emit('update:content', paragraph.uid, $event)"
             />
-            <div v-else-if="paragraph.type === 'separator'" style="padding: 12px 24px">
-              <hr style="border: none; border-top: 1px solid var(--border-color); margin: 0" />
-            </div>
+            <EditorSeparatorCard v-else-if="paragraph.type === 'separator'" />
             <div
               v-else-if="paragraph.type === 'table'"
               style="padding: 24px; text-align: center; color: var(--text-tertiary)"
@@ -114,9 +123,12 @@ function stripHtml(html: string): string {
           <!-- 预览模式 -->
           <template v-else>
             <div class="paragraph-preview">
-              <p v-if="paragraph.type === 'text' || paragraph.type === 'heading'">
+              <p v-if="paragraph.type === 'text'">
                 {{ stripHtml(paragraph.content) || '（空段落）' }}
               </p>
+              <div v-else-if="paragraph.type === 'heading'" class="paragraph-preview__heading">
+                {{ paragraph.content || '（空标题）' }}
+              </div>
               <div v-else-if="paragraph.type === 'image'" class="preview-media">
                 <img v-if="paragraph.media_url" :src="paragraph.media_url" alt="" />
                 <span v-else>（图片占位）</span>
@@ -136,13 +148,7 @@ function stripHtml(html: string): string {
     </div>
 
     <!-- 右侧拖拽轨道（窄条，悬停浮现） -->
-    <div
-      class="drag-rail"
-      draggable="true"
-      title="拖拽排序"
-      @dragstart="handleDragStart"
-      @dragend="handleDragEnd"
-    >
+    <div class="drag-rail" title="拖拽排序">
       <!-- 手柄图标（竖直六点） -->
       <svg
         class="drag-rail__icon"

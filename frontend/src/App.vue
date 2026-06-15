@@ -161,8 +161,8 @@ const themeOverrides: GlobalThemeOverrides = {
 }
 
 /** 当前布局模式，从路由 meta 读取 */
-const layoutMode = computed<string>(() => {
-  return (route.meta.layout as string) || 'guest'
+const layoutMode = computed(() => {
+  return (route.meta.layout as 'guest' | 'user' | 'admin') || 'guest'
 })
 
 /** 是否显示顶部导航栏 */

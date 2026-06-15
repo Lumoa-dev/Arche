@@ -93,7 +93,7 @@ function onDrop(e: DragEvent, targetIndex: number, groupId?: string) {
   const [moved] = ids.splice(from, 1)
   if (moved) {
     ids.splice(to, 0, moved)
-    emit('reorder', { groupId: gId || undefined, items: ids })
+    emit('reorder', { groupId: gId ?? undefined, items: ids })
   }
 
   dragIndex.value = -1

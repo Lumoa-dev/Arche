@@ -18,7 +18,6 @@ from fastapi import Request
 from backend.plugins.search.routes import search_suggestions
 from backend.plugins.search.services import SearchService
 
-
 # =============================================================================
 # Mock 辅助
 # =============================================================================

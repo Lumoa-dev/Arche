@@ -96,7 +96,7 @@ export function useParagraphEditor() {
   function moveParagraphUp(uid: string) {
     const idx = paragraphs.value.findIndex((p) => p.uid === uid)
     if (idx > 0) {
-      const item = paragraphs.value[idx]
+      const item = paragraphs.value[idx]!
       paragraphs.value.splice(idx, 1)
       paragraphs.value.splice(idx - 1, 0, item)
     }
@@ -106,7 +106,9 @@ export function useParagraphEditor() {
   function moveParagraphDown(uid: string) {
     const idx = paragraphs.value.findIndex((p) => p.uid === uid)
     if (idx < paragraphs.value.length - 1) {
-      const item = paragraphs.value[idx]
+      const item = paragraphs.value[idx]!
+      paragraphs.value.splice(idx, 1)
+      paragraphs.value.splice(idx + 1, 0, item)
       paragraphs.value.splice(idx, 1)
       paragraphs.value.splice(idx + 1, 0, item)
     }
@@ -120,7 +122,7 @@ export function useParagraphEditor() {
     if (fromIdx === -1 || toIdx === -1) return
     const [item] = paragraphs.value.splice(fromIdx, 1)
     const adjustedTo = fromIdx < toIdx ? toIdx - 1 : toIdx
-    paragraphs.value.splice(adjustedTo, 0, item)
+    paragraphs.value.splice(adjustedTo, 0, item!)
   }
 
   /** 切换段落类型 */

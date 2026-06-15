@@ -88,7 +88,7 @@ class TestOSSUploadAPI:
         self, client, auth_headers, oss_service_with_mock_backend
     ):
         """上传文件应成功后可在列表中查到。"""
-        svc, backend = oss_service_with_mock_backend
+        _svc, backend = oss_service_with_mock_backend
 
         response = await client.post(
             "/api/oss/upload",
@@ -116,7 +116,7 @@ class TestOSSUploadAPI:
         self, client, auth_headers, oss_service_with_mock_backend
     ):
         """删除文件接口应成功并更新列表。"""
-        svc, backend = oss_service_with_mock_backend
+        svc, _backend = oss_service_with_mock_backend
 
         token = auth_headers["Authorization"].replace("Bearer ", "")
         owner_id = _decode_user_id(token)

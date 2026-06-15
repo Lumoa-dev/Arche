@@ -8,16 +8,16 @@
 
 from __future__ import annotations
 
-import uuid
 import io
+import uuid
 from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
 from fastapi import UploadFile
 
-from backend.plugins.oss.services import StorageService
 from backend.core.middleware import AppError, PermissionError
+from backend.plugins.oss.services import StorageService
 
 
 @contextmanager
@@ -360,7 +360,7 @@ class TestDownload:
                 file, owner_id=user_id, user_level=5, is_private=False
             )
 
-            stream, info = await service.download_file(
+            _stream, info = await service.download_file(
                 uuid.UUID(uploaded["id"]), requester_id=user_id, requester_level=5
             )
 
@@ -400,7 +400,7 @@ class TestDownload:
             )
 
             # P0 管理员应该能下载
-            stream, info = await service.download_file(
+            _stream, info = await service.download_file(
                 uuid.UUID(uploaded["id"]),
                 requester_id=admin_id,
                 requester_level=0,  # P0

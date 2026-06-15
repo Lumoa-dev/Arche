@@ -4,14 +4,18 @@ import os
 import tempfile
 import time
 from pathlib import Path
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from pydantic_settings import BaseSettings
+
 from backend.core.config import (
     ConfigManager,
     PluginSettingsRegistry,
-    config_manager as global_config_manager,
     get_config,
+)
+from backend.core.config import (
+    config_manager as global_config_manager,
 )
 
 

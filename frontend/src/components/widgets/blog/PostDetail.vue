@@ -14,9 +14,10 @@ function handleParagraphClick(para: ParagraphData) {
 <template>
   <article class="post-detail">
     <ParagraphComponent
-      v-for="para in paragraphs"
+      v-for="(para, idx) in paragraphs"
       :key="para.pid"
       :paragraph="para"
+      :index="idx"
       @click="handleParagraphClick"
     />
   </article>

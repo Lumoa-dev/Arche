@@ -43,7 +43,7 @@ function selectType(type: ParagraphType) {
 </script>
 
 <template>
-  <ArHBox gap="4px" justify="flex-end" align="center">
+  <ArHBox gap="4px" justify="end" align="center">
     <!-- 类型切换标签 -->
     <div class="type-trigger" @click.stop="showMenu = !showMenu">
       <span class="type-trigger__label">{{

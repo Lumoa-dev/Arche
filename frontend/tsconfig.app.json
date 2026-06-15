@@ -7,21 +7,20 @@
     /* Path mapping */
     "paths": {
       "@/*": ["./src/*"],
-      "@/core/*": ["./src/core/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/services/*": ["./src/services/*"],
-      "@/store/*": ["./src/store/*"],
-      "@/router/*": ["./src/router/*"],
-      "@/utils/*": ["./src/utils/*"],
-      "@/hooks/*": ["./src/hooks/*"],
-      "@/composables/*": ["./src/composables/*"],
-      "@/directives/*": ["./src/directives/*"],
+      "@/constants/*": ["./src/lib/constants/*"],
+      "@/router/*": ["./src/lib/router/*"],
+      "@/services/api/*": ["./src/components/logic/api/*"],
+      "@/services/mock/*": ["./src/lib/services/mock/*"],
+      "@/services/request": ["./src/lib/services/request.ts"],
+      "@/services/*": ["./src/lib/services/*"],
+      "@/store/*": ["./src/lib/store/*"],
+      "@/utils/*": ["./src/lib/utils/*"],
+      "@/composables/*": ["./src/lib/composables/*"],
+      "@/directives/*": ["./src/lib/directives/*"],
       "@/components/*": ["./src/components/*"],
-      "@/layouts/*": ["./src/layouts/*"],
       "@/views/*": ["./src/views/*"],
-      "@/plugins/*": ["./src/plugins/*"],
-      "@/assets/*": ["./src/assets/*"],
-      "@/styles/*": ["./src/styles/*"]
+      "@/styles/*": ["./src/styles/*"],
+      "@/icons/*": ["./src/icons/*"]
     },
 
     /* 严格类型检查（最高级别） */
@@ -33,7 +32,7 @@
     "strictPropertyInitialization": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,

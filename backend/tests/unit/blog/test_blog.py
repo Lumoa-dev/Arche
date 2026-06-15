@@ -7,21 +7,20 @@
 from __future__ import annotations
 
 import uuid
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from backend.plugins.blog.services import (
-    can_user_see_post,
-    BlogService,
-    MAX_TAGS_PER_POST,
-)
 from backend.plugins.blog.sensitive_words import (
     SensitiveWordFilter,
-    init_filter,
     get_filter,
+    init_filter,
 )
-
+from backend.plugins.blog.services import (
+    MAX_TAGS_PER_POST,
+    BlogService,
+    can_user_see_post,
+)
 
 # =============================================================================
 # 测试辅助
@@ -38,7 +37,7 @@ def _make_blog_container():
     container = MagicMock()
 
     class FakeConfig:
-        _values = {
+        _values = {  # noqa: RUF012
             "GITHUB_TOKEN": "test_token",
             "SECRET_KEY": "test_secret_key_12345",
         }
@@ -462,7 +461,7 @@ class TestBlogServiceComments:
 
         blog_container._mock_result.scalar_one_or_none.return_value = None
 
-        with patch.object(service, "get_post_by_id", return_value=mock_post):
+        with patch.object(service, "get_post_by_id", return_value=mock_post):  # noqa: SIM117
             with pytest.raises(Exception) as excinfo:
                 await service.create_comment(
                     post_id=post_id,

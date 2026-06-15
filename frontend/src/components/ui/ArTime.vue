@@ -37,13 +37,6 @@ const props = withDefaults(
     hideMs?: boolean
   }>(),
   {
-    year: undefined,
-    month: undefined,
-    day: undefined,
-    hour: undefined,
-    minute: undefined,
-    second: undefined,
-    ms: undefined,
     dateSeparator: '-',
     hideYear: false,
     hideMonth: false,

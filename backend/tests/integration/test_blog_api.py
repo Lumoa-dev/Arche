@@ -17,8 +17,8 @@ import uuid
 
 import pytest
 
-from backend.tests.conftest import patch_container_service
 from backend.plugins.blog.services import BlogService
+from backend.tests.conftest import patch_container_service
 
 
 @pytest.fixture(autouse=True)

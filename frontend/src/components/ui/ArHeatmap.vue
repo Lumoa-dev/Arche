@@ -30,7 +30,7 @@ const option = computed(() => {
     tooltip: {
       ...tooltipStyle(),
       formatter: (p: { value: number[] }) =>
-        `${props.categoriesX[p.value[0]]} ~ ${props.categoriesY[p.value[1]]}: ${p.value[2]}`
+        `${props.categoriesX[p.value[0]!]} ~ ${props.categoriesY[p.value[1]!]}: ${p.value[2]}`
     },
     grid: { left: 60, right: 40, top: 16, bottom: 40 },
     xAxis: { type: 'category', data: props.categoriesX, splitArea: { show: true }, ...axis },

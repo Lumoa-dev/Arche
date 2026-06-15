@@ -60,7 +60,7 @@ const option = computed(() => {
       }
     ]
   }
-}) as Record<string, unknown>
+}) as unknown as Record<string, unknown>
 </script>
 
 <template>

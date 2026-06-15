@@ -53,8 +53,8 @@ const option = computed(() => {
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: t.borderLight } },
-      ...axis
+      ...axis,
+      splitLine: { lineStyle: { color: t.borderLight } }
     },
     series: props.series.map((s) => {
       const serie: Record<string, unknown> = {

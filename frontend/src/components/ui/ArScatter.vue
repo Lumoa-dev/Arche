@@ -28,8 +28,8 @@ const option = computed(() => {
         `${p.data.name || ''} (${p.data.x}, ${p.data.y})`
     },
     grid: { left: 40, right: 40, top: 16, bottom: 24 },
-    xAxis: { type: 'value', splitLine: { lineStyle: { color: t.borderLight } }, ...axis },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: t.borderLight } }, ...axis },
+    xAxis: { type: 'value', ...axis, splitLine: { lineStyle: { color: t.borderLight } } },
+    yAxis: { type: 'value', ...axis, splitLine: { lineStyle: { color: t.borderLight } } },
     series: [
       {
         type: 'scatter',
@@ -37,7 +37,7 @@ const option = computed(() => {
           name: d.name,
           value: [d.x, d.y, d.value ?? 1]
         })),
-        symbolSize: (val: number[]) => Math.max(4, (val[2] / maxVal) * 24),
+        symbolSize: (val: number[]) => Math.max(4, ((val[2] ?? 1) / Math.max(maxVal, 1)) * 24),
         itemStyle: { color: t.accent, opacity: 0.7 }
       }
     ]

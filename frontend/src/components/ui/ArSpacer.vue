@@ -13,7 +13,6 @@ withDefaults(
     orientation?: 'horizontal' | 'vertical'
   }>(),
   {
-    size: undefined,
     orientation: 'horizontal'
   }
 )

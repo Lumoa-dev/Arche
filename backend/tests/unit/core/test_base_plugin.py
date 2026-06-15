@@ -1,8 +1,10 @@
 """BasePlugin 抽象基类测试。"""
 
 from abc import ABC
+
 import pytest
 from fastapi import FastAPI
+
 from backend.core.base_plugin import BasePlugin
 from backend.core.container import ServiceContainer
 
@@ -57,8 +59,8 @@ class TestBasePlugin:
         class TestPlugin(BasePlugin):
             name = "test-plugin"
             version = "1.0.0"
-            requires = ["plugin-a", "plugin-b"]
-            optional = ["plugin-c"]
+            requires = ["plugin-a", "plugin-b"]  # noqa: RUF012
+            optional = ["plugin-c"]  # noqa: RUF012
 
             def setup(self, app: FastAPI) -> None:
                 pass

@@ -51,7 +51,7 @@ watch(
   () => props.modelValue,
   (val) => {
     if (editor.value && val !== editor.value.getHTML()) {
-      editor.value.commands.setContent(val || '', false)
+      editor.value.commands.setContent(val || '', { emitUpdate: false })
     }
   }
 )
@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="intro-card">
     <div class="intro-card__label" @click="focusEditor">引言</div>
-    <EditorContent :editor="editor" class="intro-card__editor" />
+    <EditorContent v-if="editor" :editor="editor" class="intro-card__editor" />
   </div>
 </template>
 

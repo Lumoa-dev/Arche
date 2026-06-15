@@ -15,12 +15,7 @@ withDefaults(
     /** 行起始位置 */
     rowStart?: number | string
   }>(),
-  {
-    colSpan: undefined,
-    colStart: undefined,
-    rowSpan: undefined,
-    rowStart: undefined
-  }
+  {}
 )
 </script>
 

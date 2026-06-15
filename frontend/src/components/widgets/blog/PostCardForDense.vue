@@ -120,7 +120,7 @@ function formatDate(dateStr: string): string {
         <ArTag
           v-for="(tag, i) in post.tags.slice(0, 3)"
           :key="tag"
-          :color="TAG_COLORS[i % TAG_COLORS.length]"
+          :color="TAG_COLORS[i % TAG_COLORS.length]!"
           size="sm"
           type="light"
         >

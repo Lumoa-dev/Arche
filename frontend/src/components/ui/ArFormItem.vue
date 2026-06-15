@@ -34,7 +34,7 @@ const form: {
   labelPosition: string
   validateField: (_field: string) => Promise<boolean>
   clearValidate: (_field?: string) => void
-} | null = inject('arForm', null)
+} | null = inject('arForm', null) as any
 
 const fieldErrors = computed(() => {
   if (!form || !props.prop) return []

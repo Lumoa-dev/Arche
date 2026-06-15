@@ -7,8 +7,8 @@
  */
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import draggable from 'vuedraggable'
 import ArVBox from '@/components/ui/ArVBox.vue'
+import ArSortable from '@/components/ui/ArSortable.vue'
 import EditorToolbar from '@/components/widgets/create/EditorToolbar.vue'
 import EditorBody from '@/components/widgets/create/EditorBody.vue'
 import EditorCoverArea from '@/components/widgets/create/EditorCoverArea.vue'
@@ -16,12 +16,16 @@ import EditorTitleArea from '@/components/widgets/create/EditorTitleArea.vue'
 import EditorIntroductionCard from '@/components/widgets/create/EditorIntroductionCard.vue'
 import EditorParagraphCard from '@/components/widgets/create/EditorParagraphCard.vue'
 import { useParagraphEditor, type ParagraphType } from '@/components/logic/useParagraphEditor'
+import { useFileImporter } from '@/components/logic/useFileImporter'
 import type { Editor } from '@tiptap/vue-3'
+import { useMessage } from 'naive-ui'
 
 const route = useRoute()
 const router = useRouter()
 
 const editor = useParagraphEditor()
+const fileImporter = useFileImporter()
+const message = useMessage()
 
 /** 各段落 uid → TipTap editor 实例映射（供工具栏联动） */
 const editorMap = ref<Record<string, Editor>>({})
@@ -109,17 +113,39 @@ function toggleCover() {
 }
 
 /** 处理从工具栏拖拽插入的段落 */
-function handleExternalDrop(evt: any) {
-  const raw = evt.element as string
+function handleExternalDrop(payload: { element: string; newIndex: number }) {
+  const raw = payload.element
   if (typeof raw !== 'string' || !raw.startsWith('paragraph:')) return
   const type = raw.replace('paragraph:', '') as ParagraphType
-  editor.paragraphs.value.splice(evt.newIndex, 1)
-  editor.addParagraph(type, evt.newIndex)
+  editor.addParagraph(type, payload.newIndex)
+}
+
+/** 导入文件 */
+async function handleImportFile() {
+  const result = await fileImporter.pickAndParse()
+  if (!result) {
+    if (fileImporter.importError.value) {
+      message.error(fileImporter.importError.value)
+    }
+    return
+  }
+
+  // 填充编辑器
+  editor.title.value = result.title || editor.title.value
+  editor.subtitles.value = [...editor.subtitles.value, ...result.subtitles.slice(0, 3)]
+  if (result.introduction) {
+    editor.introduction.value = result.introduction
+  }
+  if (result.paragraphs.length > 0) {
+    editor.paragraphs.value = fileImporter.toEditorParagraphs(result)
+  }
+
+  message.success(`已导入 ${result.paragraphs.length} 个段落`)
 }
 </script>
 
 <template>
-  <ArVBox style="height: 100vh; background: var(--bg-gradient)">
+  <ArVBox style="min-height: 100vh; background: var(--bg-gradient)">
     <!-- 编辑区主体（可滚动+拖放），工具栏移入纸面顶部 -->
     <EditorBody @drop-paragraph="(type: any) => editor.addParagraph(type)">
       <!-- 工具栏 — 位于纸面顶部，随纸面滚动 -->
@@ -132,6 +158,7 @@ function handleExternalDrop(evt: any) {
         @insert="(type: any) => editor.addParagraph(type)"
         @insert-separator="() => editor.addParagraph('separator')"
         @toggle-cover="toggleCover"
+        @import-file="handleImportFile"
         @save-draft="handleSaveDraft"
         @publish="handlePublish"
       />
@@ -139,7 +166,8 @@ function handleExternalDrop(evt: any) {
       <EditorCoverArea
         v-if="showCover"
         :title="editor.title.value"
-        :content="editor.paragraphs.value[0]?.content || ''"
+        :introduction="editor.introduction.value"
+        :paragraphs="editor.paragraphs.value"
         :tags="editor.tags.value"
         @update:cover-url="editor.coverUrl.value = $event"
       />
@@ -160,15 +188,14 @@ function handleExternalDrop(evt: any) {
         @update:model-value="editor.updateIntroduction($event)"
       />
 
-      <!-- 段落卡片列表（SortableJS 拖拽排序） -->
-      <draggable
+      <!-- 段落卡片列表（ArSortable 拖拽排序） -->
+      <ArSortable
         v-model="editor.paragraphs.value"
+        axis="y"
+        handle=".drag-rail"
+        :animation="150"
+        ghost="line"
         item-key="uid"
-        direction="vertical"
-        :animation="250"
-        ghost-class="sortable-ghost"
-        chosen-class="sortable-chosen"
-        group="editor-paragraphs"
         @add="handleExternalDrop"
       >
         <template #item="{ element: para, index: idx }">
@@ -183,7 +210,9 @@ function handleExternalDrop(evt: any) {
             @update:content="
               (uid: string, content: string) => editor.updateParagraphContent(uid, content)
             "
-            @update:media-url="(uid: string, url: string) => editor.updateParagraphMediaUrl(uid, url)"
+            @update:media-url="
+              (uid: string, url: string) => editor.updateParagraphMediaUrl(uid, url)
+            "
             @update:caption="
               (uid: string, caption: string) => editor.updateParagraphCaption(uid, caption)
             "
@@ -191,28 +220,7 @@ function handleExternalDrop(evt: any) {
             @focus="handleEditorFocus"
           />
         </template>
-      </draggable>
+      </ArSortable>
     </EditorBody>
   </ArVBox>
 </template>
-
-<!-- 全局样式：SortableJS 拖拽反馈（不受 scoped 限制） -->
-<style>
-/* 原位置的幽灵占位 — 虚线框 */
-.sortable-ghost {
-  border: 2px dashed var(--primary-color) !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  min-height: 12px;
-  border-radius: var(--radius-md);
-}
-
-.sortable-ghost > * {
-  visibility: hidden;
-}
-
-/* 拖拽中的卡片 — 稍微加点阴影，不变透明 */
-.sortable-chosen {
-  box-shadow: var(--card-shadow-elevated) !important;
-}
-</style>

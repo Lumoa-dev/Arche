@@ -1,18 +1,20 @@
 """中间件和错误处理测试。"""
 
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi import FastAPI
-from unittest.mock import MagicMock
+
 from backend.core.middleware import (
     AppError,
     AuthError,
     PermissionError,
     error_response,
-    register_error_handlers,
-    setup_cors,
     get_current_user,
-    require_user,
+    register_error_handlers,
     require_level,
+    require_user,
+    setup_cors,
 )
 
 

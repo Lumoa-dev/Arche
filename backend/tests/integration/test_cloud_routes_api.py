@@ -1,6 +1,6 @@
 """云训练全链路集成测试。
 
-Mock 边界：无。CloudTrainingService 使用 MockProvider（纯内存实现，不调用任何外部 API）。
+Mock 边界：无。CloudTrainingService 使用 MockProvider（纯内存实现，不调用任何外部 API）。  # noqa: E501
 所有 CRUD 操作使用真实的内存 SQLite 数据库。
 不 mock CloudTrainingService 或其任何内部方法。
 """

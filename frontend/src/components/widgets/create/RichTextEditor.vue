@@ -54,11 +54,11 @@ const editor = useEditor({
   onSelectionUpdate: ({ editor: ed }) => {
     // 选中变化 = 编辑器获得焦点，通知父组件
     if (props.uid) {
-      emit('focus', props.uid, ed)
+      emit('focus', props.uid, ed as any)
     }
   },
   onCreate: ({ editor: ed }) => {
-    emit('ready', ed)
+    emit('ready', ed as any)
   }
 })
 
@@ -67,7 +67,7 @@ watch(
   (val) => {
     const ed = editor.value
     if (ed && val !== ed.getHTML()) {
-      ed.commands.setContent(val || '', false)
+      ed.commands.setContent(val || '', { emitUpdate: false })
     }
   }
 )
@@ -81,7 +81,7 @@ defineExpose({ editor })
 
 <template>
   <div class="rich-text-wrapper">
-    <EditorContent :editor="editor" />
+    <EditorContent v-if="editor" :editor="editor" />
   </div>
 </template>
 

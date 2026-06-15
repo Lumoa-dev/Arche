@@ -40,11 +40,11 @@ const option = computed(() => {
       bottom: 24
     },
     xAxis: isHorizontal
-      ? { type: 'value', splitLine: { lineStyle: { color: t.borderLight } }, ...axis }
+      ? { type: 'value', ...axis, splitLine: { lineStyle: { color: t.borderLight } } }
       : { type: 'category', data: props.categories, ...axis },
     yAxis: isHorizontal
       ? { type: 'category', data: props.categories, ...axis }
-      : { type: 'value', splitLine: { lineStyle: { color: t.borderLight } }, ...axis },
+      : { type: 'value', ...axis, splitLine: { lineStyle: { color: t.borderLight } } },
     series: props.series.map((s) => ({
       type: 'bar',
       name: s.name,

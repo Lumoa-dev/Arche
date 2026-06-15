@@ -19,9 +19,7 @@ const props = withDefaults(
   {
     variant: 'inline',
     percent: -1,
-    loading: false,
-    height: undefined,
-    color: undefined
+    loading: false
   }
 )
 

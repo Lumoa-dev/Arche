@@ -28,7 +28,7 @@ const option = computed(() => {
       data: props.data.map((d) => d.name),
       ...axis
     },
-    yAxis: { type: 'value', splitLine: { lineStyle: { color: t.borderLight } }, ...axis },
+    yAxis: { type: 'value', ...axis, splitLine: { lineStyle: { color: t.borderLight } } },
     series: [
       {
         type: 'boxplot',

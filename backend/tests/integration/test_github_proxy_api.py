@@ -1,6 +1,6 @@
 """GitHub Proxy 全链路集成测试。
 
-Mock 边界：httpx.AsyncClient（外部 HTTP 调用）和 asyncio.create_subprocess_exec（CLI 子进程）。
+Mock 边界：httpx.AsyncClient（外部 HTTP 调用）和 asyncio.create_subprocess_exec（CLI 子进程）。  # noqa: E501
 不 mock GitHubService 或 GhCliService 等业务服务层。
 """
 
@@ -161,7 +161,7 @@ class TestGitHubProxyAPI:
         self, client, admin_headers, mock_subprocess, github_service
     ):
         """健康检查接口应返回 CLI 和 HTTP 状态。"""
-        mock_exec, stop = mock_subprocess(
+        _mock_exec, stop = mock_subprocess(
             stdout_bytes=b'{"rate": {"limit": 5000, "used": 10}}'
         )
         try:
@@ -206,7 +206,7 @@ class TestGitHubProxyAPI:
     ):
         """mode 参数应被正确传递。"""
         # mode=cli —— 需要 mock subprocess
-        mock_exec, stop = mock_subprocess(stdout_bytes=b'{"ok": true}')
+        _mock_exec, stop = mock_subprocess(stdout_bytes=b'{"ok": true}')
         try:
             resp = await client.get(
                 "/api/github/user",

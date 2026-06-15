@@ -181,7 +181,7 @@ function onDrop(_e: DragEvent, index: number) {
   }
   const items = [...localItems.value]
   const [moved] = items.splice(dragIndex.value, 1)
-  items.splice(index, 0, moved)
+  items.splice(index, 0, moved!)
   localItems.value = items
   emit('update:items', items)
   emit('reorder', items)
@@ -197,7 +197,7 @@ function onDragEnd() {
 // ─── 选项勾选 ───
 function onToggle(index: number, val: boolean) {
   if (props.disabled || localItems.value[index]?.disabled) return
-  localItems.value[index].selected = val
+  if (index >= 0 && localItems.value[index]) localItems.value[index].selected = val
   syncModelValue()
 }
 
@@ -280,7 +280,7 @@ watch(
           <span class="ar-multi-select__title">{{ item.title }}</span>
           <ArCheckbox
             :model-value="!!item.selected"
-            :disabled="disabled || item.disabled"
+            :disabled="(disabled ?? false) || !!item.disabled"
             size="sm"
             @update:model-value="onToggle(index, $event)"
           />

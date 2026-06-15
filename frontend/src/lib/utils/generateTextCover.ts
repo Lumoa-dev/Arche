@@ -1,63 +1,70 @@
 /**
  * Canvas 文字封面生成工具。
  * 为无封面图的帖子自动生成一张"文字海报"风格的封面图片。
- * - 渐变色背景（复用 getCoverGradient）
- * - 正文片段（高斯模糊 3-5px 随机）
- * - 清晰标题 + 装饰分隔线 + 标签
- * - 纯前端 Canvas 渲染，零网络开销
+ * - 正文片段（高斯模糊）+ 随机裁切布局
+ * - 清晰标题（占小比例）+ 引言/正文填充
+ * - 文字色彩调制 + 模糊装饰
+ * - 纯前端 Canvas 渲染
  */
 
 import { getCoverGradient } from './cover'
 import type { BlogPost } from '@/components/logic/api'
 
-/** canvas 输出尺寸 */
 const W = 640
 const H = 400
 
-/** 简单 LRU 缓存，避免同一帖子重复生成 */
 const cache = new Map<string, string>()
 
-/** strip HTML tags */
 function stripHtml(html: string): string {
   const el = document.createElement('div')
   el.innerHTML = html
   return el.textContent || ''
 }
 
-/** 从 post 中提取用于封面的文本片段 */
-function extractText(post: BlogPost): string {
-  // 优先级 1：引言文本（strip HTML）
-  if (post.introduction?.trim()) return stripHtml(post.introduction).trim()
+/** 从 post 提取用于封面渲染的文本素材 */
+function extractTexts(post: BlogPost): {
+  title: string
+  bodyLines: string[]
+} {
+  const title = post.title?.trim() || ''
+  const bodyChunks: string[] = []
 
-  // 优先级 2：段落数据第一段
-  if (post.paragraphs?.length && post.paragraphs[0]?.content?.trim()) {
-    return stripHtml(post.paragraphs[0].content).trim()
+  // 引言
+  if (post.introduction?.trim()) {
+    bodyChunks.push(stripHtml(post.introduction).trim())
   }
 
-  // 优先级 3：标题兜底
-  return post.title?.trim() || ''
-}
+  // 段落正文（取前 3 段）
+  if (post.paragraphs?.length) {
+    for (let i = 0; i < Math.min(3, post.paragraphs.length); i++) {
+      const text = stripHtml(post.paragraphs[i]?.content || '').trim()
+      if (text) bodyChunks.push(text)
+    }
+  }
 
-/** 在 3-5 之间随机取一个模糊像素值 */
-function randomBlur(): number {
-  return 3 + Math.random() * 2 // 3.0 ~ 4.999...
+  // 将正文打散成行（每行 10-16 字随机裁切）
+  const full = bodyChunks.join('　')
+  const lines: string[] = []
+  let pos = 0
+  while (pos < full.length && lines.length < 12) {
+    const len = 10 + Math.floor(Math.random() * 7) // 10~16 字随机
+    lines.push(full.slice(pos, pos + len))
+    pos += len
+  }
+
+  return { title, bodyLines: lines }
 }
 
 function parseGradient(style: string): CanvasGradient | null {
-  // 从 "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 中提取色标
   const match = style.match(/linear-gradient\(.*?,\s*(.*?)\)\s*$/)
   if (!match) return null
-
   const stops: { pct: number; color: string }[] = []
-  // 匹配 "(#xxx  xx%)" 或 "(#xxxxxx  xx%)"
   const re = /(#[\da-fA-F]+)\s+([\d.]+)%/g
   let m: RegExpExecArray | null
   while ((m = re.exec(match[1]!)) !== null) {
     stops.push({ color: m[1]!, pct: parseFloat(m[2]!) / 100 })
   }
-
   if (stops.length < 2) return null
-
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')!
   const grad = ctx.createLinearGradient(0, 0, W, H)
@@ -65,12 +72,6 @@ function parseGradient(style: string): CanvasGradient | null {
   return grad
 }
 
-/**
- * 为帖子生成文字封面图片。
- * @param post - 帖子数据
- * @param noCache - 强制不缓存（用于创建帖子时的预生成）
- * @returns data URL（image/jpeg, 0.85 质量）
- */
 export function generateTextCover(post: BlogPost, noCache?: boolean): string {
   if (!noCache) {
     const cached = cache.get(post.id)
@@ -81,120 +82,157 @@ export function generateTextCover(post: BlogPost, noCache?: boolean): string {
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
-  const text = extractText(post)
 
-  // ── 1. 绘制背景渐变 ──
+  // 随机种子偏移
+  const seed = post.title?.length ?? 0
+
+  const { title, bodyLines } = extractTexts(post)
+
+  // ── 1. 背景渐变 ──
   const gradientCss = getCoverGradient(post)
   const grad = parseGradient(gradientCss)
-  if (grad) {
-    ctx.fillStyle = grad
-  } else {
-    ctx.fillStyle = '#667eea'
-  }
+  ctx.fillStyle = grad ?? '#667eea'
   ctx.fillRect(0, 0, W, H)
 
-  // ── 2. 装饰性底部渐变叠加层 ──
-  const bottomGrad = ctx.createLinearGradient(0, H * 0.55, 0, H)
-  bottomGrad.addColorStop(0, 'rgba(0,0,0,0)')
-  bottomGrad.addColorStop(1, 'rgba(0,0,0,0.35)')
-  ctx.fillStyle = bottomGrad
+  // ── 2. 装饰叠加层 ──
+  const overlayGrad = ctx.createLinearGradient(0, 0, 0, H)
+  overlayGrad.addColorStop(0, 'rgba(0,0,0,0)')
+  overlayGrad.addColorStop(1, 'rgba(0,0,0,0.3)')
+  ctx.fillStyle = overlayGrad
   ctx.fillRect(0, 0, W, H)
 
-  // ── 3. 模糊正文片段 ──
-  if (text) {
+  // ── 3. 模糊正文层（随机裁切布局） ──
+  //    制造"看不清又看得清"的模糊背景文字
+  if (bodyLines.length > 0) {
     ctx.save()
-    ctx.filter = `blur(${randomBlur().toFixed(1)}px)`
-    ctx.fillStyle = 'rgba(255,255,255,0.85)'
-    ctx.font = 'bold 32px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif'
-    ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
 
-    // 自动换行：每行最多 12 个字
-    const maxCharsPerLine = 12
-    const lines: string[] = []
-    let remaining = text
-    while (remaining.length > 0 && lines.length < 3) {
-      if (remaining.length <= maxCharsPerLine) {
-        lines.push(remaining)
-        break
-      }
-      // 尽量在标点/空格处断开
-      const slice = remaining.slice(0, maxCharsPerLine)
-      const punctMatch = slice.match(/^.*?[，。、；：！？）」』"\s]/)
-      const breakAt = punctMatch ? punctMatch[0].length : maxCharsPerLine
-      lines.push(remaining.slice(0, breakAt))
-      remaining = remaining.slice(breakAt).trim()
+    const baseSize = 26 + (seed % 8)
+    const blurAmount = 3 + (seed % 3)
+
+    ctx.filter = `blur(${blurAmount}px)`
+
+    // 色彩调制：根据文字长度偏移 HSL
+    const hueShift = (seed * 37) % 360
+    ctx.fillStyle = `hsla(${hueShift}, 60%, 70%, 0.5)`
+
+    // 随机布局：每行随机位置、旋转
+    const usedPositions: { x: number; y: number }[] = []
+    const lineCount = Math.min(bodyLines.length, 8)
+
+    for (let i = 0; i < lineCount; i++) {
+      const line = bodyLines[i]!
+      ctx.font = `bold ${baseSize + (i % 3) * 4}px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif`
+
+      // 随机位置（避免过于重叠）
+      let x: number,
+        y: number,
+        attempts = 0
+      do {
+        x = 20 + Math.random() * (W - 80)
+        y = 20 + Math.random() * (H - 60)
+        attempts++
+      } while (
+        attempts < 20 &&
+        usedPositions.some((p) => Math.abs(p.x - x) < 60 && Math.abs(p.y - y) < 40)
+      )
+      usedPositions.push({ x, y })
+
+      // 随机旋转（-15° ~ +15°）
+      const angle = ((Math.random() - 0.5) * 30 * Math.PI) / 180
+
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.rotate(angle)
+      ctx.textAlign = 'left'
+
+      // 随机色彩偏移
+      const lineHue = (hueShift + i * 47) % 360
+      ctx.fillStyle = `hsla(${lineHue}, 50%, 75%, 0.45)`
+
+      ctx.fillText(line, 0, 0)
+      ctx.restore()
     }
 
-    const lineHeight = 50
-    const startY = H * 0.38 - ((lines.length - 1) * lineHeight) / 2
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i]!, W / 2, startY + i * lineHeight)
-    }
     ctx.restore()
   }
 
-  // ── 4. 装饰分隔线 ──
-  const lineY = H * 0.72
+  // ── 4. 装饰性几何元素 ──
   ctx.save()
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)'
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(W * 0.25, lineY)
-  ctx.lineTo(W * 0.75, lineY)
-  ctx.stroke()
+  for (let i = 0; i < 3; i++) {
+    const cx = 40 + Math.random() * (W - 80)
+    const cy = 30 + Math.random() * (H - 100)
+    const r = 8 + Math.random() * 20
+    ctx.beginPath()
+    ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    ctx.fillStyle = `rgba(255,255,255,${0.03 + Math.random() * 0.05})`
+    ctx.fill()
+  }
   ctx.restore()
 
-  // ── 5. 标题（清晰，不模糊） ──
-  ctx.save()
-  ctx.fillStyle = '#fff'
-  ctx.font = 'bold 22px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
+  // ── 5. 标题（清晰，小比例 — 底部区域） ──
+  if (title) {
+    ctx.save()
 
-  const title = post.title || ''
-  const displayTitle = title.length > 24 ? title.slice(0, 22) + '…' : title
-  ctx.fillText(displayTitle, W / 2, H * 0.82)
-  ctx.restore()
+    // 标题底色 pill
+    const displayTitle = title.length > 28 ? title.slice(0, 26) + '…' : title
+    ctx.font = 'bold 20px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif'
+    const tw = ctx.measureText(displayTitle).width
+    const pillW = tw + 32
+    const pillH = 38
+    const pillX = (W - pillW) / 2
+    const pillY = H - 56
 
-  // ── 6. 标签（右上角小标签） ──
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'
+    ctx.beginPath()
+    ctx.roundRect(pillX, pillY, pillW, pillH, 19)
+    ctx.fill()
+
+    // 标题文字
+    ctx.fillStyle = '#fff'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.font = 'bold 20px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif'
+    ctx.fillText(displayTitle, W / 2, pillY + pillH / 2)
+
+    ctx.restore()
+  }
+
+  // ── 6. 标签（右上角） ──
   const tags = (post.tags || []).slice(0, 2)
   if (tags.length > 0) {
     ctx.save()
-    ctx.font = '12px "Noto Sans SC", "PingFang SC", sans-serif'
+    ctx.font = '11px "Noto Sans SC","PingFang SC",sans-serif'
     ctx.textAlign = 'right'
     ctx.textBaseline = 'top'
 
-    let tx = W - 16
-    const ty = 14
+    let tx = W - 14
+    const ty = 12
     for (let i = tags.length - 1; i >= 0; i--) {
       const label = tags[i]!
-      const tw = ctx.measureText(label).width + 16
-      // pill 背景
-      ctx.fillStyle = 'rgba(0,0,0,0.25)'
+      const tw = ctx.measureText(label).width + 14
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'
       ctx.beginPath()
-      ctx.roundRect(tx - tw + 4, ty - 4, tw, 22, 11)
+      ctx.roundRect(tx - tw + 3, ty - 3, tw, 20, 10)
       ctx.fill()
-      // 文字
-      ctx.fillStyle = 'rgba(255,255,255,0.8)'
-      ctx.fillText(label, tx - 4, ty + 2)
-      tx -= tw + 6
+      ctx.fillStyle = 'rgba(255,255,255,0.75)'
+      ctx.fillText(label, tx - 3, ty + 2)
+      tx -= tw + 4
     }
     ctx.restore()
   }
 
-  // ── 7. 左下角装饰（引号/标记） ──
+  // ── 7. 左下角装饰引号 ──
   ctx.save()
-  ctx.fillStyle = 'rgba(255,255,255,0.06)'
-  ctx.font = '120px serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.05)'
+  ctx.font = '100px serif'
   ctx.textAlign = 'left'
   ctx.textBaseline = 'bottom'
-  ctx.fillText('"', 14, H - 6)
+  ctx.fillText('"', 12, H - 8)
   ctx.restore()
 
   const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
 
-  // 缓存最多 50 个，避免内存泄漏
   if (cache.size >= 50) {
     const firstKey = cache.keys().next().value
     if (firstKey) cache.delete(firstKey)
