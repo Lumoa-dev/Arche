@@ -4,8 +4,8 @@
  * 负责浏览模式下的帖子列表获取、筛选和统计计算。
  */
 import { computed, ref } from 'vue'
-import { getMyPostsApi, type BlogPost } from '@/components/logic/api'
-import { ensurePostsCovers } from '@/components/logic/useCoverLazyGenerator'
+import { getMyPostsApi, type BlogPost } from '@/lib/services/api'
+import { ensurePostsCovers } from '@/lib/composables/useCoverLazyGenerator'
 
 export type PostTab = 'all' | 'published' | 'draft'
 

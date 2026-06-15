@@ -8,7 +8,7 @@
  */
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { generateTextCover } from '@/lib/utils/generateTextCover'
-import type { BlogPost } from '@/components/logic/api'
+import type { BlogPost } from '@/lib/services/api'
 
 const props = defineProps<{
   title: string

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ArCarousel3D from '@/components/ui/ArCarousel3D.vue'
 import PostCardForShowcase from '../blog/PostCardForShowcase.vue'
-import type { BlogPost } from '@/components/logic/api'
+import type { BlogPost } from '@/lib/services/api'
 
 withDefaults(
   defineProps<{

@@ -4,7 +4,7 @@
  * 使用背景图 + 文字叠加层，适合 HeroCarousel
  */
 import { computed } from 'vue'
-import type { BlogPost } from '@/components/logic/api'
+import type { BlogPost } from '@/lib/services/api'
 
 const props = withDefaults(
   defineProps<{

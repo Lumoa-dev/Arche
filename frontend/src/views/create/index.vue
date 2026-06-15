@@ -44,9 +44,9 @@ import ArButton from '@/components/ui/ArButton.vue'
 import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import PostStatsCards from '@/components/widgets/create/PostStatsCards.vue'
 import PostListPanel from '@/components/widgets/create/PostListPanel.vue'
-import { usePostManager } from '@/components/logic/usePostManager'
-import { uploadPostFileApi } from '@/components/logic/api'
-import type { BlogPost } from '@/components/logic/api'
+import { usePostManager } from '@/components/widgets/create/usePostManager'
+import { uploadPostFileApi } from '@/lib/services/api'
+import type { BlogPost } from '@/lib/services/api'
 
 const router = useRouter()
 const message = useMessage()

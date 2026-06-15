@@ -10,8 +10,8 @@ import {
   type BlogPost,
   type CreatePostPayload,
   type UpdatePostPayload
-} from '@/components/logic/api'
-import { uploadOssFileApi } from '@/components/logic/api/oss'
+} from '@/lib/services/api'
+import { uploadOssFileApi } from '@/lib/services/api/oss'
 import { generateTextCover } from '@/lib/utils/generateTextCover'
 
 const route = useRoute()

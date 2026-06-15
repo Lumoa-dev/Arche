@@ -13,7 +13,7 @@ import {
   type ConfigItem,
   type ConfigListParams,
   type CreateConfigPayload
-} from '@/components/logic/api'
+} from '@/lib/services/api'
 
 const message = useMessage()
 

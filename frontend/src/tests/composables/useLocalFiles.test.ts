@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { useLocalFiles } from '@/components/logic/useLocalFiles'
+import { useLocalFiles } from '@/components/widgets/create/useLocalFiles'
 
 /**
  * 辅助函数：创建一个模拟 File 对象

@@ -10,8 +10,8 @@ import { NIcon } from 'naive-ui'
 import { EyeOutline, CreateOutline } from '@vicons/ionicons5'
 import ArTag from '@/components/ui/ArTag.vue'
 import PostStatsModal from './PostStatsModal.vue'
-import type { BlogPost } from '@/components/logic/api'
-import type { PostTab } from '@/components/logic/usePostManager'
+import type { BlogPost } from '@/lib/services/api'
+import type { PostTab } from '@/components/widgets/create/usePostManager'
 
 withDefaults(
   defineProps<{

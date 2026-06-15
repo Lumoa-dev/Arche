@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useSearchStore } from '@/lib/store/modules/search'
-import type { SuggestionItem } from '@/components/logic/api/search'
+import type { SuggestionItem } from '@/lib/services/api/search'
 
 // 模拟搜索建议 API
 vi.mock('@/services/api/search', () => ({
   getSearchSuggestionsApi: vi.fn()
 }))
 
-import { getSearchSuggestionsApi } from '@/components/logic/api/search'
+import { getSearchSuggestionsApi } from '@/lib/services/api/search'
 
 describe('useSearchStore', () => {
   beforeEach(() => {

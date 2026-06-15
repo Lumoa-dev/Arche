@@ -6,7 +6,7 @@
  * - 词语检测：特殊关键词标记段落
  * - Markdown：标题 # / 副标题 >（仅行首有效）/ 分隔线 --- / 图片 ![]()
  */
-import type { ParagraphType } from '@/components/logic/useParagraphEditor'
+import type { ParagraphType } from '@/components/widgets/create/useParagraphEditor'
 
 export interface ImportParagraph {
   type: ParagraphType

@@ -2,10 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useUserStore } from '@/lib/store/modules/user'
 import { usePermissionStore } from '@/lib/store/modules/permission'
-import type { UserInfo } from '@/components/logic/api/auth'
+import type { UserInfo } from '@/lib/services/api/auth'
 
 // 模拟 auth API
-vi.mock('@/components/logic/api/auth', () => ({
+vi.mock('@/lib/services/api/auth', () => ({
   loginApi: vi.fn(),
   logoutApi: vi.fn(),
   refreshTokenApi: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock('@/lib/services/permission-bus', () => ({
   getVisiblePages: vi.fn(() => [])
 }))
 
-import { loginApi, logoutApi, refreshTokenApi, getUserInfoApi } from '@/components/logic/api/auth'
+import { loginApi, logoutApi, refreshTokenApi, getUserInfoApi } from '@/lib/services/api/auth'
 
 describe('useUserStore', () => {
   beforeEach(() => {

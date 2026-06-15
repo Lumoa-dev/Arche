@@ -9,8 +9,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { ParsedQuery } from '@/lib/utils/search-parser'
 import { parseSearchQuery } from '@/lib/utils/search-parser'
-import { getSearchSuggestionsApi } from '@/components/logic/api/search'
-import type { SuggestionItem } from '@/components/logic/api/search'
+import { getSearchSuggestionsApi } from '@/lib/services/api/search'
+import type { SuggestionItem } from '@/lib/services/api/search'
 
 export interface Suggestion {
   type: string

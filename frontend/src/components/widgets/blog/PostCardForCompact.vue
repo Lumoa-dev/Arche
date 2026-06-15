@@ -6,7 +6,7 @@
 import { computed } from 'vue'
 import ArCard from '@/components/ui/ArCard.vue'
 import ArTag from '@/components/ui/ArTag.vue'
-import type { BlogPost } from '@/components/logic/api'
+import type { BlogPost } from '@/lib/services/api'
 import { htmlToText } from '@/lib/utils/string'
 
 const props = withDefaults(

@@ -284,7 +284,7 @@ import { NModal, NForm, NFormItem, NSelect, NInputNumber, NPopconfirm } from 'na
 import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { ArTag, ArTable, ArButton } from '@/components/ui'
 import type { ArTableColumn } from '@/components/ui/ArTable.vue'
-import { getUserStatsApi, type UserStats } from '@/components/logic/api/auth'
+import { getUserStatsApi, type UserStats } from '@/lib/services/api/auth'
 import {
   getUsersApi,
   disableUserApi,
@@ -297,7 +297,7 @@ import {
   type AdminUser,
   type HotPost,
   type Paginated
-} from '@/components/logic/api'
+} from '@/lib/services/api'
 
 const message = useMessage()
 

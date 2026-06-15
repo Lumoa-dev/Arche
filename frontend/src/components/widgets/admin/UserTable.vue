@@ -8,7 +8,7 @@ import {
   disableUserApi,
   type AdminUser,
   type Paginated
-} from '@/components/logic/api'
+} from '@/lib/services/api'
 import { ArButton, ArTag, ArTable, ArPagination } from '@/components/ui'
 
 interface UserRow {

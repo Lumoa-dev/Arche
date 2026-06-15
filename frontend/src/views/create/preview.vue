@@ -15,7 +15,7 @@ import {
   getPostParagraphsApi,
   type BlogPost,
   type ParagraphData
-} from '@/components/logic/api'
+} from '@/lib/services/api'
 import ParagraphComponent from '@/components/widgets/blog/ParagraphComponent.vue'
 import ArPage from '@/components/ui/ArPage.vue'
 

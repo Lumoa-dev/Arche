@@ -6,7 +6,7 @@
  * 横向间距由纸面内边距控制，此组件只负责纸面容器 + 纵向滚动 + 拖放。
  */
 import { ref } from 'vue'
-import type { ParagraphType } from '@/components/logic/useParagraphEditor'
+import type { ParagraphType } from '@/components/widgets/create/useParagraphEditor'
 
 defineSlots<{
   default: void

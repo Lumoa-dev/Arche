@@ -12,7 +12,7 @@ import {
   getLikeStatusApi,
   type BlogPost,
   type ParagraphData
-} from '@/components/logic/api'
+} from '@/lib/services/api'
 import { useUserStore } from '@/lib/store/modules/user'
 import ArPage from '@/components/ui/ArPage.vue'
 import ArVBox from '@/components/ui/ArVBox.vue'

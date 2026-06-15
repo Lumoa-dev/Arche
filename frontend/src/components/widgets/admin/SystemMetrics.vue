@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { NProgress, NEmpty } from 'naive-ui'
-import { getSystemSummaryApi, type SystemSummary } from '@/components/logic/api'
+import { getSystemSummaryApi, type SystemSummary } from '@/lib/services/api'
 import { ArCard } from '@/components/ui'
 
 const summary = ref<SystemSummary>({

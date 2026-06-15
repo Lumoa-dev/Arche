@@ -5,8 +5,8 @@
  * 按需在浏览器端生成文字封面 → 上传 OSS → 持久化回后端。
  */
 import { generateTextCover } from '@/lib/utils/generateTextCover'
-import { uploadOssFileApi } from '@/components/logic/api/oss'
-import { updatePostApi, type BlogPost } from '@/components/logic/api/blog'
+import { uploadOssFileApi } from '@/lib/services/api/oss'
+import { updatePostApi, type BlogPost } from '@/lib/services/api/blog'
 
 /** 正在处理中的帖子 ID 集合，防止并发重复触发 */
 const processingPosts = new Set<string>()

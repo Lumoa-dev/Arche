@@ -9,7 +9,7 @@
 
 import { getCoverGradient } from './cover'
 import { htmlToText } from './string'
-import type { BlogPost } from '@/components/logic/api'
+import type { BlogPost } from '@/lib/services/api'
 
 const W = 640
 const H = 400

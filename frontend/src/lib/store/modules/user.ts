@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { UserInfo } from '@/components/logic/api/auth'
+import type { UserInfo } from '@/lib/services/api/auth'
 import {
   loginApi,
   logoutApi,
   refreshTokenApi,
   getUserInfoApi,
   type LoginParams
-} from '@/components/logic/api/auth'
+} from '@/lib/services/api/auth'
 import { usePermissionStore } from '@/lib/store/modules/permission'
 import { authMockData } from '@/lib/services/mock'
 

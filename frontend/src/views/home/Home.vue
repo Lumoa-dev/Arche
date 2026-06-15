@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NPagination, useMessage } from 'naive-ui'
-import { getBlogPostsApi, type BlogPost } from '@/components/logic/api/blog'
+import { getBlogPostsApi, type BlogPost } from '@/lib/services/api/blog'
 import { withFallback, blogMockData } from '@/lib/services/mock'
 import { useUserStore } from '@/lib/store/modules/user'
 import { HeroCarousel, TrendingTags, WatchHistoryStack } from '@/components/widgets'
@@ -10,7 +10,7 @@ import PostCardForCompact from '@/components/widgets/blog/PostCardForCompact.vue
 import ArPage from '@/components/ui/ArPage.vue'
 import ArVBox from '@/components/ui/ArVBox.vue'
 import ArHBox from '@/components/ui/ArHBox.vue'
-import { ensurePostsCovers } from '@/components/logic/useCoverLazyGenerator'
+import { ensurePostsCovers } from '@/lib/composables/useCoverLazyGenerator'
 import type { WatchHistoryItem } from '@/components/widgets/blog/WatchHistoryStack.vue'
 
 const route = useRoute()

@@ -6,7 +6,7 @@
  */
 import { NModal, NIcon } from 'naive-ui'
 import { EyeOutline, HeartOutline, BookmarkOutline, TimeOutline } from '@vicons/ionicons5'
-import type { BlogPost } from '@/components/logic/api'
+import type { BlogPost } from '@/lib/services/api'
 
 defineProps<{
   show: boolean

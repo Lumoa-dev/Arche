@@ -8,7 +8,7 @@
 import { ref } from 'vue'
 import ArHBox from '@/components/ui/ArHBox.vue'
 import ArButton from '@/components/ui/ArButton.vue'
-import type { ParagraphType } from '@/components/logic/useParagraphEditor'
+import type { ParagraphType } from '@/components/widgets/create/useParagraphEditor'
 
 defineProps<{
   type: ParagraphType

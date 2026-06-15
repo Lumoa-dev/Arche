@@ -8,7 +8,7 @@
 import { type Component } from 'vue'
 import { NIcon } from 'naive-ui'
 import { DocumentTextOutline, EyeOutline, CreateOutline, HeartOutline } from '@vicons/ionicons5'
-import type { StatCard } from '@/components/logic/usePostManager'
+import type { StatCard } from '@/components/widgets/create/usePostManager'
 
 defineProps<{
   statCards: StatCard[]

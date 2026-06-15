@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import ArInput from '@/components/ui/ArInput.vue'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArTag from '@/components/ui/ArTag.vue'
-import type { BlogPost, CreatePostPayload, UpdatePostPayload } from '@/components/logic/api'
+import type { BlogPost, CreatePostPayload, UpdatePostPayload } from '@/lib/services/api'
 
 const props = withDefaults(
   defineProps<{

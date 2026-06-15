@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { NForm, NGrid, NGi, NFormItemGi, type FormRules } from 'naive-ui'
 import ArInput from '@/components/ui/ArInput.vue'
 import ArButton from '@/components/ui/ArButton.vue'
-import { registerApi } from '@/components/logic/api'
+import { registerApi } from '@/lib/services/api'
 import { $message } from '@/lib/utils/message'
 import { LockClosedOutline } from '@/icons'
 

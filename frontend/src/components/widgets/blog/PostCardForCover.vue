@@ -4,7 +4,7 @@
  * 适合 WatchHistoryStack 等需要封面为主体的场景
  */
 import { computed } from 'vue'
-import type { BlogPost } from '@/components/logic/api'
+import type { BlogPost } from '@/lib/services/api'
 
 const props = withDefaults(
   defineProps<{

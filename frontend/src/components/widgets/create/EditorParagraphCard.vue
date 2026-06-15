@@ -14,7 +14,7 @@ import EditorCodeEditor from './EditorCodeEditor.vue'
 import EditorSeparatorCard from './EditorSeparatorCard.vue'
 import EditorHeadingCard from './EditorHeadingCard.vue'
 import type { Editor } from '@tiptap/vue-3'
-import type { EditorParagraph, ParagraphType } from '@/components/logic/useParagraphEditor'
+import type { EditorParagraph, ParagraphType } from '@/components/widgets/create/useParagraphEditor'
 
 const props = defineProps<{
   paragraph: EditorParagraph

@@ -6,7 +6,7 @@
  * 无 sticky 无通栏背景，融入纸面色。
  */
 import ArButton from '@/components/ui/ArButton.vue'
-import type { ParagraphType } from '@/components/logic/useParagraphEditor'
+import type { ParagraphType } from '@/components/widgets/create/useParagraphEditor'
 import {
   ListOutline,
   ColorPaletteOutline,

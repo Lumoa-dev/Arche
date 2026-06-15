@@ -6,15 +6,15 @@
  */
 import { ref } from 'vue'
 import { useMessage } from 'naive-ui'
-import { useLocalFiles } from '@/components/logic/useLocalFiles'
+import { useLocalFiles } from './useLocalFiles'
 import {
   createPostApi,
   updatePostApi,
   uploadPostFileApi,
   type BlogPost,
   type CreatePostPayload
-} from '@/components/logic/api'
-import { uploadOssFileApi } from '@/components/logic/api/oss'
+} from '@/lib/services/api'
+import { uploadOssFileApi } from '@/lib/services/api/oss'
 import { generateTextCover } from '@/lib/utils/generateTextCover'
 
 export function usePostEditor() {
