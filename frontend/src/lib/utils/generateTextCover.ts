@@ -8,6 +8,7 @@
  */
 
 import { getCoverGradient } from './cover'
+import { htmlToText } from './string'
 import type { BlogPost } from '@/components/logic/api'
 
 const W = 640
@@ -16,9 +17,7 @@ const H = 400
 const cache = new Map<string, string>()
 
 function stripHtml(html: string): string {
-  const el = document.createElement('div')
-  el.innerHTML = html
-  return el.textContent || ''
+  return htmlToText(html)
 }
 
 /** 从 post 提取用于封面渲染的文本素材 */

@@ -6,6 +6,7 @@
  */
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { BlogPost } from '@/components/logic/api'
+import { htmlToText } from '@/lib/utils/string'
 import PostCardForCover from '../blog/PostCardForCover.vue'
 
 export interface WatchHistoryItem {
@@ -87,7 +88,7 @@ onBeforeUnmount(() => {
 
 // ── 估算阅读时长 ──
 function estimateDuration(post: BlogPost): string {
-  const text = post.introduction ? post.introduction.replace(/<[^>]+>/g, '') : post.title || ''
+  const text = post.introduction ? htmlToText(post.introduction) : post.title || ''
   const len = text.length
   return `${Math.max(1, Math.ceil(len / 300))} 分钟`
 }

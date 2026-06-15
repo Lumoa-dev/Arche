@@ -80,3 +80,13 @@ export function maskEmail(email: string): string {
   if (!username || !domain || username.length <= 2) return email
   return `${username.charAt(0)}***${username.charAt(username.length - 1)}@${domain}`
 }
+
+/**
+ * 安全地将 HTML 转为纯文本（使用 DOMParser，避免正则注入风险）
+ * @param html HTML 字符串
+ */
+export function htmlToText(html: string): string {
+  if (!html) return ''
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return doc.body.textContent?.trim() ?? ''
+}

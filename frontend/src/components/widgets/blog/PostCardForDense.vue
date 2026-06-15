@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import ArCard from '@/components/ui/ArCard.vue'
 import ArTag from '@/components/ui/ArTag.vue'
 import type { BlogPost } from '@/components/logic/api'
+import { htmlToText } from '@/lib/utils/string'
 
 const props = defineProps<{
   post: BlogPost
@@ -18,13 +19,8 @@ const emit = defineEmits<{
 
 const TAG_COLORS = ['red', 'blue', 'yellow', 'green', 'default'] as const
 
-/** 从 HTML 中提取纯文本 */
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, '').trim()
-}
-
 const excerptText = computed(() => {
-  const text = props.post.introduction ? stripHtml(props.post.introduction) : ''
+  const text = props.post.introduction ? htmlToText(props.post.introduction) : ''
   return text.slice(0, 120)
 })
 
