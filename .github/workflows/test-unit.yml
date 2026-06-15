@@ -1,0 +1,105 @@
+name: Test Unit
+
+on:
+  workflow_call:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  # ── 扫所有测试目录（全量跑，矩阵并行） ──
+  find-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend-plugins: ${{ steps.build-backend.outputs.matrix }}
+      frontend-dirs: ${{ steps.build-frontend.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Scan backend unit test dirs
+        id: build-backend
+        run: |
+          MATRIX=$(ls -1d backend/tests/unit/*/ 2>/dev/null | xargs -I{} basename {} | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Scan frontend test dirs
+        id: build-frontend
+        run: |
+          MATRIX=$(ls -1d frontend/src/tests/*/ 2>/dev/null | xargs -I{} basename {} | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+  # ── 跑后端单元测试（按 plugin 并行） ──
+  test-unit-py:
+    needs: [find-changes]
+    if: needs.find-changes.outputs.backend-plugins != '[]'
+    strategy:
+      matrix:
+        plugin: ${{ fromJSON(needs.find-changes.outputs.backend-plugins) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.0.0
+        with:
+          enable-cache: true
+      - name: Install deps
+        run: uv sync --frozen
+      - name: Run ${{ matrix.plugin }} unit tests
+        run: uv run pytest backend/tests/unit/${{ matrix.plugin }}/ -n auto --tb=short --no-header
+
+  # ── 跑前端单元测试（按目录并行） ──
+  test-unit-js:
+    needs: [find-changes]
+    if: needs.find-changes.outputs.frontend-dirs != '[]'
+    strategy:
+      matrix:
+        dir: ${{ fromJSON(needs.find-changes.outputs.frontend-dirs) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install deps
+        working-directory: frontend
+        run: npm ci
+      - name: Run ${{ matrix.dir }} tests
+        working-directory: frontend
+        run: >
+          npx vitest run src/tests/${{ matrix.dir }}/
+          --reporter=verbose
+      - name: Run constants/directives/router tests
+        working-directory: frontend
+        if: matrix.dir == 'constants'
+        run: >
+          npx vitest run src/tests/constants/ src/tests/directives/ src/tests/router/
+          --reporter=verbose
+
+  # ── 覆盖率报告（仅定时/手动） ──
+  show-cover:
+    needs: [test-unit-py, test-unit-js]
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.0.0
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend deps
+        run: uv sync --frozen
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+      - name: Backend coverage
+        run: uv run pytest --cov=backend --cov-report=term --cov-fail-under=40 --tb=short
+      - name: Frontend coverage
+        working-directory: frontend
+        run: npm run test:coverage

@@ -17,28 +17,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
-    uses: ./.github/workflows/lint.yml
+  check-lint:
+    uses: ./.github/workflows/check-lint.yml
 
-  security:
-    uses: ./.github/workflows/security.yml
+  check-security:
+    if: github.event_name != 'push'
+    uses: ./.github/workflows/check-security.yml
     permissions:
       actions: read
       contents: read
       security-events: write
 
-  adversarial:
-    if: github.event_name != 'pull_request'
-    uses: ./.github/workflows/adversarial.yml
-    permissions:
-      contents: read
-      issues: write
+  # PR：只跑单元测试
+  test-unit:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/test-unit.yml
 
-  test:
-    uses: ./.github/workflows/test.yml
+  # 合并到 master / tag push：跑集成 + E2E
+  test-integration:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/test-integration.yml
+
+  test-e2e:
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/test-e2e.yml
 
   build:
-    needs: [lint, security, test]
+    needs: [check-lint, test-integration, test-e2e]
+    if: github.event_name != 'pull_request'
     uses: ./.github/workflows/build.yml
     permissions:
       contents: read
