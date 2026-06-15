@@ -167,58 +167,73 @@ Keep it tight — one or two sentences per field:
 
 ---
 
-### 2026-06-24: CI/CD 工作流文件用小学级英文命名，按类型拆分测试
+### 2026-06-16: Three-layer defense for Nginx real IP passthrough
 
-**What:** 工作流文件名和 job 名全部改用最基础的英文词汇（check / test / scan / build / deploy），避免 adversarial / codeql / bandit / validate / sync 等高级词。测试按类型拆成 3 个文件。
+**What:** Write `get_real_ip(request)` utility to get the real client IP, priority `X-Real-IP` → `X-Forwarded-For` first IP → `request.client.host`.
 
-**When:** 对 CI/CD 体系进行重构升级时。旧体系用了大量高级英文词汇（adversarial「对抗性」），对非英语母语的维护者不友好；test.yml 一个文件 331 行承载 4 种测试模式，过于臃肿。
+**When:** Behind nginx reverse proxy, `request.client.host` always returns the Docker internal IP (e.g., `172.x.x.x`), causing login rate-limiter and history to record internal addresses.
 
-**Why:** 简单词汇降低阅读门槛，拆分文件让每个工作流职责单一。矩阵测试能力不变（每个 plugin/目录仍并行），但文件更小更好维护。
+**Why:** Three-layer defense design:
+- nginx.conf already sets `proxy_set_header X-Real-IP $remote_addr` (layer 1)
+- uvicorn `--proxy-headers` makes the ASGI layer trust proxy headers (layer 2)
+- `get_real_ip()` reads the `X-Real-IP` header at the application layer (layer 3)
+- Three layers guarantee real IP acquisition regardless of deployment environment
 
-**Lesson:** 命名原则：假设读者是小学三年级，只用他们能一眼看懂的词。adversarial → attack-test，codeql/bandit → scan-code/scan-py。测试按单元/集成+攻击/E2E 拆 3 个文件，每个文件 80-120 行，ci.yml 只做编排不写逻辑。对抗测试属于「测试」，归入 test-integration.yml 而非 security 文件。
-
----
-
-### 2026-06-24: test-unit.yml 全量扫目录跑，不做增量检测
-
-**What:** 删掉所有 git diff 逻辑和前端 source→test 目录映射。`find-changes` 只用两行 `ls -1d */*/` 扫出所有测试目录，全量跑。矩阵并行靠 GitHub Actions 的 `strategy.matrix`。
-
-**When:** 再次简化 test-unit.yml 时。第一次重构用 git diff 做了增量检测，但发现：
-- pytest -n auto 已经多线程，全量跑不比增量慢多少
-- git diff 逻辑 + case 映射写了 70 行，维护成本 > 收益
-- 矩阵本来就是并行 job，加个新目录 CI 扛得住
-
-**Why:** 速度不是瓶颈时，复杂度就是负债。全量扫目录 + 矩阵并行 = 7 行 bash，无分支无映射。加新 plugin 或新测试目录什么也不用改，CI 自动发现。
-
-**Lesson:** 不要在 CI 里为「省几秒」写几十行变更检测逻辑。先用最简单的全量方案跑起来，真慢了再优化。`ls -1d` + `jq` 转 JSON 是 GitHub Actions 矩阵自动发现的标配写法。
+**Lesson:** When replacing `request.client.host`, audit all `client_ip` usage chains (routes → services → models) to ensure consistency. Put `get_real_ip()` in `middleware.py` alongside `get_current_user()` so all plugins can call it uniformly.
 
 ---
 
-### 2026-06-16: 三层防御实现 Nginx 真实 IP 透传
+### 2026-06-24: Name CI/CD workflow files with elementary-level English, split tests by type
 
-**What:** 写 `get_real_ip(request)` 工具函数统一获取客户端真实 IP，优先级 `X-Real-IP` → `X-Forwarded-For` 首个 IP → `request.client.host`。
+**What:** Rename all workflow files and job names to the most basic English words (check / test / scan / build / deploy). Avoid advanced terms like adversarial / codeql / bandit / validate / sync. Split tests into 3 files by type.
 
-**When:** nginx 反代环境下，`request.client.host` 始终返回 Docker 内网 IP（如 `172.x.x.x`），导致登录限流和登录历史记录的都是内网地址。
+**When:** Refactoring the CI/CD system. The old system used advanced English vocabulary (e.g., "adversarial"), which is unfriendly to non-native English maintainers. The single `test.yml` was 331 lines carrying 4 test modes.
 
-**Why:** 三层防御设计：
-- nginx.conf 已配置 `proxy_set_header X-Real-IP $remote_addr`（第一层）
-- uvicorn `--proxy-headers` 让 ASGI 层信任代理头（第二层）
-- `get_real_ip()` 在应用层显式读取 X-Real-IP 头（第三层）
-- 三层叠加保证无论部署环境如何变化，都能拿到真实 IP
+**Why:** Simple words lower the reading bar. Splitting files keeps each workflow single-responsibility. Matrix parallelism is preserved (each plugin/directory still runs in parallel), but individual files are smaller and easier to maintain.
 
-**Lesson:** 替换 `request.client.host` 时同步检查所有使用 `client_ip` 的链路（routes → services → models），确保整条链路一致。`get_real_ip()` 加在 `middleware.py` 中与 `get_current_user()` 并列，方便所有插件统一调用。
+**Lesson:** Naming principle: assume the reader is in elementary school. Use words they can understand at a glance. adversarial → attack-test, codeql/bandit → scan-code/scan-py. Split tests into three files (unit / integration+attack / E2E), each 80-120 lines. `ci.yml` orchestrates only, contains no logic. Attack tests belong under "test", classified in `test-integration.yml`, not a security file.
 
 ---
 
-### 2026-06-24: 提取 report-fail.yml 可复用失败告警工作流
+### 2026-06-24: Run all test directories in test-unit.yml without incremental detection
 
-**What:** 把「测试失败 → 建 Issue + 建 fix 分支」的逻辑从 test-integration.yml 抽成独立的 report-fail.yml 可复用工作流。支持 title/labels/artifact-name/create-fix-branch/branch-prefix 五个输入。
+**What:** Remove all `git diff` logic and frontend source-to-test directory mapping. `find-changes` uses just two lines `ls -1d */*/` to enumerate all test directories and run them all. Matrix parallelism relies on GitHub Actions `strategy.matrix`.
 
-**When:** CI/CD 重构时发现 test-integration.yml 里 test-attack 和 alert-fail 两个 job 各自内联写了一份 Issue 建告脚本，代码重复且混在测试逻辑里。
+**When:** Simplifying `test-unit.yml` again. The first refactor added git diff incremental detection, but:
+- `pytest -n auto` already parallelizes — full run isn't much slower than incremental
+- git diff logic + case mapping took 70 lines, maintenance cost outweighed benefit
+- Matrix jobs are already parallel — CI can handle new directories
 
-**Why:** 失败告警是独立职责，不应该和测试混在同一个文件里。抽成 report-fail.yml 后：
-- 任何工作流都可以 `uses: ./.github/workflows/report-fail.yml` 一键告警
-- test-integration.yml 专注测试逻辑，从 131 行减到 65 行
-- 新增告警场景（比如 build 失败、deploy 失败）不需要重复写脚本
+**Why:** When speed isn't the bottleneck, complexity is debt. Full scan + matrix parallelism = 7 lines of bash, zero branches, zero mappings. Adding a new plugin or test directory requires no CI changes — auto-discovery works out of the box.
 
-**Lesson:** CI 文件按**职责**拆分，不是按「流水线阶段」。告警、通知、报告这类横切关注点天然应该独立成文件。用 `workflow_call` + 输入参数保持通用性。建 Issue 的 labels 用逗号分隔字符串传入比 JSON 数组更省心。
+**Lesson:** Don't write dozens of lines of change-detection logic in CI to save a few seconds. Start with the simplest full-scan approach; optimize only when it's actually slow. `ls -1d` + `jq` to JSON is the standard pattern for GitHub Actions matrix auto-discovery.
+
+---
+
+### 2026-06-24: Extract report-fail.yml as a reusable failure notification workflow
+
+**What:** Extract the "test failure → create Issue + create fix branch" logic from `test-integration.yml` into a standalone `report-fail.yml` reusable workflow. Supports five inputs: title / labels / artifact-name / create-fix-branch / branch-prefix.
+
+**When:** During CI/CD refactoring, `test-integration.yml` had `test-attack` and `alert-fail` jobs each inlining their own Issue-creation scripts — duplicate code mixed in with test logic.
+
+**Why:** Failure notification is a separate concern and shouldn't live inside test files. After extraction:
+- Any workflow can use `uses: ./.github/workflows/report-fail.yml` for one-click alerting
+- `test-integration.yml` focuses on test logic, shrinking from 131 to 65 lines
+- New alert scenarios (build failure, deploy failure) don't need to duplicate scripts
+
+**Lesson:** Split CI files by **responsibility**, not by "pipeline stage". Cross-cutting concerns like alerting, notification, and reporting naturally belong in their own files. Use `workflow_call` + input parameters for reusability. Pass labels as comma-separated strings instead of JSON arrays — it's simpler.
+
+---
+
+### 2026-06-16: Use `--body-file` for `gh pr create` under PowerShell to avoid backtick escaping
+
+**What:** Use `--body-file <tempfile>` to pass PR body content instead of inline `--body "..."`.
+
+**When:** Creating a GitHub PR from Windows PowerShell with a body that contains Markdown backticks (`).
+
+**Why:** Two things conspire to break the content:
+- PowerShell's backtick (\`) is the escape character itself (same role as `\` in bash). Every \` in a CLI argument string gets consumed by PS
+- The chain PS → Git Bash → gh CLI is too long — phantom characters appear (backticks become backslashes, leading letters like `b` in `backend` get swallowed)
+- `--body-file` reads from disk, completely bypassing shell argument parsing — content arrives intact
+
+**Lesson:** On Windows, any `gh pr create` / `gh issue create` call with multi-line or special-character body should use `--body-file <tempfile>` + clean up the temp file afterward.
