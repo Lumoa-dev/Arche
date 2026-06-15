@@ -2,6 +2,10 @@
 import { h, onMounted, ref } from 'vue'
 import { NGrid, NGi, NTabPane, NTabs, useMessage } from 'naive-ui'
 import { ArButton, ArTable, ArPagination } from '@/components/ui'
+import ArCard from '@/components/ui/ArCard.vue'
+import ArVBox from '@/components/ui/ArVBox.vue'
+import ArHBox from '@/components/ui/ArHBox.vue'
+import StatCard from '@/components/widgets/admin/StatCard.vue'
 import { getAssetsApi, getAssetStatsApi, type AssetStats } from '@/lib/services/api'
 import {
   getOssAdminStatsApi,
@@ -203,26 +207,20 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="resource-admin-page">
+  <div>
     <NTabs v-model:value="activeTab" type="line" animated>
       <NTabPane tab="资源列表" name="assets">
-        <div class="tab-content">
-          <NGrid :cols="assetTypeEntries.length + 1" :x-gap="12" :y-gap="12" class="stats-grid">
+        <ArVBox gap="var(--spacing-md)">
+          <NGrid :cols="assetTypeEntries.length + 1" :x-gap="12" :y-gap="12">
             <NGi>
-              <div class="section-card stat-card">
-                <div class="stat-value">{{ assetStats.total }}</div>
-                <div class="stat-label">资产总数</div>
-              </div>
+              <StatCard label="资产总数" :value="assetStats.total" />
             </NGi>
             <NGi v-for="entry in assetTypeEntries" :key="entry.type">
-              <div class="section-card stat-card">
-                <div class="stat-value">{{ entry.count }}</div>
-                <div class="stat-label">{{ entry.label }}</div>
-              </div>
+              <StatCard :label="entry.label" :value="entry.count" />
             </NGi>
           </NGrid>
 
-          <div class="section-card table-card">
+          <ArCard variant="elevated" style="padding: var(--spacing-md)">
             <ArTable
               :columns="assetColumns"
               :data="assetList"
@@ -230,7 +228,7 @@ onMounted(() => {
               :row-key="(row: any) => row.id"
               :bordered="false"
             />
-            <div class="pager">
+            <ArHBox justify="center" style="padding-top: var(--spacing-md)">
               <ArPagination
                 :page="assetPage"
                 :page-size="assetPageSize"
@@ -239,24 +237,30 @@ onMounted(() => {
                 @update:page="onAssetPageChange"
                 @update:page-size="onAssetPageSizeChange"
               />
-            </div>
-          </div>
-        </div>
+            </ArHBox>
+          </ArCard>
+        </ArVBox>
       </NTabPane>
 
       <NTabPane tab="OSS 存储" name="oss">
-        <div class="tab-content">
-          <NGrid :cols="3" :x-gap="12" :y-gap="12" class="stats-grid">
+        <ArVBox gap="var(--spacing-md)">
+          <NGrid :cols="3" :x-gap="12" :y-gap="12">
             <NGi v-for="card in ossStatCards" :key="card.label">
-              <div class="section-card stat-card">
-                <div class="stat-label">{{ card.label }}</div>
-                <div class="stat-value">{{ card.value() }}</div>
-              </div>
+              <StatCard :label="card.label" :value="card.value()" />
             </NGi>
           </NGrid>
 
-          <div class="section-card table-card">
-            <h3 class="section-title">文件列表</h3>
+          <ArCard variant="elevated" style="padding: var(--spacing-md)">
+            <h3
+              style="
+                margin: 0 0 var(--spacing-sm);
+                font-size: 16px;
+                font-weight: var(--font-weight-semibold);
+                color: var(--text-primary);
+              "
+            >
+              文件列表
+            </h3>
             <ArTable
               :columns="ossFileColumns"
               :data="ossFileList"
@@ -264,7 +268,7 @@ onMounted(() => {
               :row-key="(row: any) => row.id"
               :bordered="false"
             />
-            <div class="pager">
+            <ArHBox justify="center" style="padding-top: var(--spacing-md)">
               <ArPagination
                 :page="ossFilePage"
                 :page-size="ossFilePageSize"
@@ -273,68 +277,29 @@ onMounted(() => {
                 @update:page="onOssFilePageChange"
                 @update:page-size="onOssFilePageSizeChange"
               />
-            </div>
-          </div>
+            </ArHBox>
+          </ArCard>
 
-          <div class="section-card table-card">
-            <h3 class="section-title">存储排行 TOP 10</h3>
+          <ArCard variant="elevated" style="padding: var(--spacing-md)">
+            <h3
+              style="
+                margin: 0 0 var(--spacing-sm);
+                font-size: 16px;
+                font-weight: var(--font-weight-semibold);
+                color: var(--text-primary);
+              "
+            >
+              存储排行 TOP 10
+            </h3>
             <ArTable
               :columns="ossTopUserColumns"
               :data="ossTopUsers"
               :row-key="(row: any) => row.user_id"
               :bordered="false"
             />
-          </div>
-        </div>
+          </ArCard>
+        </ArVBox>
       </NTabPane>
     </NTabs>
   </div>
 </template>
-
-<style scoped>
-.resource-admin-page {
-  max-width: 100%;
-}
-.tab-content {
-  padding-top: var(--spacing-md);
-}
-.stats-grid {
-  margin-bottom: var(--spacing-md);
-}
-.section-card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-}
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  gap: 6px;
-}
-.stat-label {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-.stat-value {
-  font-size: 24px;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-}
-.table-card {
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-}
-.section-title {
-  margin: 0 0 var(--spacing-sm);
-  font-size: 16px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-}
-.pager {
-  display: flex;
-  justify-content: center;
-  padding-top: var(--spacing-md);
-}
-</style>

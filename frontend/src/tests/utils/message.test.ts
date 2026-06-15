@@ -42,28 +42,28 @@ describe('message 工具模块', () => {
 
   describe('$message', () => {
     it('应该导出 message 实例', async () => {
-      const { $message } = await import('@/utils/message')
+      const { $message } = await import('@/lib/utils/message')
       expect($message).toBe(mockDiscreteApi.message)
     })
   })
 
   describe('$notification', () => {
     it('应该导出 notification 实例', async () => {
-      const { $notification } = await import('@/utils/message')
+      const { $notification } = await import('@/lib/utils/message')
       expect($notification).toBe(mockDiscreteApi.notification)
     })
   })
 
   describe('$dialog', () => {
     it('应该导出 dialog 实例', async () => {
-      const { $dialog } = await import('@/utils/message')
+      const { $dialog } = await import('@/lib/utils/message')
       expect($dialog).toBe(mockDiscreteApi.dialog)
     })
   })
 
   describe('$loadingBar', () => {
     it('应该导出 loadingBar 实例', async () => {
-      const { $loadingBar } = await import('@/utils/message')
+      const { $loadingBar } = await import('@/lib/utils/message')
       expect($loadingBar).toBe(mockDiscreteApi.loadingBar)
     })
   })

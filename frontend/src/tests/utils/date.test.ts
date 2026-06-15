@@ -57,50 +57,50 @@ describe('isToday', () => {
 
 describe('formatRelativeTime', () => {
   it('无效日期返回空字符串', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     expect(formatRelativeTime(null as unknown as Date)).toBe('')
     expect(formatRelativeTime('invalid')).toBe('')
     expect(formatRelativeTime(new Date('invalid'))).toBe('')
   })
 
   it('刚刚（小于1分钟）', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     const now = new Date()
     expect(formatRelativeTime(now)).toBe('刚刚')
   })
 
   it('分钟前', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000)
     expect(formatRelativeTime(fiveMinAgo)).toBe('5分钟前')
   })
 
   it('小时前', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000)
     expect(formatRelativeTime(threeHoursAgo)).toBe('3小时前')
   })
 
   it('天前', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
     expect(formatRelativeTime(twoDaysAgo)).toBe('2天前')
   })
 
   it('周前', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
     expect(formatRelativeTime(twoWeeksAgo)).toBe('2周前')
   })
 
   it('个月前', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     expect(formatRelativeTime(threeMonthsAgo)).toBe('3个月前')
   })
 
   it('年前', async () => {
-    const { formatRelativeTime } = await import('@/utils/date')
+    const { formatRelativeTime } = await import('@/lib/utils/date')
     const twoYearsAgo = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000)
     expect(formatRelativeTime(twoYearsAgo)).toBe('2年前')
   })
@@ -108,7 +108,7 @@ describe('formatRelativeTime', () => {
 
 describe('getTodayStart', () => {
   it('返回今天 00:00:00.000', async () => {
-    const { getTodayStart } = await import('@/utils/date')
+    const { getTodayStart } = await import('@/lib/utils/date')
     const result = getTodayStart()
     const now = new Date()
     expect(result.getFullYear()).toBe(now.getFullYear())
@@ -123,7 +123,7 @@ describe('getTodayStart', () => {
 
 describe('getTodayEnd', () => {
   it('返回今天 23:59:59.999', async () => {
-    const { getTodayEnd } = await import('@/utils/date')
+    const { getTodayEnd } = await import('@/lib/utils/date')
     const result = getTodayEnd()
     const now = new Date()
     expect(result.getFullYear()).toBe(now.getFullYear())

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/services/request', () => ({
+vi.mock('@/lib/services/request', () => ({
   get: vi.fn()
 }))
 
@@ -10,8 +10,8 @@ beforeEach(() => {
 
 describe('system API', () => {
   it('getSystemSummaryApi 发送正确 URL', async () => {
-    const { getSystemSummaryApi } = await import('@/services/api/system')
-    const { get } = await import('@/services/request')
+    const { getSystemSummaryApi } = await import('@/lib/services/api/system')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({ cpu_percent: 50, memory_percent: 60, disk_percent: 70 })
 
     await getSystemSummaryApi()
@@ -19,8 +19,8 @@ describe('system API', () => {
   })
 
   it('getProcessesApi 提取 items 并返回数组', async () => {
-    const { getProcessesApi } = await import('@/services/api/system')
-    const { get } = await import('@/services/request')
+    const { getProcessesApi } = await import('@/lib/services/api/system')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue({
       items: [{ pid: 1, name: 'test', cpu_percent: 10, memory_percent: 20 }],
       total: 1,
@@ -34,8 +34,8 @@ describe('system API', () => {
   })
 
   it('getCpuMetricsApi 发送正确 URL', async () => {
-    const { getCpuMetricsApi } = await import('@/services/api/system')
-    const { get } = await import('@/services/request')
+    const { getCpuMetricsApi } = await import('@/lib/services/api/system')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue([])
 
     await getCpuMetricsApi()
@@ -43,8 +43,8 @@ describe('system API', () => {
   })
 
   it('getMemoryMetricsApi 发送正确 URL', async () => {
-    const { getMemoryMetricsApi } = await import('@/services/api/system')
-    const { get } = await import('@/services/request')
+    const { getMemoryMetricsApi } = await import('@/lib/services/api/system')
+    const { get } = await import('@/lib/services/request')
     vi.mocked(get).mockResolvedValue([])
 
     await getMemoryMetricsApi()

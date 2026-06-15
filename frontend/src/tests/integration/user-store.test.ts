@@ -17,7 +17,7 @@ const { mockLoginApi, mockLogoutApi, mockGetUserInfoApi, mockRefreshTokenApi } =
   mockRefreshTokenApi: vi.fn()
 }))
 
-vi.mock('@/services/api/auth', () => ({
+vi.mock('@/lib/services/api/auth', () => ({
   loginApi: mockLoginApi,
   logoutApi: mockLogoutApi,
   getUserInfoApi: mockGetUserInfoApi,

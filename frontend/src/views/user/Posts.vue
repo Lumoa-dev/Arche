@@ -6,7 +6,9 @@ import { AddOutline } from '@/icons'
 import { ArTable, ArPagination } from '@/components/ui'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArTag from '@/components/ui/ArTag.vue'
+import ArCard from '@/components/ui/ArCard.vue'
 import PostCardForCompact from '@/components/widgets/blog/PostCardForCompact.vue'
+import PageHeading from '@/components/widgets/common/PageHeading.vue'
 import { deletePostApi, getMyPostsApi, type BlogPost } from '@/lib/services/api'
 
 const message = useMessage()
@@ -175,16 +177,17 @@ onMounted(fetchPosts)
 </script>
 
 <template>
-  <div class="posts-page">
-    <div class="page-heading">
-      <h2>我的文章</h2>
-      <ArButton type="primary" @click="handleCreate">
-        <template #icon><AddOutline /></template>
-        新建文章
-      </ArButton>
-    </div>
+  <div>
+    <PageHeading title="我的文章">
+      <template #actions>
+        <ArButton type="primary" @click="handleCreate">
+          <template #icon><AddOutline /></template>
+          新建文章
+        </ArButton>
+      </template>
+    </PageHeading>
 
-    <div class="section-card">
+    <ArCard variant="elevated" padding="lg">
       <ArTable
         :columns="columns"
         :data="tableData"
@@ -192,7 +195,7 @@ onMounted(fetchPosts)
         :row-key="(row: any) => row.key"
         single-line
       />
-      <div class="pager">
+      <ArHBox justify="center" style="padding-top: var(--spacing-md)">
         <ArPagination
           :page="currentPage"
           :page-size="pageSize"
@@ -201,47 +204,7 @@ onMounted(fetchPosts)
           @update:page="handlePageChange"
           @update:page-size="handlePageSizeChange"
         />
-      </div>
-    </div>
+      </ArHBox>
+    </ArCard>
   </div>
 </template>
-
-<style scoped>
-.posts-page {
-  max-width: 100%;
-}
-
-.page-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-lg);
-}
-
-.page-heading h2 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-}
-
-.section-card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-  backdrop-filter: blur(4px);
-}
-
-.pager {
-  display: flex;
-  justify-content: center;
-  padding-top: var(--spacing-md);
-}
-
-.posts-title-cell :deep(.blog-card--compact) {
-  border: none;
-  padding: 0;
-  background: transparent;
-}
-</style>

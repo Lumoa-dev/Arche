@@ -2,6 +2,7 @@
 import { h, onMounted, ref } from 'vue'
 import { NInput, NProgress, useMessage } from 'naive-ui'
 import ArPageHeader from '@/components/ui/ArPageHeader.vue'
+import ArCard from '@/components/ui/ArCard.vue'
 import { ArButton, ArTable } from '@/components/ui'
 import type { ArTableColumn } from '@/components/ui/ArTable.vue'
 import { getOssAdminQuotasApi, updateOssUserQuotaApi, type OSSQuota } from '@/lib/services/api'
@@ -144,8 +145,13 @@ const columns: ArTableColumn[] = [
       return h(
         'span',
         {
-          class: 'quota-value',
-          style: { cursor: 'pointer', color: 'var(--primary-color)' },
+          style: {
+            cursor: 'pointer',
+            color: 'var(--primary-color)',
+            textDecoration: 'underline',
+            textDecorationStyle: 'dotted',
+            textUnderlineOffset: '2px'
+          },
           onClick: () => startEdit(row)
         },
         { default: () => formatBytes(row.quota_bytes) }
@@ -173,7 +179,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="quota-management-page">
+  <div>
     <ArPageHeader title="配额管理" desc="管理 OSS 用户存储配额">
       <template #actions>
         <ArButton size="sm" type="secondary" @click="fetchQuotas" :loading="loading">
@@ -182,7 +188,7 @@ onMounted(() => {
       </template>
     </ArPageHeader>
 
-    <div class="table-wrapper">
+    <ArCard variant="elevated" style="overflow: hidden">
       <ArTable
         :columns="columns"
         :data="quotas"
@@ -192,40 +198,13 @@ onMounted(() => {
         :single-line="true"
         striped
       />
-    </div>
+    </ArCard>
 
-    <div v-if="quotas.length === 0 && !loading" class="empty-state">
+    <div
+      v-if="quotas.length === 0 && !loading"
+      style="text-align: center; padding: 40px 0; color: var(--text-tertiary)"
+    >
       <p>暂无配额数据</p>
     </div>
   </div>
 </template>
-
-<style scoped>
-.quota-management-page {
-  max-width: 100%;
-}
-
-.table-wrapper {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.quota-value {
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 2px;
-  transition: opacity var(--transition-fast);
-}
-
-.quota-value:hover {
-  opacity: 0.75;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--text-tertiary);
-}
-</style>

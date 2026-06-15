@@ -11,7 +11,7 @@ describe('animateSpring', () => {
   })
 
   it('应该从起始值向目标值运动，并调用 onUpdate', async () => {
-    const { animateSpring } = await import('@/utils/spring')
+    const { animateSpring } = await import('@/lib/utils/spring')
 
     const values: number[] = []
     const cancel = animateSpring(0, 100, (v) => {
@@ -36,7 +36,7 @@ describe('animateSpring', () => {
   })
 
   it('应该通过 cancel 函数停止动画', async () => {
-    const { animateSpring } = await import('@/utils/spring')
+    const { animateSpring } = await import('@/lib/utils/spring')
 
     const callback = vi.fn()
     const cancel = animateSpring(0, 100, callback)
@@ -55,7 +55,7 @@ describe('animateSpring', () => {
   })
 
   it('当速度和位移足够小时应自动停止', async () => {
-    const { animateSpring } = await import('@/utils/spring')
+    const { animateSpring } = await import('@/lib/utils/spring')
 
     // 使用很大的 stiffness 让弹簧快速稳定
     const values: number[] = []
@@ -81,7 +81,7 @@ describe('animateSpring', () => {
   })
 
   it('应该使用自定义配置覆盖默认值', async () => {
-    const { animateSpring } = await import('@/utils/spring')
+    const { animateSpring } = await import('@/lib/utils/spring')
 
     const callback = vi.fn()
     animateSpring(0, 50, callback, {

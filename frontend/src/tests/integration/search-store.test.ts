@@ -14,7 +14,7 @@ const { mockGetSuggestions } = vi.hoisted(() => ({
   mockGetSuggestions: vi.fn()
 }))
 
-vi.mock('@/services/api/search', () => ({
+vi.mock('@/lib/services/api/search', () => ({
   getSearchSuggestionsApi: mockGetSuggestions
 }))
 

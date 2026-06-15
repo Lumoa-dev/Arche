@@ -3,13 +3,5 @@ import UserTable from '@/components/widgets/admin/UserTable.vue'
 </script>
 
 <template>
-  <div class="users-page">
-    <UserTable />
-  </div>
+  <UserTable />
 </template>
-
-<style scoped>
-.users-page {
-  max-width: 100%;
-}
-</style>

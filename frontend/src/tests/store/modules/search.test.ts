@@ -4,7 +4,7 @@ import { useSearchStore } from '@/lib/store/modules/search'
 import type { SuggestionItem } from '@/lib/services/api/search'
 
 // 模拟搜索建议 API
-vi.mock('@/services/api/search', () => ({
+vi.mock('@/lib/services/api/search', () => ({
   getSearchSuggestionsApi: vi.fn()
 }))
 

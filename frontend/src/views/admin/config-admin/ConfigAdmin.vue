@@ -2,7 +2,10 @@
 import { h, computed, onMounted, ref } from 'vue'
 import { useMessage, NModal, NForm, NFormItem, NInput, NSwitch, NPopconfirm } from 'naive-ui'
 import ArPageHeader from '@/components/ui/ArPageHeader.vue'
+import ArCard from '@/components/ui/ArCard.vue'
+import ArHBox from '@/components/ui/ArHBox.vue'
 import { ArButton, ArTable, ArTag } from '@/components/ui'
+import FilterBar from '@/components/widgets/admin/FilterBar.vue'
 import type { ArTableColumn } from '@/components/ui/ArTable.vue'
 import {
   getConfigListApi,
@@ -65,7 +68,11 @@ const columns: ArTableColumn[] = [
     render: (row: ConfigItem) =>
       h(
         'span',
-        { class: row.is_sensitive ? 'sensitive-value' : '' },
+        {
+          style: row.is_sensitive
+            ? 'font-family: var(--font-mono, monospace); letter-spacing: 2px; color: var(--text-tertiary);'
+            : ''
+        },
         row.is_sensitive ? '••••••••' : row.value || '-'
       )
   },
@@ -91,7 +98,7 @@ const columns: ArTableColumn[] = [
     key: 'actions',
     width: 160,
     render: (row: ConfigItem) =>
-      h('div', { class: 'action-cell' }, [
+      h('div', { style: 'display: flex; gap: 4px; align-items: center;' }, [
         h(
           ArButton,
           { size: 'sm', type: 'ghost', onClick: () => openEdit(row) },
@@ -207,11 +214,6 @@ async function handleDelete(key: string) {
   }
 }
 
-function handleGroupFilter(group: string | null) {
-  selectedGroup.value = group
-  fetchConfigs()
-}
-
 onMounted(() => {
   fetchGroups()
   fetchConfigs()
@@ -219,7 +221,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="config-admin-page">
+  <div>
     <ArPageHeader title="配置管理" desc="管理系统运行时的所有配置项">
       <template #actions>
         <ArButton size="sm" @click="fetchConfigs()">刷新</ArButton>
@@ -227,22 +229,17 @@ onMounted(() => {
       </template>
     </ArPageHeader>
 
-    <div class="filter-bar">
-      <button
-        v-for="opt in groupOptions"
-        :key="opt.label ?? '__all'"
-        class="filter-btn"
-        :class="{ 'filter-btn--active': selectedGroup === opt.value }"
-        @click="handleGroupFilter(opt.value)"
-      >
-        {{ opt.label }}
-      </button>
-    </div>
+    <FilterBar :options="groupOptions" v-model="selectedGroup" />
 
-    <div class="table-section">
+    <ArCard variant="elevated" style="overflow: hidden">
       <ArTable :columns="columns" :data="filteredConfigs" :loading="loading" :bordered="false" />
-      <div v-if="!loading && filteredConfigs.length === 0" class="empty-hint">暂无配置项</div>
-    </div>
+      <div
+        v-if="!loading && filteredConfigs.length === 0"
+        style="text-align: center; padding: 40px 0; color: var(--text-tertiary); font-size: 13px"
+      >
+        暂无配置项
+      </div>
+    </ArCard>
 
     <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px">
       <NForm ref="formRef" :model="form" label-placement="top">
@@ -271,80 +268,11 @@ onMounted(() => {
         </NFormItem>
       </NForm>
       <template #footer>
-        <div class="modal-footer">
+        <ArHBox justify="end" gap="8px">
           <ArButton @click="showModal = false">取消</ArButton>
           <ArButton type="primary" :loading="saving" @click="handleSave">保存</ArButton>
-        </div>
+        </ArHBox>
       </template>
     </NModal>
   </div>
 </template>
-
-<style scoped>
-.config-admin-page {
-  max-width: 100%;
-}
-
-.filter-bar {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.filter-btn {
-  padding: 5px 14px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: var(--bg-color);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: inherit;
-}
-
-.filter-btn:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-}
-
-.filter-btn--active {
-  border-color: var(--primary-color);
-  background: var(--primary-light-color);
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.table-section {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.action-cell {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.sensitive-value {
-  font-family: var(--font-mono, monospace);
-  letter-spacing: 2px;
-  color: var(--text-tertiary);
-}
-
-.empty-hint {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--text-tertiary);
-  font-size: 13px;
-}
-</style>
