@@ -42,8 +42,6 @@ _orchestrator_ref = None
 class CloudIntegrationPlugin(BasePlugin):
     name = "cloud_integration"
     version = "0.1.0"
-    requires = None
-    optional = None
 
     def __init__(self):
         self._app = None

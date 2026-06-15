@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 class BasePlugin(ABC):
     name: str = ""
     version: str = "0.1.0"
-    requires: list[str] | None = None  # type: ignore[assignment, unused-ignore]  # 硬依赖，没有就启动失败
-    optional: list[str] | None = None  # type: ignore[assignment, unused-ignore]  # 软依赖，没有就优雅降级
+    requires: list[str] = []  # noqa: RUF012  # 硬依赖，没有就启动失败
+    optional: list[str] = []  # noqa: RUF012  # 软依赖，没有就优雅降级
 
     @abstractmethod
     def setup(self, app: "FastAPI") -> None:

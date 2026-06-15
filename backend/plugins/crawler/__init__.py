@@ -23,7 +23,6 @@ from backend.plugins.crawler.services import CrawlerOrchestrator
 class CrawlerPlugin(BasePlugin):
     name = "crawler"
     version = "0.2.0"
-    requires = None
     optional = ["oss"]  # noqa: RUF012
 
     def setup(self, app: FastAPI) -> None:

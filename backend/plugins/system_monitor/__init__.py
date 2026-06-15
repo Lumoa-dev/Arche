@@ -24,8 +24,6 @@ from backend.plugins.system_monitor.services import SystemMonitorService
 class SystemMonitorPlugin(BasePlugin):
     name = "system_monitor"
     version = "0.1.0"
-    requires = None
-    optional = None
 
     def __init__(self):
         self._app = None

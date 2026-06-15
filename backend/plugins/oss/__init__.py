@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class OSSPlugin(BasePlugin):
     name = "oss"
     version = "0.2.0"
-    requires = None
     optional = ["auth"]  # noqa: RUF012
 
     def __init__(self):

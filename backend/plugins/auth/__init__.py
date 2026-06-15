@@ -25,8 +25,6 @@ from backend.plugins.auth.services import AuthService
 class AuthPlugin(BasePlugin):
     name = "auth"
     version = "0.1.0"
-    requires = None
-    optional = None
 
     def __init__(self):
         self._app = None

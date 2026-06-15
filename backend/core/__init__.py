@@ -226,19 +226,17 @@ def create_app() -> FastAPI:
         loop = asyncio.get_event_loop()
 
         def _run_migrations():
-            # 试验性阶段：直接 stamp 当前版本为 head，不执行迁移 SQL。
-            # 表结构由后续 ensure_tables() 兜底创建（`create_all` 本身是幂等的）。
-            # 等数据库中有实际数据后再改为 command.upgrade()。
-            command.stamp(alembic_cfg, "head")
+            # 自动迁移。改模型后执行 `alembic revision --autogenerate -m "xxx"`
+            command.upgrade(alembic_cfg, "head")
 
         await loop.run_in_executor(None, _run_migrations)
 
-        # 兜底：确保所有 ORM 模型对应的表已创建（处理缺少 migration 的场景）
+        # 兜底：确保所有 ORM 模型对应的表已创建（迁移未覆盖时使用，幂等）
         from .db import ensure_tables
 
         await ensure_tables()
 
-        # 校验数据库 schema
+        # 校验数据库 schema 是否与模型一致
         from .db import validate_schema
 
         await validate_schema()

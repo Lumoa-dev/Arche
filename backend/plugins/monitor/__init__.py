@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 class MonitorPlugin(BasePlugin):
     name = "monitor"
     version = "0.1.0"
-    requires = None
     optional = ["system_monitor"]  # noqa: RUF012
 
     def setup(self, app: FastAPI) -> None:

@@ -22,8 +22,6 @@ from backend.plugins.search.services import SearchService
 class SearchPlugin(BasePlugin):
     name = "search"
     version = "0.1.0"
-    requires = None
-    optional = None
 
     def __init__(self):
         self._app = None

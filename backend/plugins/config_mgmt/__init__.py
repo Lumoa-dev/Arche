@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 class ConfigMgmtPlugin(BasePlugin):
     name = "config_mgmt"
-    requires = None
 
     def setup(self, app) -> None:
         app.include_router(router)
