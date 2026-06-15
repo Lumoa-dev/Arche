@@ -100,17 +100,27 @@ onMounted(fetchData)
   <div>
     <PageHeading title="创作者看板" />
 
-    <AlertNote>
-      TODO：后端补充 analytics 接口后，将聚合逻辑替换为 /blog/analytics/*。
-    </AlertNote>
+    <AlertNote> TODO：后端补充 analytics 接口后，将聚合逻辑替换为 /blog/analytics/*。 </AlertNote>
 
-    <ArGrid :cols="3" gap="12px" style="margin-bottom: var(--spacing-md);">
-      <StatCard v-for="card in statCards" :key="card.label" :label="card.label" :value="card.value" />
+    <ArGrid :cols="3" gap="12px" style="margin-bottom: var(--spacing-md)">
+      <StatCard
+        v-for="card in statCards"
+        :key="card.label"
+        :label="card.label"
+        :value="card.value"
+      />
     </ArGrid>
 
     <ArCard variant="elevated" padding="lg">
-      <div style="margin-bottom: var(--spacing-md);">
-        <span style="font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--text-primary);">内容表现排行（近 50 篇）</span>
+      <div style="margin-bottom: var(--spacing-md)">
+        <span
+          style="
+            font-size: 16px;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+          "
+          >内容表现排行（近 50 篇）</span
+        >
       </div>
       <ArTable :columns="columns" :data="rows" :loading="loading" />
     </ArCard>

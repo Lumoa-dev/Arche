@@ -2,7 +2,11 @@
   <ArPage>
     <ArVBox gap="var(--layout-gap)">
       <ArPageHeader title="调度器" desc="管理模型训练任务与爬虫调度" />
-      <ArCard variant="elevated" padding="lg" style="text-align: center; color: var(--text-tertiary);">
+      <ArCard
+        variant="elevated"
+        padding="lg"
+        style="text-align: center; color: var(--text-tertiary)"
+      >
         调度器功能开发中，敬请期待
       </ArCard>
     </ArVBox>

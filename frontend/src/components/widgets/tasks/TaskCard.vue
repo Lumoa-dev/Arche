@@ -18,7 +18,15 @@ const emit = defineEmits<{
 <template>
   <div class="task-card" @click="emit('click')">
     <div class="card-header">
-      <NIcon size="28" class="card-icon" :style="{ background: iconColor.replace(')', ', 0.1)').replace('rgb', 'rgba'), color: iconColor }"><component :is="icon" /></NIcon>
+      <NIcon
+        size="28"
+        class="card-icon"
+        :style="{
+          background: iconColor.replace(')', ', 0.1)').replace('rgb', 'rgba'),
+          color: iconColor
+        }"
+        ><component :is="icon"
+      /></NIcon>
       <span class="card-title">{{ title }}</span>
     </div>
     <div class="card-stats">

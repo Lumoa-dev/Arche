@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 const props = defineProps<{
   title: string
   icon?: Component
-  to: string | null
+  to?: string
   disabled?: boolean
   stats: { label: string; value: string | number }[]
   note?: string
@@ -20,11 +20,7 @@ function handleClick() {
 </script>
 
 <template>
-  <div
-    class="overview-card"
-    :class="{ 'card-disabled': disabled || !to }"
-    @click="handleClick"
-  >
+  <div class="overview-card" :class="{ 'card-disabled': disabled || !to }" @click="handleClick">
     <div class="card-header">
       <NIcon v-if="icon" size="22" class="card-icon"><component :is="icon" /></NIcon>
       <h3 class="card-title">{{ title }}</h3>

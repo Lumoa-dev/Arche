@@ -2,9 +2,23 @@
   <ArPage>
     <ArVBox gap="var(--layout-gap)">
       <ArPageHeader title="GitHub" desc="项目开源仓库，欢迎 Star 和贡献" />
-      <ArCard variant="elevated" padding="lg" style="text-align: center; color: var(--text-tertiary);">
+      <ArCard
+        variant="elevated"
+        padding="lg"
+        style="text-align: center; color: var(--text-tertiary)"
+      >
         <p>正在跳转到 GitHub...</p>
-        <a :href="repoUrl" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 8px; color: var(--primary-color); text-decoration: none;">
+        <a
+          :href="repoUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+          "
+        >
           {{ repoUrl }}
         </a>
       </ArCard>

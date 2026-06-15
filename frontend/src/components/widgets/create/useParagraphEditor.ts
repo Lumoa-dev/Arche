@@ -13,7 +13,7 @@ import {
   updatePostApi,
   type CreatePostPayload,
   type ParagraphData
-} from './api'
+} from '@/lib/services/api'
 
 /** 编辑器可用的段落类型 */
 export type ParagraphType = 'text' | 'heading' | 'image' | 'video' | 'code' | 'table' | 'separator'

@@ -3,13 +3,10 @@ import { useRouter } from 'vue-router'
 import { NButton } from 'naive-ui'
 import ArCard from '@/components/ui/ArCard.vue'
 
-const props = withDefaults(
-  defineProps<{
-    code: string
-    message: string
-  }>(),
-  {}
-)
+defineProps<{
+  code: string
+  message: string
+}>()
 
 const router = useRouter()
 
@@ -24,7 +21,7 @@ const goHome = () => {
 
 <template>
   <div class="error-page">
-    <ArCard variant="elevated" padding="3xl" class="error-card">
+    <ArCard variant="elevated" padding="lg" class="error-card">
       <h1 class="error-code">{{ code }}</h1>
       <p class="error-message">{{ message }}</p>
       <div class="error-actions">

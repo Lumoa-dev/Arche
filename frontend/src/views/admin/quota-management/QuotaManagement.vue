@@ -145,7 +145,13 @@ const columns: ArTableColumn[] = [
       return h(
         'span',
         {
-          style: { cursor: 'pointer', color: 'var(--primary-color)', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '2px' },
+          style: {
+            cursor: 'pointer',
+            color: 'var(--primary-color)',
+            textDecoration: 'underline',
+            textDecorationStyle: 'dotted',
+            textUnderlineOffset: '2px'
+          },
           onClick: () => startEdit(row)
         },
         { default: () => formatBytes(row.quota_bytes) }
@@ -182,7 +188,7 @@ onMounted(() => {
       </template>
     </ArPageHeader>
 
-    <ArCard variant="elevated" style="overflow: hidden;">
+    <ArCard variant="elevated" style="overflow: hidden">
       <ArTable
         :columns="columns"
         :data="quotas"
@@ -194,7 +200,10 @@ onMounted(() => {
       />
     </ArCard>
 
-    <div v-if="quotas.length === 0 && !loading" style="text-align: center; padding: 40px 0; color: var(--text-tertiary);">
+    <div
+      v-if="quotas.length === 0 && !loading"
+      style="text-align: center; padding: 40px 0; color: var(--text-tertiary)"
+    >
       <p>暂无配额数据</p>
     </div>
   </div>

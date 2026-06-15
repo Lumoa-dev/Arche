@@ -9,7 +9,7 @@
       "@/*": ["./src/*"],
       "@/constants/*": ["./src/lib/constants/*"],
       "@/router/*": ["./src/lib/router/*"],
-      "@/services/api/*": ["./src/components/logic/api/*"],
+      "@/services/api/*": ["./src/lib/services/api/*"],
       "@/services/mock/*": ["./src/lib/services/mock/*"],
       "@/services/request": ["./src/lib/services/request.ts"],
       "@/services/*": ["./src/lib/services/*"],

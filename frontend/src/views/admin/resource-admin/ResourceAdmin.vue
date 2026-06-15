@@ -220,7 +220,7 @@ onMounted(() => {
             </NGi>
           </NGrid>
 
-          <ArCard variant="elevated" style="padding: var(--spacing-md);">
+          <ArCard variant="elevated" style="padding: var(--spacing-md)">
             <ArTable
               :columns="assetColumns"
               :data="assetList"
@@ -228,7 +228,7 @@ onMounted(() => {
               :row-key="(row: any) => row.id"
               :bordered="false"
             />
-            <ArHBox justify="center" style="padding-top: var(--spacing-md);">
+            <ArHBox justify="center" style="padding-top: var(--spacing-md)">
               <ArPagination
                 :page="assetPage"
                 :page-size="assetPageSize"
@@ -250,8 +250,17 @@ onMounted(() => {
             </NGi>
           </NGrid>
 
-          <ArCard variant="elevated" style="padding: var(--spacing-md);">
-            <h3 style="margin: 0 0 var(--spacing-sm); font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--text-primary);">文件列表</h3>
+          <ArCard variant="elevated" style="padding: var(--spacing-md)">
+            <h3
+              style="
+                margin: 0 0 var(--spacing-sm);
+                font-size: 16px;
+                font-weight: var(--font-weight-semibold);
+                color: var(--text-primary);
+              "
+            >
+              文件列表
+            </h3>
             <ArTable
               :columns="ossFileColumns"
               :data="ossFileList"
@@ -259,7 +268,7 @@ onMounted(() => {
               :row-key="(row: any) => row.id"
               :bordered="false"
             />
-            <ArHBox justify="center" style="padding-top: var(--spacing-md);">
+            <ArHBox justify="center" style="padding-top: var(--spacing-md)">
               <ArPagination
                 :page="ossFilePage"
                 :page-size="ossFilePageSize"
@@ -271,8 +280,17 @@ onMounted(() => {
             </ArHBox>
           </ArCard>
 
-          <ArCard variant="elevated" style="padding: var(--spacing-md);">
-            <h3 style="margin: 0 0 var(--spacing-sm); font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--text-primary);">存储排行 TOP 10</h3>
+          <ArCard variant="elevated" style="padding: var(--spacing-md)">
+            <h3
+              style="
+                margin: 0 0 var(--spacing-sm);
+                font-size: 16px;
+                font-weight: var(--font-weight-semibold);
+                color: var(--text-primary);
+              "
+            >
+              存储排行 TOP 10
+            </h3>
             <ArTable
               :columns="ossTopUserColumns"
               :data="ossTopUsers"

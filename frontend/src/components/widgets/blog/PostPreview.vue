@@ -37,6 +37,7 @@ function goBack() {
     </div>
 
     <!-- 引言 -->
+    <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-if="introduction" class="preview-introduction" v-html="introduction" />
 
     <!-- 段落 -->

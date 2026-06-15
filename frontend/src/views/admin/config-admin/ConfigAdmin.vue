@@ -68,7 +68,11 @@ const columns: ArTableColumn[] = [
     render: (row: ConfigItem) =>
       h(
         'span',
-        { style: row.is_sensitive ? 'font-family: var(--font-mono, monospace); letter-spacing: 2px; color: var(--text-tertiary);' : '' },
+        {
+          style: row.is_sensitive
+            ? 'font-family: var(--font-mono, monospace); letter-spacing: 2px; color: var(--text-tertiary);'
+            : ''
+        },
         row.is_sensitive ? '••••••••' : row.value || '-'
       )
   },
@@ -210,11 +214,6 @@ async function handleDelete(key: string) {
   }
 }
 
-function handleGroupFilter(group: string | null) {
-  selectedGroup.value = group
-  fetchConfigs()
-}
-
 onMounted(() => {
   fetchGroups()
   fetchConfigs()
@@ -232,17 +231,30 @@ onMounted(() => {
 
     <FilterBar :options="groupOptions" v-model="selectedGroup" />
 
-    <ArCard variant="elevated" style="overflow: hidden;">
+    <ArCard variant="elevated" style="overflow: hidden">
       <ArTable :columns="columns" :data="filteredConfigs" :loading="loading" :bordered="false" />
-      <div v-if="!loading && filteredConfigs.length === 0" style="text-align: center; padding: 40px 0; color: var(--text-tertiary); font-size: 13px;">暂无配置项</div>
+      <div
+        v-if="!loading && filteredConfigs.length === 0"
+        style="text-align: center; padding: 40px 0; color: var(--text-tertiary); font-size: 13px"
+      >
+        暂无配置项
+      </div>
     </ArCard>
 
     <NModal v-model:show="showModal" :title="modalTitle" preset="card" style="width: 500px">
       <NForm ref="formRef" :model="form" label-placement="top">
         <NFormItem label="配置键" path="key" :rule="[{ required: true, message: '请输入配置键' }]">
-          <NInput v-model:value="form.key" placeholder="如：MY_CONFIG_KEY" :disabled="!!editingKey" />
+          <NInput
+            v-model:value="form.key"
+            placeholder="如：MY_CONFIG_KEY"
+            :disabled="!!editingKey"
+          />
         </NFormItem>
-        <NFormItem label="配置值" path="value" :rule="[{ required: true, message: '请输入配置值' }]">
+        <NFormItem
+          label="配置值"
+          path="value"
+          :rule="[{ required: true, message: '请输入配置值' }]"
+        >
           <NInput v-model:value="form.value" placeholder="配置值" />
         </NFormItem>
         <NFormItem label="分组" path="group">

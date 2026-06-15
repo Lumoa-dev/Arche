@@ -195,7 +195,7 @@ onMounted(fetchPosts)
         :row-key="(row: any) => row.key"
         single-line
       />
-      <ArHBox justify="center" style="padding-top: var(--spacing-md);">
+      <ArHBox justify="center" style="padding-top: var(--spacing-md)">
         <ArPagination
           :page="currentPage"
           :page-size="pageSize"

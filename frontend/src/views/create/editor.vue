@@ -15,7 +15,10 @@ import EditorCoverArea from '@/components/widgets/create/EditorCoverArea.vue'
 import EditorTitleArea from '@/components/widgets/create/EditorTitleArea.vue'
 import EditorIntroductionCard from '@/components/widgets/create/EditorIntroductionCard.vue'
 import EditorParagraphCard from '@/components/widgets/create/EditorParagraphCard.vue'
-import { useParagraphEditor, type ParagraphType } from '@/components/widgets/create/useParagraphEditor'
+import {
+  useParagraphEditor,
+  type ParagraphType
+} from '@/components/widgets/create/useParagraphEditor'
 import { useFileImporter } from '@/components/widgets/create/useFileImporter'
 import type { Editor } from '@tiptap/vue-3'
 import { useMessage } from 'naive-ui'

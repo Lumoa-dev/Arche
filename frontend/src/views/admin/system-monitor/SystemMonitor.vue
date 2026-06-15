@@ -72,8 +72,17 @@ onUnmounted(() => {
     <SystemMetrics />
 
     <div v-if="processes.length > 0">
-      <h3 style="margin: 0 0 var(--spacing-sm); font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--text-primary);">进程列表</h3>
-      <ArCard variant="elevated" style="overflow: hidden;">
+      <h3
+        style="
+          margin: 0 0 var(--spacing-sm);
+          font-size: 16px;
+          font-weight: var(--font-weight-semibold);
+          color: var(--text-primary);
+        "
+      >
+        进程列表
+      </h3>
+      <ArCard variant="elevated" style="overflow: hidden">
         <ArTable
           :columns="processColumns"
           :data="processes"
@@ -85,7 +94,7 @@ onUnmounted(() => {
         />
       </ArCard>
     </div>
-    <div v-else style="text-align: center; padding: 40px 0; color: var(--text-tertiary);">
+    <div v-else style="text-align: center; padding: 40px 0; color: var(--text-tertiary)">
       <p>暂无进程数据</p>
     </div>
   </ArVBox>

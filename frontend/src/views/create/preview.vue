@@ -49,6 +49,11 @@ onMounted(fetchPreview)
     :loading="loading"
     style="max-width: 880px; margin: 0 auto; padding: var(--spacing-2xl) var(--spacing-md)"
   >
-    <PostPreview v-if="post" :post="post" :paragraphs="paragraphs" :post-id="String(route.query.postId)" />
+    <PostPreview
+      v-if="post"
+      :post="post"
+      :paragraphs="paragraphs"
+      :post-id="String(route.query.postId)"
+    />
   </ArPage>
 </template>
