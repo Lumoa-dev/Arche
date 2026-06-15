@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// 模拟权限总线
+vi.mock('@/lib/services/permission-bus', () => ({
+  initPermissionBus: vi.fn(() => Promise.resolve()),
+  clearPermissionCache: vi.fn(),
+  canAccessPage: vi.fn(() => true),
+  getVisiblePages: vi.fn(() => [])
+}))
+
 // ===== 在 hoisted 作用域中创建所有 mock 工厂和可变状态 =====
 const helper = vi.hoisted(() => {
   // 拦截器数组，用于捕获 router.beforeEach / afterEach 注册的 handler
@@ -9,9 +17,9 @@ const helper = vi.hoisted(() => {
   // 可变状态 —— 通过 getter/setter 让 mock store 始终读取最新值
   let _token: string | null = null
   let _userInfo: any = null
-  let _routesLoaded = false
   let _isAdmin = false
   let _level = 5
+  let _canAccessPage = true
 
   return {
     capturedBeforeEach,
@@ -24,14 +32,14 @@ const helper = vi.hoisted(() => {
     setUserInfo: (v: any) => {
       _userInfo = v
     },
-    setRoutesLoaded: (v: boolean) => {
-      _routesLoaded = v
-    },
     setIsAdmin: (v: boolean) => {
       _isAdmin = v
     },
     setLevel: (v: number) => {
       _level = v
+    },
+    setCanAccessPage: (v: boolean) => {
+      _canAccessPage = v
     },
 
     // mock 函数（可被 spy/mocked 追踪）
@@ -44,9 +52,8 @@ const helper = vi.hoisted(() => {
       _userInfo = null
     }),
     mockResetPermission: vi.fn(),
-    mockGenerateRoutes: vi.fn().mockRejectedValue(new Error('not initialized')),
-    mockHasPermission: vi.fn(),
     mockHasLevel: vi.fn(),
+    mockCanAccessPage: vi.fn(() => true),
     mockResetAllStores: vi.fn(),
     mockMessageError: vi.fn(),
     mockCancelAllPendingRequests: vi.fn(),
@@ -55,9 +62,9 @@ const helper = vi.hoisted(() => {
     // 供 mock factory 使用的 getter
     getToken: () => _token,
     getUserInfo: () => _userInfo,
-    getRoutesLoaded: () => _routesLoaded,
     getIsAdmin: () => _isAdmin,
-    getLevel: () => _level
+    getLevel: () => _level,
+    getCanAccessPage: () => _canAccessPage
   }
 })
 
@@ -80,17 +87,13 @@ vi.mock('@/store/modules/user', () => ({
 vi.mock('@/store/modules/permission', () => ({
   usePermissionStore: vi.fn(() => ({
     whiteList: ['/login', '/404', '/403'],
-    get routesLoaded() {
-      return helper.getRoutesLoaded()
-    },
     get level() {
       return helper.getLevel()
     },
-    hasPermission: helper.mockHasPermission,
     isAdmin: helper.mockIsAdmin,
     hasLevel: helper.mockHasLevel,
-    resetPermission: helper.mockResetPermission,
-    generateRoutes: helper.mockGenerateRoutes
+    canAccessPage: helper.mockCanAccessPage,
+    resetPermission: helper.mockResetPermission
   }))
 }))
 
@@ -124,7 +127,7 @@ vi.mock('@/router/index', () => ({
 }))
 
 // ===== 导入 guard.ts —— 触发模块级代码（注册事件监听和路由守卫）=====
-await import('@/router/guard')
+await import('@/lib/router/guard')
 
 // 创建一个辅助函数用于调用 beforeEach 守卫
 function runGuard(to: any, from: any = { path: '/', meta: {} }): Promise<any> {
@@ -142,12 +145,11 @@ describe('路由导航守卫', () => {
     // 默认状态：未登录
     helper.setToken(null)
     helper.setUserInfo(null)
-    helper.setRoutesLoaded(false)
     helper.setIsAdmin(false)
     helper.setLevel(5)
+    helper.setCanAccessPage(true)
     helper.mockGetUserInfo = vi.fn().mockRejectedValue(new Error('not initialized'))
     helper.mockRefreshAccessToken = vi.fn().mockRejectedValue(new Error('no token'))
-    helper.mockGenerateRoutes = vi.fn().mockRejectedValue(new Error('not initialized'))
   })
 
   afterEach(() => {
@@ -195,7 +197,6 @@ describe('路由导航守卫', () => {
       const mockToken = `header.${payload}.signature`
       helper.setToken(mockToken)
       helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(true)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
 
       const result = await runGuard({ path: '/profile', meta: {}, fullPath: '/profile' })
@@ -211,7 +212,6 @@ describe('路由导航守卫', () => {
       helper.mockRefreshAccessToken = vi.fn().mockResolvedValue('new-token')
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
       helper.setUserInfo({ id: '1', username: 'test' })
-      helper.setRoutesLoaded(true)
 
       const result = await runGuard({ path: '/profile', meta: {}, fullPath: '/profile' })
       expect(result).toBeUndefined()
@@ -235,7 +235,6 @@ describe('路由导航守卫', () => {
     it('没有 userInfo 时自动获取用户信息', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo(null)
-      helper.setRoutesLoaded(true)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test', level: 5 })
 
       const result = await runGuard({ path: '/profile', meta: {}, fullPath: '/profile' })
@@ -246,7 +245,6 @@ describe('路由导航守卫', () => {
     it('获取用户信息失败时重定向到 /login', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo(null)
-      helper.setRoutesLoaded(true)
       helper.mockGetUserInfo = vi.fn().mockRejectedValue(new Error('token expired'))
 
       const result = await runGuard({ path: '/profile', meta: {}, fullPath: '/profile' })
@@ -255,37 +253,53 @@ describe('路由导航守卫', () => {
     })
   })
 
-  describe('权限路由加载', () => {
-    it('routesLoaded 为 false 时自动生成路由', async () => {
+  describe('页面权限校验', () => {
+    it('to.meta.pageName 不满足时重定向到 /403', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(false)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
-      helper.mockGenerateRoutes = vi.fn().mockResolvedValue([])
+      helper.mockCanAccessPage = vi.fn(() => false)
 
-      const result = await runGuard({ path: '/profile', meta: {}, fullPath: '/profile' })
-      expect(result).toBeUndefined()
-      expect(helper.mockGenerateRoutes).toHaveBeenCalled()
+      const result = await runGuard({
+        path: '/admin/ops/system',
+        meta: { pageName: 'admin_ops' },
+        fullPath: '/admin/ops/system'
+      })
+      expect(result).toMatchObject({ path: '/403' })
     })
 
-    it('生成路由失败时重定向到首页', async () => {
+    it('to.meta.pageName 满足时放行', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(false)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
-      helper.mockGenerateRoutes = vi.fn().mockRejectedValue(new Error('failed'))
+      helper.mockCanAccessPage = vi.fn(() => true)
 
-      const result = await runGuard({ path: '/profile', meta: {}, fullPath: '/profile' })
-      expect(result).toMatchObject({ path: '/' })
-      expect(helper.mockMessageError).toHaveBeenCalledWith('获取权限失败，请重新登录')
+      const result = await runGuard({
+        path: '/profile',
+        meta: { pageName: 'profile' },
+        fullPath: '/profile'
+      })
+      expect(result).toBeUndefined()
+    })
+
+    it('无 pageName 的页面直接放行', async () => {
+      helper.setToken('valid-token')
+      helper.setUserInfo({ id: '1', username: 'test', level: 5 })
+      helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
+
+      const result = await runGuard({
+        path: '/some-page',
+        meta: {},
+        fullPath: '/some-page'
+      })
+      expect(result).toBeUndefined()
     })
   })
 
-  describe('权限校验', () => {
+  describe('level 等级校验', () => {
     it('to.meta.level 不满足时重定向到 /403', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(true)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
       helper.mockHasLevel = vi.fn(() => false)
 
@@ -297,33 +311,15 @@ describe('路由导航守卫', () => {
       expect(result).toMatchObject({ path: '/403' })
     })
 
-    it('to.meta.permission 不满足时重定向到 /403', async () => {
+    it('to.meta.level 满足时放行', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(true)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
       helper.mockHasLevel = vi.fn(() => true)
-      helper.mockHasPermission = vi.fn(() => false)
-
-      const result = await runGuard({
-        path: '/admin/users',
-        meta: { permission: 'admin:users' },
-        fullPath: '/admin/users'
-      })
-      expect(result).toMatchObject({ path: '/403' })
-    })
-
-    it('to.meta.permission 为字符串权限且满足时放行', async () => {
-      helper.setToken('valid-token')
-      helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(true)
-      helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
-      helper.mockHasLevel = vi.fn(() => true)
-      helper.mockHasPermission = vi.fn(() => true)
 
       const result = await runGuard({
         path: '/profile',
-        meta: { permission: 'auth:me' },
+        meta: { level: 5 },
         fullPath: '/profile'
       })
       expect(result).toBeUndefined()
@@ -355,10 +351,8 @@ describe('路由导航守卫', () => {
     it('路由切换时取消待处理请求', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(true)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
       helper.mockHasLevel = vi.fn(() => true)
-      helper.mockHasPermission = vi.fn(() => true)
 
       await runGuard(
         { path: '/profile', meta: {}, fullPath: '/profile' },
@@ -370,10 +364,8 @@ describe('路由导航守卫', () => {
     it('相同路径不取消请求', async () => {
       helper.setToken('valid-token')
       helper.setUserInfo({ id: '1', username: 'test', level: 5 })
-      helper.setRoutesLoaded(true)
       helper.mockGetUserInfo = vi.fn().mockResolvedValue({ id: '1', username: 'test' })
       helper.mockHasLevel = vi.fn(() => true)
-      helper.mockHasPermission = vi.fn(() => true)
 
       await runGuard({ path: '/same', meta: {}, fullPath: '/same' }, { path: '/same', meta: {} })
       expect(helper.mockCancelAllPendingRequests).not.toHaveBeenCalled()

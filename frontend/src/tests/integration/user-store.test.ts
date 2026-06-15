@@ -24,6 +24,13 @@ vi.mock('@/services/api/auth', () => ({
   refreshTokenApi: mockRefreshTokenApi
 }))
 
+vi.mock('@/lib/services/permission-bus', () => ({
+  initPermissionBus: vi.fn(() => Promise.resolve()),
+  clearPermissionCache: vi.fn(),
+  canAccessPage: vi.fn(() => true),
+  getVisiblePages: vi.fn(() => [])
+}))
+
 // 模拟 localStorage
 const store: Record<string, string> = {}
 const mockLocalStorage = {

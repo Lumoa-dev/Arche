@@ -140,3 +140,15 @@ Keep it tight — one or two sentences per field:
 **Why:** Previous frontend had no clear layer boundaries — CSS was scattered across all levels, API calls were mixed into everything, and business logic leaked into UI primitives. This made the codebase unpredictable and hard to refactor.
 
 **Lesson:** Define layer boundaries upfront with iron-clad rules and CR checklists. Base components use CSS variables for theming. Business components fix all scene specs in CSS (normal/empty/loading/error). Pages are forbidden from having more than 5 lines of CSS or any non-layout properties. API calls in `.vue` files are banned — use composables instead.
+
+---
+
+### 2026-06-15: Permission bus — backend-driven page-level permission with frontend subscription
+
+**What:** Implement page-component level permission control using a backend-driven JSON mapping table, consumed by a frontend permission bus.
+
+**When:** Building authorization for the Arche platform. Previous approach used static permission codes (`permission: 'auth:users:list'`) hardcoded in both frontend routes and `v-permission` directives — changing permissions required redeploy.
+
+**Why:** A level-based (0-10) system with a `PageComponentPermission` DB table is simpler to manage than RBAC with named roles. The permission bus pattern (backend stores `{pageName: {componentName: boolean}}`, frontend fetches at runtime) eliminates hardcoded permissions entirely. Key insight: if any component in a page is visible, the page is accessible — this maps naturally to route guards and sidebar rendering.
+
+**Lesson:** For permission systems in personal platforms, prefer level-based access over role-based. Store the page-component mapping in a single DB table with unique constraint on `(level, page_name, component_name)`. Frontend should treat permissions as external data fetched at login (with 5-min TTL), not as compile-time constants. The `v-permission` directive format `page.component` maps cleanly to this model.
