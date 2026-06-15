@@ -42,7 +42,7 @@ async function loadLevels() {
     const res = await get<number[]>('/auth/permissions/levels')
     levels.value = res.length > 0 ? res : [0]
     if (!levels.value.includes(selectedLevel.value)) {
-      selectedLevel.value = levels.value[0]
+      selectedLevel.value = levels.value[0] ?? 0
     }
   } catch {
     levels.value = [0]
@@ -135,7 +135,7 @@ onMounted(async () => {
           <ArButton
             v-for="level in levels"
             :key="level"
-            :type="selectedLevel === level ? 'primary' : 'default'"
+            :type="selectedLevel === level ? 'primary' : 'secondary'"
             size="sm"
             @click="onLevelChange(level)"
           >

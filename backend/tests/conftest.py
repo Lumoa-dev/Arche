@@ -148,7 +148,7 @@ def pytest_collection_modifyitems(config, items):
     if deselected:
         items[:] = [i for i in items if i not in deselected]
         config.hook.pytest_deselected(items=deselected)
-        print(f"\n🔍 Diff 模式：跳过了 {len(deselected)} 个未变更插件的测试")
+        print(f"\n[Diff 模式] 跳过了 {len(deselected)} 个未变更插件的测试")
         print("   用 --all 参数运行全量测试\n")
 
 
