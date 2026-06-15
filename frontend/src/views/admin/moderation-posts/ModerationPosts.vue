@@ -3,13 +3,5 @@ import ModerationPanel from '@/components/widgets/admin/ModerationPanel.vue'
 </script>
 
 <template>
-  <div class="moderation-page">
-    <ModerationPanel />
-  </div>
+  <ModerationPanel />
 </template>
-
-<style scoped>
-.moderation-page {
-  height: 100%;
-}
-</style>

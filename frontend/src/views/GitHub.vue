@@ -1,16 +1,21 @@
 <template>
-  <div class="page-shell">
-    <ArPageHeader title="GitHub" desc="项目开源仓库，欢迎 Star 和贡献" />
-    <div class="placeholder-card">
-      <p>正在跳转到 GitHub...</p>
-      <a :href="repoUrl" target="_blank" rel="noopener noreferrer" class="repo-link">
-        {{ repoUrl }}
-      </a>
-    </div>
-  </div>
+  <ArPage>
+    <ArVBox gap="var(--layout-gap)">
+      <ArPageHeader title="GitHub" desc="项目开源仓库，欢迎 Star 和贡献" />
+      <ArCard variant="elevated" padding="lg" style="text-align: center; color: var(--text-tertiary);">
+        <p>正在跳转到 GitHub...</p>
+        <a :href="repoUrl" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 8px; color: var(--primary-color); text-decoration: none;">
+          {{ repoUrl }}
+        </a>
+      </ArCard>
+    </ArVBox>
+  </ArPage>
 </template>
 
 <script setup lang="ts">
+import ArPage from '@/components/ui/ArPage.vue'
+import ArVBox from '@/components/ui/ArVBox.vue'
+import ArCard from '@/components/ui/ArCard.vue'
 import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import { onMounted } from 'vue'
 
@@ -20,33 +25,3 @@ onMounted(() => {
   window.open(repoUrl, '_blank', 'noopener')
 })
 </script>
-
-<style scoped>
-.page-shell {
-  width: min(900px, 100%);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--layout-gap);
-}
-
-.placeholder-card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-3xl);
-  text-align: center;
-  color: var(--text-tertiary);
-}
-
-.repo-link {
-  display: inline-block;
-  margin-top: 8px;
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-.repo-link:hover {
-  text-decoration: underline;
-}
-</style>

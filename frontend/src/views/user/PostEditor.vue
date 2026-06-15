@@ -13,6 +13,8 @@ import {
 } from '@/lib/services/api'
 import { uploadOssFileApi } from '@/lib/services/api/oss'
 import { generateTextCover } from '@/lib/utils/generateTextCover'
+import PageHeading from '@/components/widgets/common/PageHeading.vue'
+import ArCard from '@/components/ui/ArCard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -84,37 +86,10 @@ onMounted(fetchDetail)
 </script>
 
 <template>
-  <div class="page-wrapper">
-    <div class="page-heading">
-      <h2>{{ mode === 'edit' ? '编辑文章' : '创作新文章' }}</h2>
-    </div>
-    <div class="section-card">
+  <div>
+    <PageHeading :title="mode === 'edit' ? '编辑文章' : '创作新文章'" />
+    <ArCard variant="elevated" padding="lg">
       <PostEditor :post="post" :loading="submitting" @save="handleSave" @cancel="handleCancel" />
-    </div>
+    </ArCard>
   </div>
 </template>
-
-<style scoped>
-.page-wrapper {
-  max-width: 100%;
-}
-
-.page-heading {
-  margin-bottom: var(--spacing-lg);
-}
-
-.page-heading h2 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-}
-
-.section-card {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-  backdrop-filter: blur(4px);
-}
-</style>

@@ -2,6 +2,8 @@
 import { h, onMounted, onUnmounted, ref } from 'vue'
 import { NTag } from 'naive-ui'
 import { ArTable } from '@/components/ui'
+import ArCard from '@/components/ui/ArCard.vue'
+import ArVBox from '@/components/ui/ArVBox.vue'
 import { getProcessesApi, type ProcessInfo } from '@/lib/services/api'
 import SystemMetrics from '@/components/widgets/admin/SystemMetrics.vue'
 
@@ -66,12 +68,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="system-monitor-page">
+  <ArVBox gap="var(--layout-gap)">
     <SystemMetrics />
 
-    <div v-if="processes.length > 0" class="processes-section">
-      <h3 class="section-title">进程列表</h3>
-      <div class="table-wrapper">
+    <div v-if="processes.length > 0">
+      <h3 style="margin: 0 0 var(--spacing-sm); font-size: 16px; font-weight: var(--font-weight-semibold); color: var(--text-primary);">进程列表</h3>
+      <ArCard variant="elevated" style="overflow: hidden;">
         <ArTable
           :columns="processColumns"
           :data="processes"
@@ -81,39 +83,10 @@ onUnmounted(() => {
           :bordered="false"
           :single-line="true"
         />
-      </div>
+      </ArCard>
     </div>
-    <div v-else class="processes-empty">
+    <div v-else style="text-align: center; padding: 40px 0; color: var(--text-tertiary);">
       <p>暂无进程数据</p>
     </div>
-  </div>
+  </ArVBox>
 </template>
-
-<style scoped>
-.system-monitor-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--layout-gap);
-  max-width: 100%;
-}
-
-.section-title {
-  margin: 0 0 var(--spacing-sm);
-  font-size: 16px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-}
-
-.table-wrapper {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.processes-empty {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--text-tertiary);
-}
-</style>
