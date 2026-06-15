@@ -12,8 +12,8 @@
             <div class="app-shell" :class="[`app-shell--${layoutMode}`]">
               <AppHeader
                 v-if="showHeader"
-                :layoutMode="layoutMode"
-                @toggleSidebar="handleToggleSidebar"
+                :layout-mode="layoutMode"
+                @toggle-sidebar="handleToggleSidebar"
               />
 
               <div
@@ -25,7 +25,7 @@
               >
                 <AppSidebar
                   v-if="showSidebar"
-                  :sidebarItems="sidebarItems"
+                  :sidebar-items="sidebarItems"
                   :mode="sidebarMode"
                   :collapsed="appStore.sidebarCollapsed"
                   @close="handleCloseSidebar"

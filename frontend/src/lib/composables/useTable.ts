@@ -10,7 +10,6 @@ export interface UseTableResult<T> {
   total: number
 }
 
-// eslint-disable-next-line no-unused-vars
 type UseTableRequest<T> = (_params: UseTableParams) => Promise<UseTableResult<T>>
 
 export const useTable = <T>(request: UseTableRequest<T>) => {

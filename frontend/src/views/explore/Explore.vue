@@ -159,9 +159,9 @@ watch(
         :selected-authors="selectedAuthors"
         :all-tags="allTags"
         :all-authors="allAuthors"
-        @update:filterMode="filterMode = $event"
-        @update:selectedTags="selectedTags = $event"
-        @update:selectedAuthors="selectedAuthors = $event"
+        @update:filter-mode="filterMode = $event"
+        @update:selected-tags="selectedTags = $event"
+        @update:selected-authors="selectedAuthors = $event"
       />
 
       <ArHBox wrap gap="var(--spacing-md)" style="flex: 1; min-width: 0; align-content: start">

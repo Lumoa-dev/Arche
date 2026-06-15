@@ -13,7 +13,6 @@ import ArTopNav from '@/components/ui/ArTopNav.vue'
 import ArAvatar from '@/components/ui/ArAvatar.vue'
 import SiteLogo from '@/components/widgets/common/SiteLogo.vue'
 import { useUserStore } from '@/lib/store/modules/user'
-import { useAppStore } from '@/lib/store/modules/app'
 import { useSearchStore } from '@/lib/store/modules/search'
 import type { Suggestion } from '@/lib/store/modules/search'
 
@@ -28,7 +27,6 @@ const emit = defineEmits<{
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-const appStore = useAppStore()
 const searchStore = useSearchStore()
 
 const showUserMenu = ref(false)
@@ -167,8 +165,8 @@ onBeforeUnmount(() => {
 <template>
   <ArTopNav
     :variant="layoutMode"
-    :showMenuToggle="layoutMode !== 'guest'"
-    @toggleSidebar="emit('toggleSidebar')"
+    :show-menu-toggle="layoutMode !== 'guest'"
+    @toggle-sidebar="emit('toggleSidebar')"
   >
     <template #left>
       <SiteLogo size="md" />

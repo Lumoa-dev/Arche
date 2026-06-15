@@ -642,9 +642,7 @@ async def get_post_tags(post_id: str, request: Request):
     blog_service = container.get("blog")
     user = get_current_user(request)
     user_level = user["level"] if user else None
-    tags = await blog_service.get_post_tags(
-        uuid.UUID(post_id), user_level=user_level
-    )
+    tags = await blog_service.get_post_tags(uuid.UUID(post_id), user_level=user_level)
     return {"code": "ok", "message": "获取成功", "data": {"tags": tags}}
 
 

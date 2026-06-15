@@ -5,7 +5,7 @@
  * 组合 ArInput / ArSelect / ArRadio / ArCheckbox / ArMultiSelect 使用。
  * 通过 ArFormItem 包装字段，自动管理校验和错误状态。
  */
-import { ref, reactive, computed, provide } from 'vue'
+import { ref, reactive, provide } from 'vue'
 
 export interface FormRule {
   required?: boolean
@@ -13,7 +13,6 @@ export interface FormRule {
   max?: number
   pattern?: RegExp
   message?: string
-  // eslint-disable-next-line no-unused-vars
   validator?: (_value: unknown) => boolean | string | Promise<boolean | string>
 }
 

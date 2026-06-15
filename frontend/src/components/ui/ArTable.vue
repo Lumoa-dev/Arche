@@ -15,11 +15,8 @@ export interface ArTableColumn {
   ellipsis?: boolean
   fixed?: 'left' | 'right'
   sortable?: boolean
-  // eslint-disable-next-line no-unused-vars
   sorter?: (a: any, b: any) => number
-  // eslint-disable-next-line no-unused-vars
   render?: (row: any) => any
-  // eslint-disable-next-line no-unused-vars
   summary?: (rows: any[]) => string | number
 }
 
@@ -41,7 +38,6 @@ const props = withDefaults(
     columns: ArTableColumn[]
     data: Record<string, any>[]
     loading?: boolean
-    // eslint-disable-next-line no-unused-vars
     rowKey?: string | ((row: any) => string | number)
     bordered?: boolean
     singleLine?: boolean

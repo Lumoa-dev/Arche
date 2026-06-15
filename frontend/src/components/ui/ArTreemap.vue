@@ -20,7 +20,7 @@ const props = withDefaults(
   }
 )
 
-const { palette, tooltipStyle } = useArChartTheme()
+const { tooltipStyle } = useArChartTheme()
 
 const option = computed(
   () =>

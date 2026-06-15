@@ -34,7 +34,6 @@ interface SpringHandle {
   /** 当前弹簧位置（只读） */
   value: Readonly<Ref<number>>
   /** 为 current 和 target 同时增加一个偏移量（无动画），用于无限循环无缝边界复位 */
-  // eslint-disable-next-line no-unused-vars
   jump: (_offset: number) => void
 }
 
@@ -104,7 +103,6 @@ export function useSpring(targetRef: Ref<number>, config: SpringConfig = {}): Sp
   return { value: readonly(current), jump }
 }
 
-// eslint-disable-next-line no-unused-vars
 type SpringCallback = (_x: number) => void
 
 /**

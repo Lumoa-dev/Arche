@@ -6,7 +6,7 @@ defineProps<{
   paragraphs: ParagraphData[]
 }>()
 
-function handleParagraphClick(para: ParagraphData) {
+function handleParagraphClick(_para: ParagraphData) {
   // 段落点击事件预留（后续评论功能恢复时使用）
 }
 </script>

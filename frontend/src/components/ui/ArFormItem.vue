@@ -5,7 +5,7 @@
  * 配合 ArForm 使用，自动从表单上下文获取校验状态。
  * 包装 ArInput / ArSelect 等输入组件。
  */
-import { inject, ref, onMounted, computed } from 'vue'
+import { inject, onMounted, computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{

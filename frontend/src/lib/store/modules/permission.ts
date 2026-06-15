@@ -33,7 +33,7 @@ export const usePermissionStore = defineStore(
       return getVisiblePages(level.value)
     }
 
-    const setUserPermission = async (perms: string[] = [], userLevel = 5) => {
+    const setUserPermission = async (_perms: string[] = [], userLevel = 5) => {
       level.value = userLevel
       // 初始化权限总线：从后端拉取页面组件映射
       try {

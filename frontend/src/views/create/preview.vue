@@ -81,6 +81,7 @@ onMounted(fetchPreview)
       </div>
 
       <!-- 引言（富文本） -->
+      <!-- eslint-disable-next-line vue/no-v-html -->
       <div v-if="introduction" class="preview-introduction" v-html="introduction" />
 
       <!-- 段落 -->

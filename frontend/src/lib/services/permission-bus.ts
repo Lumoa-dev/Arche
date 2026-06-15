@@ -13,8 +13,8 @@
  *   if (canAccessPage('admin_users')) { ... }
  */
 
-import { reactive, computed, type ComputedRef, toRef } from 'vue'
-import { get, put } from '@/lib/services/request'
+import { reactive, computed, type ComputedRef } from 'vue'
+import { get } from '@/lib/services/request'
 
 // ── 类型 ──
 
@@ -23,12 +23,6 @@ export interface PagePermissionMap {
   [pageName: string]: {
     [componentName: string]: boolean
   }
-}
-
-/** 单一组件订阅者状态 */
-interface SubscriberState {
-  pageName: string
-  componentName: string
 }
 
 // ── 状态 ──

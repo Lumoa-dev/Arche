@@ -25,8 +25,6 @@ export const permissionDirective = {
         return true
       }
       const pageName = perm.substring(0, dotIdx)
-      const componentName = perm.substring(dotIdx + 1)
-      const level = permissionStore.level
       // 委托给总线：通过 store 的 canAccessPage 初筛 + 直接查总线
       if (!permissionStore.canAccessPage(pageName)) {
         return false

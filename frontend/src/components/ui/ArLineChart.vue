@@ -82,8 +82,6 @@ const option = computed(() => {
         }
       }
       if (props.showMarkLine) {
-        const values = s.data.filter((v) => v != null) as number[]
-        const max = Math.max(...values)
         serie.markLine = {
           silent: true,
           data: [

@@ -5,7 +5,6 @@
  * 位于纸面（EditorBody）顶部，与正文内容构成一体。
  * 无 sticky 无通栏背景，融入纸面色。
  */
-import ArHBox from '@/components/ui/ArHBox.vue'
 import ArButton from '@/components/ui/ArButton.vue'
 import type { ParagraphType } from '@/components/logic/useParagraphEditor'
 import {
@@ -24,7 +23,7 @@ defineProps<{
   hasActiveEditor: boolean
   saving: boolean
   isEdit: boolean
-  execCommand: (cmd: string) => void
+  execCommand: (_cmd: string) => void
 }>()
 
 const emit = defineEmits<{

@@ -42,7 +42,6 @@ const service: AxiosInstance = axios.create({
 
 // --- refresh_token 自动续期 ---
 let isRefreshing = false
-// eslint-disable-next-line no-unused-vars
 let failedQueue: Array<{ resolve: (t: string) => void; reject: (e: unknown) => void }> = []
 
 const processQueue = (error: unknown, token: string | null = null) => {

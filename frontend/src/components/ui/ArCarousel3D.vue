@@ -40,7 +40,6 @@ const props = withDefaults(
 
 // ── Slots ──
 defineSlots<{
-  // eslint-disable-next-line no-unused-vars
   card(_props: { item: any; index: number; isMain: boolean; showOverlay: boolean }): any
 }>()
 

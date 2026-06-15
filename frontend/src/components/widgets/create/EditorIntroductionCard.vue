@@ -5,7 +5,7 @@
  * 视觉上和段落卡片一致（同款 border/bg/圆角），但固定在标题下方
  * 不可拖拽排序（锚定位置）。
  */
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { watch, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import { StarterKit } from '@tiptap/starter-kit'
 import { TextAlign } from '@tiptap/extension-text-align'

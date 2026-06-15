@@ -21,7 +21,6 @@ import { ref } from 'vue'
 
 type Axis = 'x' | 'y' | 'xy'
 type GhostPreset = 'line' | 'box' | 'none'
-// eslint-disable-next-line no-unused-vars
 type ItemKeyFn = (item: any, index: number) => string | number
 
 const props = withDefaults(

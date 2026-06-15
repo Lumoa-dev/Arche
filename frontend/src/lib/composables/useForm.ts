@@ -10,7 +10,6 @@ export const useForm = <T extends Record<string, any>>(initialValue: T) => {
     model.value = { ...initialValue }
   }
 
-  // eslint-disable-next-line no-unused-vars
   type SubmitHandler = (_value: T) => Promise<void>
 
   const submit = async (handler: SubmitHandler) => {

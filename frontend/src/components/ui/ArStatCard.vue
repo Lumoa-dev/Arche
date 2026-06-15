@@ -12,7 +12,7 @@ const props = withDefaults(
     /** 趋势方向 */
     trend?: 'up' | 'down' | 'neutral'
     /** 数值格式化 */
-    formatter?: (val: number | string) => string
+    formatter?: (_val: number | string) => string
     /** 尺寸 */
     size?: 'sm' | 'md' | 'lg'
   }>(),

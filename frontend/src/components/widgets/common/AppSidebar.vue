@@ -9,7 +9,6 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { Component } from 'vue'
 import ArSideNav from '@/components/ui/ArSideNav.vue'
-import type { ArNavItem, ArNavGroup } from '@/components/ui/ArSideNav.vue'
 import { useAppStore } from '@/lib/store/modules/app'
 
 interface SidebarItem {
@@ -82,7 +81,7 @@ const handleSelect = (id: string) => {
     :items="flatItems"
     :groups="groupedItems"
     :collapsed="collapsed"
-    :activeId="activeId"
+    :active-id="activeId"
     position="left"
     @select="handleSelect"
   />

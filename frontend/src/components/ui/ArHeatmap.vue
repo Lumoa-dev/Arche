@@ -21,7 +21,7 @@ const props = withDefaults(
   }
 )
 
-const { tokens, palette, axisStyle, tooltipStyle } = useArChartTheme()
+const { tokens, axisStyle, tooltipStyle } = useArChartTheme()
 
 const option = computed(() => {
   const t = tokens()

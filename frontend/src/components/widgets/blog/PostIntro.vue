@@ -10,6 +10,7 @@ defineProps<{
 </script>
 
 <template>
+  <!-- eslint-disable-next-line vue/no-v-html -->
   <div v-if="content" class="post-intro" v-html="content" />
 </template>
 

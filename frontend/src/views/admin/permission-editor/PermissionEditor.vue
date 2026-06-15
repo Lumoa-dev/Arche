@@ -2,16 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useMessage } from 'naive-ui'
 import ArPageHeader from '@/components/ui/ArPageHeader.vue'
-import {
-  ArButton,
-  ArCard,
-  ArSwitch,
-  ArTag,
-  ArVBox,
-  ArHBox,
-  ArSpacer,
-  ArGrid
-} from '@/components/ui'
+import { ArButton, ArCard, ArSwitch, ArVBox, ArHBox, ArSpacer } from '@/components/ui'
 import { get, put } from '@/lib/services/request'
 
 const message = useMessage()

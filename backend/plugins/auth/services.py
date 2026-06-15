@@ -105,10 +105,20 @@ class AuthService:
                 from backend.plugins.auth.models import PageComponentPermission
 
                 all_pages = [
-                    "home", "explore", "create", "assets", "scheduler",
-                    "profile", "posts", "creator",
-                    "console", "admin_users", "admin_content", "admin_ops",
-                    "admin_permissions", "tasks",
+                    "home",
+                    "explore",
+                    "create",
+                    "assets",
+                    "scheduler",
+                    "profile",
+                    "posts",
+                    "creator",
+                    "console",
+                    "admin_users",
+                    "admin_content",
+                    "admin_ops",
+                    "admin_permissions",
+                    "tasks",
                 ]
                 for page_name in all_pages:
                     session.add(

@@ -142,7 +142,7 @@ onMounted(async () => {
 
 <template>
   <ArPage
-    maxWidth="1440px"
+    max-width="1440px"
     padding="0 var(--content-padding) var(--spacing-lg)"
     style="margin: 0 auto"
   >

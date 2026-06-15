@@ -143,6 +143,18 @@ Keep it tight — one or two sentences per field:
 
 ---
 
+### 2026-06-15: First user gets P0 — seed `PageComponentPermission` at registration time
+
+**What:** When the first registered user becomes P0 (level=0), pre-fill `page_component_permissions` with all pages set to visible=True. New pages added later must be added to the seed list or configured via the permission editor.
+
+**When:** First-user registration flow — `AuthService.register()` already detects first user and sets level=0, but the empty `page_component_permissions` table blocks everything including P0.
+
+**Why:** The route guard (`guard.ts`) calls `canAccessPage()` which checks `permissionCache[level][pageName]`. An empty table returns `{}` so `canAccessPage('create')` returns `false` for everyone, including P0. The seed ensures P0 has full access immediately.
+
+**Lesson:** Any change to the list of frontend pageNames must be mirrored in the seed list in `AuthService.register()`. Search for `all_pages = [` in `backend/plugins/auth/services.py` and add the new page. Alternatively, use the permission editor UI to add new pages for any level.
+
+---
+
 ### 2026-06-15: Permission bus — backend-driven page-level permission with frontend subscription
 
 **What:** Implement page-component level permission control using a backend-driven JSON mapping table, consumed by a frontend permission bus.
