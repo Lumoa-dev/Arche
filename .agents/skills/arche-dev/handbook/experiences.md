@@ -194,6 +194,22 @@ Keep it tight — one or two sentences per field:
 
 ---
 
+### 2026-06-16: 三层防御实现 Nginx 真实 IP 透传
+
+**What:** 写 `get_real_ip(request)` 工具函数统一获取客户端真实 IP，优先级 `X-Real-IP` → `X-Forwarded-For` 首个 IP → `request.client.host`。
+
+**When:** nginx 反代环境下，`request.client.host` 始终返回 Docker 内网 IP（如 `172.x.x.x`），导致登录限流和登录历史记录的都是内网地址。
+
+**Why:** 三层防御设计：
+- nginx.conf 已配置 `proxy_set_header X-Real-IP $remote_addr`（第一层）
+- uvicorn `--proxy-headers` 让 ASGI 层信任代理头（第二层）
+- `get_real_ip()` 在应用层显式读取 X-Real-IP 头（第三层）
+- 三层叠加保证无论部署环境如何变化，都能拿到真实 IP
+
+**Lesson:** 替换 `request.client.host` 时同步检查所有使用 `client_ip` 的链路（routes → services → models），确保整条链路一致。`get_real_ip()` 加在 `middleware.py` 中与 `get_current_user()` 并列，方便所有插件统一调用。
+
+---
+
 ### 2026-06-24: 提取 report-fail.yml 可复用失败告警工作流
 
 **What:** 把「测试失败 → 建 Issue + 建 fix 分支」的逻辑从 test-integration.yml 抽成独立的 report-fail.yml 可复用工作流。支持 title/labels/artifact-name/create-fix-branch/branch-prefix 五个输入。

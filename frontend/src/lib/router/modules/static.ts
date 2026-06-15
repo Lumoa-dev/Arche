@@ -338,6 +338,16 @@ export const staticRoutes: RouteRecordRaw[] = [
           title: '权限配置',
           searchScope: { type: 'ops', placeholder: '搜索页面或组件...', label: '权限' }
         }
+      },
+      {
+        path: '/admin/ops/request-logs',
+        name: 'AdminRequestLogs',
+        component: () => import('@/views/admin/request-log/RequestLogView.vue'),
+        meta: {
+          pageName: 'admin_ops',
+          title: 'IP 请求日志',
+          searchScope: { type: 'ops', placeholder: '搜索 IP 或行为分类...', label: '请求日志' }
+        }
       }
     ]
   },

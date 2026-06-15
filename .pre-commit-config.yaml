@@ -1,64 +1,84 @@
-# ── Arche pre-commit 配置 ──────────────────────────────────────
+# ── Arche pre-commit 配置（全本地化，无需远程拉取） ─────────
 # 安装：uv run pre-commit install
 # 全量运行：uv run pre-commit run --all-files
 
 repos:
-  # ── 通用文件规范 ──
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-        exclude: ^frontend/.*\.d\.ts$
-      - id: check-yaml
-        args: [--allow-multiple-documents]
-      - id: check-added-large-files
-        args: [--maxkb=1024]
-      - id: check-merge-conflict
-      - id: detect-private-key
-
-  # ── 后端：Ruff lint + format ──
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.8
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-        types_or: [python, pyi]
-        exclude: ^backend/tests/|^backend/migrations/
-      - id: ruff-format
-        types_or: [python, pyi]
-        exclude: ^backend/tests/|^backend/migrations/
-
-  # ── 前端：ESLint + Prettier ──
   - repo: local
     hooks:
+      # ── 通用文件规范 ──
+      - id: trailing-whitespace
+        name: trailing-whitespace
+        entry: powershell -Command "git diff --check 2>$null; if ($LASTEXITCODE -ne 0) { Write-Host '存在尾随空白，请清理'; exit 1 }"
+        language: system
+        stages: [pre-commit]
+
+      - id: end-of-file-fixer
+        name: end-of-file-fixer
+        entry: powershell -File scripts/pre-commit/end-of-file-fixer.ps1
+        language: system
+        exclude: ^frontend/.*\.d\.ts$
+
+      - id: check-yaml
+        name: check-yaml
+        entry: python -c "import sys,yaml,glob;skip={'node_modules','.venv','.git','__pycache__','dist'};sys.exit(0 if all(yaml.safe_load(open(f)) or True for f in glob.glob('**/*.yml',recursive=True)+glob.glob('**/*.yaml',recursive=True) if not any(d in f for d in skip)) else 1)"
+        language: system
+        pass_filenames: false
+
+      - id: check-added-large-files
+        name: check-added-large-files
+        entry: powershell -File scripts/pre-commit/check-added-large-files.ps1
+        language: system
+
+      - id: check-merge-conflict
+        name: check-merge-conflict
+        entry: powershell -File scripts/pre-commit/check-merge-conflict.ps1
+        language: system
+
+      - id: detect-private-key
+        name: detect-private-key
+        entry: powershell -File scripts/pre-commit/detect-private-key.ps1
+        language: system
+
+      # ── 后端：Ruff lint + format ──
+      - id: ruff
+        name: ruff
+        entry: uv run ruff check --fix --exit-non-zero-on-fix
+        language: system
+        types_or: [python, pyi]
+        exclude: ^backend/tests/|^backend/migrations/
+
+      - id: ruff-format
+        name: ruff-format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, pyi]
+        exclude: ^backend/tests/|^backend/migrations/
+
+      # ── 前端：ESLint + Prettier ──
       - id: eslint
         name: eslint
         entry: npx --prefix frontend eslint --fix
         language: system
-        types_or: [javascript, jsx, typescript, tsx, vue]
+        types_or: [javascript, jsx, ts, tsx, vue]
         files: ^frontend/src/
 
       - id: prettier
         name: prettier
         entry: npx --prefix frontend prettier --write --ignore-unknown
         language: system
-        types_or: [javascript, jsx, typescript, tsx, vue, css, html, json, yaml, markdown]
+        types_or: [javascript, jsx, ts, tsx, vue, css, html, json, yaml, markdown]
         files: ^frontend/
 
-  # ── commit 信息校验 ──
-  - repo: https://github.com/commitlint/pre-commit-hooks
-    rev: v10.0.0
-    hooks:
+      # ── commit 信息校验 ──
       - id: commitlint
+        name: commitlint
+        entry: npx --prefix frontend commitlint --edit
+        language: system
         stages: [commit-msg]
-        additional_dependencies:
-          - "@commitlint/config-conventional"
 
-  # ── 禁止将 debug 代码提交到非测试文件 ──
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
+      # ── 禁止直接提交到 master ──
       - id: no-commit-to-branch
-        args: [--branch, master]
-        stages: [commit]
+        name: no-commit-to-branch
+        entry: powershell -File scripts/pre-commit/no-commit-to-branch.ps1
+        language: system
+        stages: [pre-commit]
