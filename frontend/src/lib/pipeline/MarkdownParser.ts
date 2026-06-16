@@ -49,7 +49,6 @@ export class MarkdownParser implements FileParser {
   }
 
   private handleToken(token: marked.Token, result: RawParagraph[]): void {
-    // eslint-disable-next-line default-case
     switch (token.type) {
       case 'heading': {
         const content = this.renderTokenContent(token)
