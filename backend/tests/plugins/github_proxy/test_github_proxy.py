@@ -15,21 +15,30 @@ class TestGitHubProxy:
         """健康检查不调用外部 GitHub API。"""
         resp = await async_client.get(f"{PREFIX}/health/status", headers=admin_headers)
         assert resp.status_code == 200
+        data = resp.json()
+        assert data["code"] == "ok"
+        assert "data" in data
 
     @pytest.mark.asyncio
     async def test_health_no_auth(self, async_client):
         resp = await async_client.get(f"{PREFIX}/health/status")
         assert resp.status_code == 401
+        data = resp.json()
+        assert "auth" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_cache_clear_requires_auth(self, async_client):
         resp = await async_client.post(f"{PREFIX}/cache/clear")
         assert resp.status_code == 401
+        data = resp.json()
+        assert "auth" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_cache_clear(self, async_client, admin_headers):
         resp = await async_client.post(f"{PREFIX}/cache/clear", headers=admin_headers)
         assert resp.status_code == 200
+        data = resp.json()
+        assert data["code"] == "ok"
 
 
 @pytest.mark.real
@@ -43,4 +52,5 @@ class TestGitHubProxyReal:
             f"{PREFIX}/raw/owner/repo/branch/file.py",
             headers=admin_headers,
         )
+        # 外部依赖，接受多种状态码
         assert resp.status_code in (200, 301, 302, 404, 502, 503)

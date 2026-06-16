@@ -96,23 +96,25 @@ class TestMethodNotAllowed:
 
     @pytest.mark.asyncio
     async def test_get_on_create_endpoint(self, async_client):
-        """GET 请求创建端点返回 405。"""
+        """GET 请求仅 POST 的端点返回 404。"""
         resp = await async_client.get("/api/auth/register")
-        assert resp.status_code in (405, 404)
+        assert resp.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_post_on_list_endpoint(self, async_client):
-        """POST 请求列表端点返回 405。"""
+    async def test_post_on_list_endpoint(self, async_client, auth_headers):
+        """POST 请求列表端点返回 422（空 body + 认证 = 校验失败）。"""
         resp = await async_client.post(
-            "/api/blog/posts?page=1", headers={"Content-Type": "application/json"}
+            "/api/blog/posts",
+            json={},
+            headers=auth_headers,
         )
-        assert resp.status_code in (405, 401, 422)
+        assert resp.status_code == 422
 
     @pytest.mark.asyncio
     async def test_put_on_readonly_endpoint(self, async_client):
         """PUT 请求只读端点返回 405。"""
         resp = await async_client.put("/api/ping", json={})
-        assert resp.status_code in (405, 404)
+        assert resp.status_code == 405
 
 
 class TestConcurrency:

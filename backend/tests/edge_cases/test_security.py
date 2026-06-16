@@ -28,8 +28,8 @@ class TestSQLInjection:
             "/api/search/suggestions?q='; DROP TABLE users; --",
             headers=auth_headers,
         )
-        # 不应 500（不应崩溃），也不应返回有效结果
-        assert resp.status_code in (200, 400, 422)
+        # ORM 参数化查询，注入 payload 作为普通搜索关键词处理
+        assert resp.status_code == 200
 
     @pytest.mark.asyncio
     async def test_sql_injection_integer_field(self, async_client, admin_headers):
@@ -38,16 +38,18 @@ class TestSQLInjection:
             "/api/auth/users?page=1&page_size=10; DROP TABLE users",
             headers=admin_headers,
         )
-        assert resp.status_code in (200, 400, 422)
+        # page_size 参数化查询，注入 payload 被忽略或校验失败
+        assert resp.status_code in (200, 422)
 
     @pytest.mark.asyncio
     async def test_sql_union_injection(self, async_client, auth_headers):
-        """UNION 注入不导致数据泄露或崩溃。"""
+        """UNION 注入不导致数据泄露。"""
         resp = await async_client.get(
             "/api/search/suggestions?q=test UNION SELECT * FROM users",
             headers=auth_headers,
         )
-        assert resp.status_code in (200, 400, 422)
+        # ORM 参数化，UNION 作为普通文本搜索
+        assert resp.status_code == 200
 
 
 class TestXSS:
