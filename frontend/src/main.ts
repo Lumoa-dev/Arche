@@ -5,6 +5,7 @@ import pinia from './lib/store'
 import { setupDirectives } from './lib/directives'
 import './lib/router/guard'
 import './styles/theme.css'
+import 'katex/dist/katex.min.css'
 import { useAppStore } from '@/lib/store/modules/app'
 
 const app = createApp(App)

@@ -16,8 +16,10 @@ import type {
   PipelineOptions,
   PipelineProgress,
   StageProgress,
-  PipelineStageName
+  PipelineStageName,
 } from './types'
+import { processMathFormulas } from './stages/stage2_math'
+import { processImages } from './stages/stage3_image'
 
 /** 流水线默认阶段定义 */
 const STAGE_DEFS: { name: PipelineStageName; label: string }[] = [
@@ -287,34 +289,46 @@ export async function runPipeline(
     })
     notify(progress)
 
-    // ── Stage 2: 数学公式（预留） ──
+    // ── Stage 2: 数学公式 ──
     progress.currentStage = 'math'
-    updateStage(progress, 'math', {
-      status: 'done',
-      progress: 100,
-      message: '数学公式处理已跳过（待实现）'
-    })
+    updateStage(progress, 'math', { status: 'running', progress: 10, message: '正在扫描数学公式...' })
     notify(progress)
 
-    // ── Stage 3: 图片处理（预留） ──
+    const mathProcessed = processMathFormulas(rawParagraphs)
+    updateStage(progress, 'math', { status: 'done', progress: 100, message: '数学公式转换完成' })
+    notify(progress)
+
+    // ── Stage 3: 图片处理 ──
     progress.currentStage = 'image'
-    updateStage(progress, 'image', {
-      status: 'done',
-      progress: 100,
-      message: '图片处理已跳过（待实现）'
+    updateStage(progress, 'image', { status: 'running', progress: 0, message: '正在扫描图片引用...' })
+    notify(progress)
+
+    const {
+      paragraphs: imageProcessed,
+      imageCount,
+      uploadedCount,
+    } = await processImages(mathProcessed, (message, substeps) => {
+      updateStage(progress, 'image', { progress: 30, message, substeps })
+      notify(progress)
     })
+
+    if (imageCount > 0) {
+      const skipCount = imageCount - uploadedCount
+      let msg = `共处理 ${imageCount} 张图片`
+      if (uploadedCount > 0) msg += `，已上传 ${uploadedCount} 张`
+      if (skipCount > 0) msg += `，${skipCount} 张跳过`
+      updateStage(progress, 'image', { status: 'done', progress: 100, message: msg })
+    } else {
+      updateStage(progress, 'image', { status: 'done', progress: 100, message: '未发现图片引用' })
+    }
     notify(progress)
 
     // ── Stage 4: 段落重整 ──
     progress.currentStage = 'rearrange'
-    updateStage(progress, 'rearrange', {
-      status: 'running',
-      progress: 0,
-      message: '正在合并标题与正文...'
-    })
+    updateStage(progress, 'rearrange', { status: 'running', progress: 0, message: '正在合并标题与正文...' })
     notify(progress)
 
-    const rearranged = rearrangeParagraphs(rawParagraphs)
+    const rearranged = rearrangeParagraphs(imageProcessed)
     updateStage(progress, 'rearrange', { progress: 60, message: '正在清理空段落...' })
     notify(progress)
 
@@ -323,11 +337,7 @@ export async function runPipeline(
 
     // ── Stage 5: 填充输出 ──
     progress.currentStage = 'fill'
-    updateStage(progress, 'fill', {
-      status: 'running',
-      progress: 0,
-      message: '正在构建最终结果...'
-    })
+    updateStage(progress, 'fill', { status: 'running', progress: 0, message: '正在构建最终结果...' })
     notify(progress)
 
     const result = buildResult(rearranged)
