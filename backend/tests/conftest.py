@@ -222,9 +222,9 @@ async def module_db():
     from backend.plugins.blog import models as _blog_models  # noqa: F401
     from backend.plugins.cloud_integration import models as _cloud_models  # noqa: F401
     from backend.plugins.crawler import models as _crawler_models  # noqa: F401
+    from backend.plugins.ip_ban import models as _ip_ban_models  # noqa: F401
     from backend.plugins.monitor import models as _monitor_models  # noqa: F401
     from backend.plugins.oss import models as _oss_models  # noqa: F401
-    from backend.plugins.ip_ban import models as _ip_ban_models  # noqa: F401
     from backend.plugins.request_log import models as _request_log_models  # noqa: F401
 
     engine = create_async_engine(
