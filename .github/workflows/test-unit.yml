@@ -7,32 +7,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      backend-plugins: ${{ steps.scan-backend.outputs.matrix }}
-      frontend-dirs: ${{ steps.scan-frontend.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Scan backend unit test dirs
-        id: scan-backend
-        run: |
-          MATRIX=$(ls -1d backend/tests/unit/*/ 2>/dev/null | xargs -I{} basename {} | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
-
-      - name: Scan frontend test dirs
-        id: scan-frontend
-        run: |
-          MATRIX=$(ls -1d frontend/src/tests/*/ 2>/dev/null | xargs -I{} basename {} | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
-
   test-unit-py:
-    needs: [setup]
-    if: needs.setup.outputs.backend-plugins != '[]'
     strategy:
       matrix:
-        plugin: ${{ fromJSON(needs.setup.outputs.backend-plugins) }}
+        plugin:
+          - asset_mgmt
+          - auth
+          - blog
+          - cloud_integration
+          - core
+          - crawler
+          - github_proxy
+          - monitor
+          - oss
+          - search
+          - system_monitor
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -45,11 +34,18 @@ jobs:
         run: uv run pytest backend/tests/unit/${{ matrix.plugin }}/ -n auto --tb=short --no-header
 
   test-unit-js:
-    needs: [setup]
-    if: needs.setup.outputs.frontend-dirs != '[]'
     strategy:
       matrix:
-        dir: ${{ fromJSON(needs.setup.outputs.frontend-dirs) }}
+        dir:
+          - composables
+          - constants
+          - directives
+          - integration
+          - pipeline
+          - router
+          - services
+          - store
+          - utils
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
