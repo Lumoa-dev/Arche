@@ -28,7 +28,7 @@ class IpBan(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    ip_or_cidr: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    ip_or_cidr: Mapped[str] = mapped_column(String(64), nullable=False)
     ban_type: Mapped[str] = mapped_column(
         String(16), nullable=False, default="manual"
     )  # auto | manual
@@ -58,9 +58,7 @@ class IpBanLog(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    ban_id: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, index=True, default=None
-    )
+    ban_id: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     ip_or_cidr: Mapped[str] = mapped_column(String(64), nullable=False)
     action: Mapped[str] = mapped_column(String(16), nullable=False)  # ban | unban
     ban_type: Mapped[str] = mapped_column(

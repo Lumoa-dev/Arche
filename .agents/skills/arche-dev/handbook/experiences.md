@@ -254,3 +254,25 @@ Keep it tight — one or two sentences per field:
 **Why:** Conditional jobs (`if: failure()`, `if: github.event_name == 'schedule'`) create "dangling" jobs that show as skipped in every run. They add visual noise without value — failure notification via auto-Issue/auto-branch is overkill for a personal project; checking Actions logs is sufficient. `find-changes` as a separate job required matrix dependencies and `if` guards — inlining the loop eliminates the dependency chain.
 
 **Lesson:** In GHA, a job that conditionally skips on every run is noise, not value. The three patterns to eliminate: (1) separate job just for matrix generation — inline the loop instead; (2) failure notification jobs — rely on Actions UI; (3) mode-dispatching jobs (SSH vs webhook, sync vs no-sync) — pick one mode and delete the rest. Result: 13 files → 10 files, ~650 lines → ~300 lines.
+
+---
+
+### 2026-06-16: Fix integration test "Event loop is closed" caused by missing ip_ban models import and duplicate indexes
+
+**What:** Three fixes for integration test failures:
+1. Added `from backend.plugins.ip_ban import models as _ip_ban_models` to `module_db` test fixture so `ip_bans` table is created
+2. Added explicit `ip_ban` service mock in `db_container` fixture that returns `is_ip_banned=False`, preventing the middleware from blocking test requests
+3. Removed duplicate `index=True` from `ip_or_cidr` and `ban_id` columns in `IpBan`/`IpBanLog` models — they already had explicit `Index` entries in `__table_args__`
+
+**When:** Running integration tests (`pytest backend/tests/integration/ -n auto`). The `test_app` fixture activates all plugins including `ip_ban`, whose middleware and models weren't accounted for in test fixtures.
+
+**Why:** Three root causes conspired:
+- `module_db` fixture imported models from every plugin except `ip_ban` → `ip_bans` table never created → teardown `DELETE FROM ip_bans` crashed with "no such table"
+- `container` is a `MagicMock`, so `container.is_available("ip_ban")` returned truthy, and the fallback `AsyncMock` service returned `is_ip_banned=True` → all requests got 403
+- `index=True` on a column + explicit `Index` with the same name in `__table_args__` = SQLite tries to create the index twice → `OperationalError: index already exists`
+- These errors cascaded into "Event loop is closed" because the event loop was left in a bad state after the SQLite crash
+
+**Lesson:** When adding a new plugin with models and middleware, audit all test fixtures:
+1. `module_db` — add the new plugin's models import so `create_all` picks them up
+2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
+3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
