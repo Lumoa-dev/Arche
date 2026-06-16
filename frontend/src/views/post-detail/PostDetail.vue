@@ -2,16 +2,20 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { StarterKit } from '@tiptap/starter-kit'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Underline } from '@tiptap/extension-underline'
+import { Image } from '@tiptap/extension-image'
 import {
   getPostBySlugApi,
-  getPostParagraphsApi,
   likePostApi,
   addFavoriteApi,
   removeFavoriteApi,
   getFavoriteStatusApi,
   getLikeStatusApi,
-  type BlogPost,
-  type ParagraphData
+  type BlogPost
 } from '@/lib/services/api'
 import { useUserStore } from '@/lib/store/modules/user'
 import ArPage from '@/components/ui/ArPage.vue'
@@ -19,14 +23,12 @@ import ArVBox from '@/components/ui/ArVBox.vue'
 import PostTitle from '@/components/widgets/blog/PostTitle.vue'
 import AuthorBar from '@/components/widgets/blog/AuthorBar.vue'
 import PostIntro from '@/components/widgets/blog/PostIntro.vue'
-import PostDetail from '@/components/widgets/blog/PostDetail.vue'
 
 const route = useRoute()
 const message = useMessage()
 const userStore = useUserStore()
 
 const post = ref<BlogPost | null>(null)
-const paragraphs = ref<ParagraphData[]>([])
 const liked = ref(false)
 const favorited = ref(false)
 const likeCount = ref(0)
@@ -36,17 +38,19 @@ const isLoggedIn = computed(() => userStore.isLoggedIn)
 const isPostPublished = computed(() => post.value?.status === 'published')
 const canInteract = computed(() => isLoggedIn.value && isPostPublished.value)
 
+/** 是否有新版 content（TipTap JSON） */
+const hasContent = computed(() => !!post.value?.content)
+
+/** TipTap 只读编辑器（渲染 content 用） */
+const contentEditor = ref<ReturnType<typeof useEditor> | null>(null)
+
 const fetchPost = async () => {
   loading.value = true
   try {
     const detail = await getPostBySlugApi(String(route.params.slug || ''))
     post.value = detail
 
-    const tasks: Promise<unknown>[] = [
-      getPostParagraphsApi(detail.id, { limit: 100, offset: 0 }, { silent: true }).then((data) => {
-        paragraphs.value = data
-      })
-    ]
+    const tasks: Promise<unknown>[] = []
 
     if (isLoggedIn.value) {
       tasks.push(
@@ -72,11 +76,43 @@ const fetchPost = async () => {
     }
 
     await Promise.all(tasks)
+
+    // 初始化 TipTap 只读编辑器（如果有新版 content）
+    if (detail.content) {
+      initContentEditor(detail.content)
+    }
   } catch (err) {
     console.error('[PostDetail] 加载帖子失败:', err)
     message.error('加载帖子失败')
   } finally {
     loading.value = false
+  }
+}
+
+function initContentEditor(contentJson: string) {
+  try {
+    const json = JSON.parse(contentJson)
+    contentEditor.value = useEditor({
+      content: json,
+      editable: false,
+      extensions: [
+        StarterKit.configure({
+          heading: { levels: [1, 2, 3, 4] }
+        }),
+        TextStyle,
+        TextAlign.configure({ types: ['heading', 'paragraph'] }),
+        Underline,
+        Image.configure({ inline: false })
+      ],
+      editorProps: {
+        attributes: {
+          class: 'post-content-editor'
+        }
+      }
+    })
+  } catch {
+    // 解析失败，用段落模式兜底
+    contentEditor.value = null
   }
 }
 
@@ -222,8 +258,10 @@ onMounted(fetchPost)
       <!-- 引言 -->
       <PostIntro v-if="post.introduction" :content="post.introduction" />
 
-      <!-- 正文 -->
-      <PostDetail :paragraphs="paragraphs" />
+      <!-- 正文：TipTap 渲染 -->
+      <div v-if="hasContent && contentEditor" class="post-content-wrapper">
+        <EditorContent :editor="contentEditor" />
+      </div>
 
       <!-- 评论区（暂关闭） -->
       <div style="padding-top: var(--spacing-md)">
@@ -260,3 +298,66 @@ onMounted(fetchPost)
     </ArVBox>
   </ArPage>
 </template>
+
+<style scoped>
+.post-content-wrapper {
+  font-family: var(--font-serif);
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.post-content-wrapper :deep(.ProseMirror) {
+  outline: none;
+}
+
+.post-content-wrapper :deep(.ProseMirror p) {
+  margin: 0.6em 0;
+}
+
+.post-content-wrapper :deep(.ProseMirror h1) {
+  font-size: 1.8em;
+  font-weight: var(--font-weight-bold);
+  margin: 0.8em 0 0.4em;
+}
+
+.post-content-wrapper :deep(.ProseMirror h2) {
+  font-size: 1.5em;
+  font-weight: var(--font-weight-bold);
+  margin: 0.7em 0 0.3em;
+}
+
+.post-content-wrapper :deep(.ProseMirror h3) {
+  font-size: 1.25em;
+  font-weight: var(--font-weight-semibold);
+  margin: 0.6em 0 0.3em;
+}
+
+.post-content-wrapper :deep(.ProseMirror ul),
+.post-content-wrapper :deep(.ProseMirror ol) {
+  padding-left: 1.5em;
+}
+
+.post-content-wrapper :deep(.ProseMirror blockquote) {
+  border-left: 3px solid var(--border-color);
+  padding-left: var(--spacing-md);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0.5em 0;
+}
+
+.post-content-wrapper :deep(.ProseMirror pre) {
+  background: var(--surface-hover-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  overflow-x: auto;
+}
+
+.post-content-wrapper :deep(.ProseMirror img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: var(--spacing-md) 0;
+}
+</style>
