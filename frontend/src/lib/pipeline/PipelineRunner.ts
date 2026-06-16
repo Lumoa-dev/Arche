@@ -11,12 +11,11 @@ import { findParser } from './FileParser'
 import type { FileParser } from './FileParser'
 import type {
   PipelineResult,
-  PipelineParagraph,
   RawParagraph,
   PipelineOptions,
   PipelineProgress,
   StageProgress,
-  PipelineStageName,
+  PipelineStageName
 } from './types'
 import { processMathFormulas } from './stages/stage2_math'
 import { processImages } from './stages/stage3_image'
@@ -152,7 +151,7 @@ function buildResult(raw: RawParagraph[], frontmatter?: FrontmatterResult): Pipe
     title: '',
     subtitles: [],
     introduction: '',
-    paragraphs: [],
+    paragraphs: []
   }
 
   // Frontmatter 提取的标题优先
@@ -225,43 +224,6 @@ function buildResult(raw: RawParagraph[], frontmatter?: FrontmatterResult): Pipe
   return result
 }
 
-/** 将 heading 段落与紧随的 text 合并，保持当前系统兼容 */
-function mergeSections(paragraphs: RawParagraph[]): RawParagraph[] {
-  const merged: RawParagraph[] = []
-  for (let i = 0; i < paragraphs.length; i++) {
-    const p = paragraphs[i]!
-    if (p.type !== 'heading') {
-      merged.push(p)
-      continue
-    }
-
-    const bodyParts: string[] = []
-    bodyParts.push(p.content)
-
-    let j = i + 1
-    while (j < paragraphs.length) {
-      const next = paragraphs[j]!
-      if (next.type === 'heading') break
-      if (next.type === 'separator') {
-        j++
-        break
-      }
-      if (next.type === 'image') break
-      bodyParts.push('')
-      bodyParts.push(next.content)
-      j++
-    }
-
-    merged.push({
-      type: 'text',
-      content: bodyParts.join('\n'),
-      heading: p.heading
-    })
-    i = j - 1
-  }
-  return merged
-}
-
 /**
  * 执行完整流水线
  *
@@ -282,7 +244,11 @@ export async function runPipeline(
   try {
     // ── Stage 0: Frontmatter 提取 ──
     progress.currentStage = 'frontmatter'
-    updateStage(progress, 'frontmatter', { status: 'running', progress: 0, message: '正在扫描元数据...' })
+    updateStage(progress, 'frontmatter', {
+      status: 'running',
+      progress: 0,
+      message: '正在扫描元数据...'
+    })
     notify(progress)
 
     let text: string
@@ -290,7 +256,10 @@ export async function runPipeline(
     const source = options.source
 
     if (source === 'manual' && Array.isArray(input)) {
-      updateStage(progress, 'frontmatter', { progress: 30, message: '手动编辑场景跳过 Frontmatter 提取' })
+      updateStage(progress, 'frontmatter', {
+        progress: 30,
+        message: '手动编辑场景跳过 Frontmatter 提取'
+      })
       notify(progress)
       text = reassembleToMarkdown(input)
     } else if (typeof input === 'string') {
@@ -300,19 +269,27 @@ export async function runPipeline(
         progress: 80,
         message: frontmatterResult.title
           ? `发现元数据：标题="${frontmatterResult.title}"`
-          : '未发现元数据',
+          : '未发现元数据'
       })
       notify(progress)
     } else {
       throw new Error('输入格式不匹配：manual 场景需要段落数组，import 场景需要文本')
     }
 
-    updateStage(progress, 'frontmatter', { status: 'done', progress: 100, message: '元数据提取完成' })
+    updateStage(progress, 'frontmatter', {
+      status: 'done',
+      progress: 100,
+      message: '元数据提取完成'
+    })
     notify(progress)
 
     // ── Stage 1: 解析 ──
     progress.currentStage = 'parse'
-    updateStage(progress, 'parse', { status: 'running', progress: 0, message: '正在初始化解析器...' })
+    updateStage(progress, 'parse', {
+      status: 'running',
+      progress: 0,
+      message: '正在初始化解析器...'
+    })
     notify(progress)
 
     updateStage(progress, 'parse', { progress: 60, message: '正在解析 Markdown 语法结构...' })
@@ -333,7 +310,11 @@ export async function runPipeline(
 
     // ── Stage 2: 数学公式 ──
     progress.currentStage = 'math'
-    updateStage(progress, 'math', { status: 'running', progress: 10, message: '正在扫描数学公式...' })
+    updateStage(progress, 'math', {
+      status: 'running',
+      progress: 10,
+      message: '正在扫描数学公式...'
+    })
     notify(progress)
 
     const mathProcessed = processMathFormulas(rawParagraphs)
@@ -342,13 +323,17 @@ export async function runPipeline(
 
     // ── Stage 3: 图片处理 ──
     progress.currentStage = 'image'
-    updateStage(progress, 'image', { status: 'running', progress: 0, message: '正在扫描图片引用...' })
+    updateStage(progress, 'image', {
+      status: 'running',
+      progress: 0,
+      message: '正在扫描图片引用...'
+    })
     notify(progress)
 
     const {
       paragraphs: imageProcessed,
       imageCount,
-      uploadedCount,
+      uploadedCount
     } = await processImages(mathProcessed, (message, substeps) => {
       updateStage(progress, 'image', { progress: 30, message, substeps })
       notify(progress)
@@ -367,7 +352,11 @@ export async function runPipeline(
 
     // ── Stage 4: 段落重整 ──
     progress.currentStage = 'rearrange'
-    updateStage(progress, 'rearrange', { status: 'running', progress: 0, message: '正在合并标题与正文...' })
+    updateStage(progress, 'rearrange', {
+      status: 'running',
+      progress: 0,
+      message: '正在合并标题与正文...'
+    })
     notify(progress)
 
     const rearranged = rearrangeParagraphs(imageProcessed)
@@ -379,7 +368,11 @@ export async function runPipeline(
 
     // ── Stage 5: 填充输出 ──
     progress.currentStage = 'fill'
-    updateStage(progress, 'fill', { status: 'running', progress: 0, message: '正在构建最终结果...' })
+    updateStage(progress, 'fill', {
+      status: 'running',
+      progress: 0,
+      message: '正在构建最终结果...'
+    })
     notify(progress)
 
     const result = buildResult(rearranged, frontmatterResult)

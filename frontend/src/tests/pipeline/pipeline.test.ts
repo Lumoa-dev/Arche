@@ -15,11 +15,19 @@ import { extractFrontmatter } from '@/lib/pipeline/stages/stage0_frontmatter'
 import type { RawParagraph } from '@/lib/pipeline/types'
 
 // 辅助函数：纯段落 → 输出引用，用于 buildResult 的输入
-function buildResult(raw: RawParagraph[]): { title: string; introduction: string; paragraphs: { type: string; content: string; heading?: string }[] } {
-  const result: { title: string; introduction: string; paragraphs: { type: string; content: string; heading?: string }[] } = {
+function buildResult(raw: RawParagraph[]): {
+  title: string
+  introduction: string
+  paragraphs: { type: string; content: string; heading?: string }[]
+} {
+  const result: {
+    title: string
+    introduction: string
+    paragraphs: { type: string; content: string; heading?: string }[]
+  } = {
     title: '',
     introduction: '',
-    paragraphs: [],
+    paragraphs: []
   }
   // 第一个非空 text → title
   for (const p of raw) {
@@ -34,7 +42,7 @@ function buildResult(raw: RawParagraph[]): { title: string; introduction: string
       result.paragraphs.push({
         type: p.type,
         content: p.content,
-        heading: p.heading,
+        heading: p.heading
       })
     }
   }
@@ -157,7 +165,7 @@ describe('rearrangeParagraphs', () => {
   it('应将 heading + 紧跟的 text 合并', () => {
     const input: RawParagraph[] = [
       { type: 'heading', content: '项目背景', heading: 'H2' },
-      { type: 'text', content: '这个项目是为了解决...', heading: undefined },
+      { type: 'text', content: '这个项目是为了解决...', heading: undefined }
     ]
     const result = rearrangeParagraphs(input)
     expect(result).toHaveLength(1)
@@ -170,7 +178,7 @@ describe('rearrangeParagraphs', () => {
   it('孤标题应自成一 text 段落', () => {
     const input: RawParagraph[] = [
       { type: 'heading', content: '孤标题', heading: 'H2' },
-      { type: 'separator', content: '---', heading: undefined },
+      { type: 'separator', content: '---', heading: undefined }
     ]
     const result = rearrangeParagraphs(input)
     expect(result).toHaveLength(2)
@@ -182,7 +190,7 @@ describe('rearrangeParagraphs', () => {
     const input: RawParagraph[] = [
       { type: 'heading', content: '标题1', heading: 'H2' },
       { type: 'heading', content: '标题2', heading: 'H2' },
-      { type: 'text', content: '正文', heading: undefined },
+      { type: 'text', content: '正文', heading: undefined }
     ]
     const result = rearrangeParagraphs(input)
     expect(result).toHaveLength(2)
@@ -196,7 +204,7 @@ describe('rearrangeParagraphs', () => {
   it('标题 + 代码块 → 不合并', () => {
     const input: RawParagraph[] = [
       { type: 'heading', content: '代码示例', heading: 'H2' },
-      { type: 'code', content: 'print("hello")', heading: undefined },
+      { type: 'code', content: 'print("hello")', heading: undefined }
     ]
     const result = rearrangeParagraphs(input)
     expect(result).toHaveLength(2)
@@ -214,7 +222,7 @@ describe('reassembleToMarkdown', () => {
   it('应将 text 段落拼回纯文本', () => {
     const input = [
       { type: 'text', content: '第一段正文', heading: undefined },
-      { type: 'text', content: '第二段正文', heading: undefined },
+      { type: 'text', content: '第二段正文', heading: undefined }
     ]
     const result = reassembleToMarkdown(input)
     expect(result).toBe('第一段正文\n\n第二段正文')
@@ -222,7 +230,13 @@ describe('reassembleToMarkdown', () => {
 
   it('应将 heading 段落转为 # 标记', () => {
     const input = [
-      { type: 'heading', content: '项目背景', heading: 'H2', media_url: undefined, caption: undefined },
+      {
+        type: 'heading',
+        content: '项目背景',
+        heading: 'H2',
+        media_url: undefined,
+        caption: undefined
+      }
     ]
     const result = reassembleToMarkdown(input)
     expect(result).toContain('## 项目背景')
@@ -230,7 +244,13 @@ describe('reassembleToMarkdown', () => {
 
   it('应将 code 段落转为 ``` 围栏', () => {
     const input = [
-      { type: 'code', content: 'print("hello")', heading: undefined, media_url: undefined, caption: undefined },
+      {
+        type: 'code',
+        content: 'print("hello")',
+        heading: undefined,
+        media_url: undefined,
+        caption: undefined
+      }
     ]
     const result = reassembleToMarkdown(input)
     expect(result).toContain('```')
@@ -239,7 +259,13 @@ describe('reassembleToMarkdown', () => {
 
   it('应将 image 段落转为 ![]() 标记', () => {
     const input = [
-      { type: 'image', content: '', heading: undefined, media_url: 'https://example.com/img.png', caption: '说明' },
+      {
+        type: 'image',
+        content: '',
+        heading: undefined,
+        media_url: 'https://example.com/img.png',
+        caption: '说明'
+      }
     ]
     const result = reassembleToMarkdown(input)
     expect(result).toBe('![说明](https://example.com/img.png)')
@@ -254,7 +280,7 @@ describe('buildResult', () => {
   it('从段落中提取标题', () => {
     const input: RawParagraph[] = [
       { type: 'text', content: '文章标题', heading: undefined },
-      { type: 'text', content: '正文内容', heading: undefined },
+      { type: 'text', content: '正文内容', heading: undefined }
     ]
     const result = buildResult(input)
     expect(result.title).toBe('文章标题')

@@ -14,11 +14,24 @@
 
 /** 已知的 meta 字段名（小写） */
 const KNOWN_META_FIELDS = new Set([
-  'title', 'tags', 'categories', 'category',
-  'date', 'cover', 'cover_image', 'image',
-  'description', 'summary', 'abstract', 'excerpt',
-  'draft', 'published', 'status',
-  'author', 'slug', 'permalink',
+  'title',
+  'tags',
+  'categories',
+  'category',
+  'date',
+  'cover',
+  'cover_image',
+  'image',
+  'description',
+  'summary',
+  'abstract',
+  'excerpt',
+  'draft',
+  'published',
+  'status',
+  'author',
+  'slug',
+  'permalink'
 ])
 
 /** Frontmatter 解析结果 */
@@ -62,7 +75,7 @@ function parseYamlLine(line: string): { key: string; value: string } | null {
   if (!match) return null
   return {
     key: match[1]!.trim(),
-    value: match[2]!.trim(),
+    value: match[2]!.trim()
   }
 }
 
@@ -70,7 +83,10 @@ function parseYamlLine(line: string): { key: string; value: string } | null {
 function parseInlineArray(value: string): string[] | null {
   const match = value.match(/^\[([\s\S]*)\]$/)
   if (!match) return null
-  return match[1]!.split(',').map((s) => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean)
+  return match[1]!
+    .split(',')
+    .map((s) => s.trim().replace(/^["']|["']$/g, ''))
+    .filter(Boolean)
 }
 
 /** 解析 YAML 列表项：- item */
@@ -79,7 +95,10 @@ function isListItem(line: string): boolean {
 }
 
 function extractListItem(line: string): string {
-  return line.replace(/^\s*-\s+/, '').trim().replace(/^["']|["']$/g, '')
+  return line
+    .replace(/^\s*-\s+/, '')
+    .trim()
+    .replace(/^["']|["']$/g, '')
 }
 
 /** 去除值的引号 */
@@ -95,7 +114,7 @@ export function extractFrontmatter(text: string): FrontmatterResult {
   const result: FrontmatterResult = {
     body: text,
     meta: {},
-    introText: '',
+    introText: ''
   }
 
   // 检查第一行是否为定界符
@@ -202,8 +221,10 @@ export function extractFrontmatter(text: string): FrontmatterResult {
         result.coverUrl = value
       }
     } else if (
-      key === 'description' || key === 'summary' ||
-      key === 'abstract' || key === 'excerpt'
+      key === 'description' ||
+      key === 'summary' ||
+      key === 'abstract' ||
+      key === 'excerpt'
     ) {
       if (typeof value === 'string') {
         unknownTextParts.push(value)
@@ -227,7 +248,10 @@ export function extractFrontmatter(text: string): FrontmatterResult {
   }
 
   // 正文 = 结束定界符之后的内容
-  result.body = lines.slice(endLine + 1).join('\n').trim()
+  result.body = lines
+    .slice(endLine + 1)
+    .join('\n')
+    .trim()
 
   return result
 }

@@ -52,7 +52,7 @@ const savePipelineHidden = ref(false)
 const importPipelineHidden = ref(false)
 
 /** 监听流水线进度：手动编辑保存时 */
-const saveProgressWatcher = watch(
+const _saveProgressWatcher = watch(
   () => editor.pipelineProgress.value,
   (p) => {
     if (!p) return
@@ -64,8 +64,8 @@ const saveProgressWatcher = watch(
       savePipelineHidden.value = false
       $notification.success({
         title: '保存完成',
-        content: `段落已标准化，共 ${p.stages.find(s => s.stage === 'parse')?.message || ''} 个段落`,
-        duration: 3000,
+        content: `段落已标准化，共 ${p.stages.find((s) => s.stage === 'parse')?.message || ''} 个段落`,
+        duration: 3000
       })
     }
     // 隐藏模式下出错 → 通知
@@ -74,14 +74,14 @@ const saveProgressWatcher = watch(
       $notification.error({
         title: '保存失败',
         content: p.error,
-        duration: 5000,
+        duration: 5000
       })
     }
-  },
+  }
 )
 
 // 监听导入流水线进度
-const importProgressWatcher = watch(
+const _importProgressWatcher = watch(
   () => fileImporter.importProgress.value,
   (p) => {
     if (!p) return
@@ -93,8 +93,8 @@ const importProgressWatcher = watch(
       importPipelineHidden.value = false
       $notification.success({
         title: '导入完成',
-        content: `文件已解析，共 ${p.stages.find(s => s.stage === 'parse')?.message || ''}`,
-        duration: 3000,
+        content: `文件已解析，共 ${p.stages.find((s) => s.stage === 'parse')?.message || ''}`,
+        duration: 3000
       })
     }
     // 隐藏模式下出错 → 通知
@@ -103,10 +103,10 @@ const importProgressWatcher = watch(
       $notification.error({
         title: '导入失败',
         content: p.error,
-        duration: 5000,
+        duration: 5000
       })
     }
-  },
+  }
 )
 
 onMounted(async () => {
@@ -301,7 +301,10 @@ async function handleImportFile() {
     :progress="editor.pipelineProgress.value"
     title="正在保存..."
     @close="pipelineDialogVisible = false"
-    @hide="pipelineDialogVisible = false; savePipelineHidden = true"
+    @hide="
+      pipelineDialogVisible = false
+      savePipelineHidden = true
+    "
   />
 
   <!-- 导入流水线进度弹窗 -->
@@ -310,6 +313,9 @@ async function handleImportFile() {
     :progress="fileImporter.importProgress.value"
     title="正在导入文件..."
     @close="importPipelineDialogVisible = false"
-    @hide="importPipelineDialogVisible = false; importPipelineHidden = true"
+    @hide="
+      importPipelineDialogVisible = false
+      importPipelineHidden = true
+    "
   />
 </template>

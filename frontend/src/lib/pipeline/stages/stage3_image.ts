@@ -27,13 +27,6 @@ function isAbsoluteUrl(url: string): boolean {
   return url.startsWith('http://') || url.startsWith('https://')
 }
 
-/** 从 Base64 数据 URL 中提取 MIME 类型和纯 Base64 数据 */
-function extractBase64Data(dataUrl: string): { mime: string; data: string } | null {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/)
-  if (!match) return null
-  return { mime: match[1]!, data: match[2]! }
-}
-
 /**
  * 将 Base64 图片转为 WebP File
  *
@@ -65,7 +58,7 @@ function base64ToWebPFile(dataUrl: string, index: number): Promise<File> {
           }
         },
         'image/webp',
-        1.0, // 无损
+        1.0 // 无损
       )
     }
     img.onerror = () => reject(new Error('图片加载失败'))
@@ -81,7 +74,7 @@ function base64ToWebPFile(dataUrl: string, index: number): Promise<File> {
 async function processImageUrl(
   url: string,
   index: number,
-  onSubstep?: (label: string, done: boolean) => void,
+  onSubstep?: (label: string, done: boolean) => void
 ): Promise<string | null> {
   // 绝对 URL → 保留不动
   if (isAbsoluteUrl(url)) {
@@ -127,7 +120,7 @@ export interface Stage3ImageResult {
  */
 export async function processImages(
   paragraphs: RawParagraph[],
-  onProgress?: (message: string, substeps: { label: string; done: boolean }[]) => void,
+  onProgress?: (message: string, substeps: { label: string; done: boolean }[]) => void
 ): Promise<Stage3ImageResult> {
   // 第一阶段：扫描所有段落，收集图片引用
   const imageRefs: { paragraphIndex: number; fullMatch: string; alt: string; url: string }[] = []
@@ -141,7 +134,7 @@ export async function processImages(
         paragraphIndex: i,
         fullMatch: match[0],
         alt: match[1]!,
-        url: match[2]!,
+        url: match[2]!
       })
     }
   }
@@ -152,7 +145,7 @@ export async function processImages(
 
   const totalImages = imageRefs.length
   const substeps: { label: string; done: boolean }[] = [
-    { label: `发现 ${totalImages} 张图片`, done: true },
+    { label: `发现 ${totalImages} 张图片`, done: true }
   ]
   for (let i = 1; i <= totalImages; i++) {
     substeps.push({ label: `处理图片 ${i}/${totalImages}`, done: false })
@@ -178,7 +171,7 @@ export async function processImages(
 
     substeps[currentSubstepIndex] = {
       label: newUrl ? `图片 ${currentSubstepIndex} 已处理` : `图片 ${currentSubstepIndex} 已跳过`,
-      done: true,
+      done: true
     }
     onProgress?.(`图片 ${currentSubstepIndex}/${totalImages} 处理完成`, [...substeps])
     currentSubstepIndex++

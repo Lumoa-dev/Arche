@@ -33,7 +33,7 @@ function renderMathInText(text: string): string {
     try {
       return katex.renderToString(formula.trim(), {
         displayMode: true,
-        throwOnError: false,
+        throwOnError: false
       })
     } catch {
       // 渲染失败，保留原文
@@ -46,7 +46,7 @@ function renderMathInText(text: string): string {
     try {
       return katex.renderToString(formula.trim(), {
         displayMode: false,
-        throwOnError: false,
+        throwOnError: false
       })
     } catch {
       // 渲染失败，保留原文
@@ -68,7 +68,7 @@ export function processMathFormulas(paragraphs: RawParagraph[]): RawParagraph[] 
     if (p.type === 'text' || p.type === 'heading') {
       return {
         ...p,
-        content: renderMathInText(p.content),
+        content: renderMathInText(p.content)
       }
     }
     // 代码块、表格等不处理数学公式
