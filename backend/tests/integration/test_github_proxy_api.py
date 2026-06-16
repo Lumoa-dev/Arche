@@ -96,7 +96,7 @@ class TestGitHubProxyAPI:
         assert response.status_code == 200
         assert response.json()["total_count"] == 1
 
-    async def test_代理GET请求(self, client, admin_headers, mock_http_client):
+    async def test_proxy_get_request(self, client, admin_headers, mock_http_client):
         """GET 代理接口应返回数据。"""
         mock_http_client(json_data={"login": "testuser", "id": 123})
         response = await client.get(
@@ -107,7 +107,7 @@ class TestGitHubProxyAPI:
         data = response.json()
         assert data["login"] == "testuser"
 
-    async def test_代理POST请求(self, client, admin_headers, mock_http_client):
+    async def test_proxy_post_request(self, client, admin_headers, mock_http_client):
         """POST 代理接口应转发 body 给 GitHub API。"""
         mock_client = mock_http_client(
             json_data={"id": 1, "name": "new-repo"},
@@ -130,7 +130,7 @@ class TestGitHubProxyAPI:
                 "private": True,
             }
 
-    async def test_代理原始文件(self, client, admin_headers, github_service):
+    async def test_proxy_raw_file(self, client, admin_headers, github_service):
         """静态资源代理接口——mock httpx.AsyncClient 构造器。
 
         proxy_raw_content 使用全新的 httpx.AsyncClient，需 mock 其构造器。
@@ -188,7 +188,7 @@ class TestGitHubProxyAPI:
         assert data["code"] == "ok"
         assert "已清空" in data["message"]
 
-    async def test_未登录返回401(self, client):
+    async def test_unauthenticated_returns_401(self, client):
         """未登录用户访问应返回 401。"""
         for path in [
             "/api/github/health/status",
@@ -201,7 +201,7 @@ class TestGitHubProxyAPI:
                 f"期望 401，实际 {response.status_code}：{path}"
             )
 
-    async def test_proxy_mode参数传递(
+    async def test_proxy_mode_params(
         self, client, admin_headers, mock_http_client, mock_subprocess, github_service
     ):
         """mode 参数应被正确传递。"""

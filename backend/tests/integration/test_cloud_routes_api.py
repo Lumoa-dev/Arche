@@ -144,7 +144,7 @@ class TestCloudRoutesAPI:
         )
         assert started.status_code == 200
 
-    async def test_数据集管理(self, client, admin_headers, cloud_training_service):
+    async def test_dataset_management(self, client, admin_headers, cloud_training_service):
         """数据集的 CRUD 和同步操作。"""
         ds_payload = {
             "name": "my-dataset",
@@ -180,7 +180,7 @@ class TestCloudRoutesAPI:
         )
         assert delete_resp.status_code == 200
 
-    async def test_仓库管理(self, client, admin_headers, cloud_training_service):
+    async def test_repo_management(self, client, admin_headers, cloud_training_service):
         """代码仓库的 CRUD 和同步。"""
         repo_payload = {
             "name": "my-repo",
@@ -215,7 +215,7 @@ class TestCloudRoutesAPI:
         assert data["code"] == "ok"
         assert "total_cost" in data["data"]
 
-    async def test_统计(self, client, admin_headers, cloud_training_service):
+    async def test_statistics(self, client, admin_headers, cloud_training_service):
         """工作台统计接口。"""
         response = await client.get("/api/cloud/stats", headers=admin_headers)
         assert response.status_code == 200

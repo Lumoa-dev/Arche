@@ -204,7 +204,7 @@ class TestUserAuthUtils:
         """路由没有request参数时抛出 AuthError。"""
 
         @require_level(min_level=2)
-        async def test_func():  # 没有request参数
+        async def test_func():  # no request param
             return {"status": "ok"}
 
         with pytest.raises(AuthError, match="路由必须传入 request 参数"):
