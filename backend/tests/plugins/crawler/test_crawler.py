@@ -98,6 +98,8 @@ class TestCrawlerAdmin:
             headers=admin_headers,
         )
         assert resp.status_code == 422
+        data = resp.json()
+        assert "validation" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_blacklist(self, async_client, admin_headers):

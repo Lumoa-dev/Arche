@@ -28,10 +28,13 @@ class TestEmptyInput:
                 resp = await async_client.post(path, json={})
             else:
                 resp = await async_client.put(path, json={})
-            # 空 body 应触发验证错误，不崩贵
+            # 空 body 应触发验证错误
             assert resp.status_code in (401, 422), (
                 f"{method} {path}: {resp.status_code}"
             )
+            if resp.status_code == 422:
+                data = resp.json()
+                assert "validation" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_missing_required_field(self, async_client):
@@ -59,6 +62,8 @@ class TestLongInput:
             },
         )
         assert resp.status_code == 422
+        data = resp.json()
+        assert "validation" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_very_long_password(self, async_client):
@@ -72,7 +77,9 @@ class TestLongInput:
                 "password": "a" * 10000,
             },
         )
-        assert resp.status_code in (200, 422, 413)  # 413 = payload too large
+        assert resp.status_code == 422
+        data = resp.json()
+        assert "validation" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_very_long_blog_title(self, async_client, auth_headers):
@@ -88,7 +95,10 @@ class TestLongInput:
             },
             headers=auth_headers,
         )
-        assert resp.status_code in (200, 400, 422, 413)
+        assert resp.status_code in (400, 422, 413)
+        if resp.status_code == 422:
+            data = resp.json()
+            assert "validation" in data.get("code", "").lower()
 
 
 class TestMethodNotAllowed:

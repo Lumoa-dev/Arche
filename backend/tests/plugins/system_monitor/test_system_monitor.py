@@ -155,6 +155,8 @@ class TestMonitor:
             f"{MON_PREFIX}/templates/{fake_id}", headers=admin_headers
         )
         assert resp.status_code == 404
+        data = resp.json()
+        assert "detail" in data or "not found" in str(data).lower()
 
     @pytest.mark.asyncio
     async def test_update_template(self, async_client, admin_headers):
@@ -212,3 +214,5 @@ class TestMonitor:
             headers=admin_headers,
         )
         assert resp.status_code == 400
+        data = resp.json()
+        assert "detail" in data

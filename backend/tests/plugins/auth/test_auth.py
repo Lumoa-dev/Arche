@@ -167,6 +167,8 @@ class TestLogin:
         }
         resp = await async_client.post("/api/auth/login", json=login_payload)
         assert resp.status_code == 401
+        data = resp.json()
+        assert "auth" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_login_nonexistent_user(self, async_client):
@@ -177,6 +179,8 @@ class TestLogin:
         }
         resp = await async_client.post("/api/auth/login", json=login_payload)
         assert resp.status_code == 401
+        data = resp.json()
+        assert "auth" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_login_by_email(self, async_client):

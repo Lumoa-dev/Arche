@@ -31,4 +31,4 @@ class TestConfigMgmt:
         resp = await async_client.get(PREFIX)
         assert resp.status_code == 401
         data = resp.json()
-        assert "code" in data
+        assert "auth" in data.get("code", "").lower()

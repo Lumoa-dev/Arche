@@ -35,6 +35,9 @@ class TestBlogPosts:
     async def test_list_posts_public(self, async_client):
         resp = await async_client.get(POSTS_URL)
         assert resp.status_code == 200
+        data = resp.json()
+        # 列表返回 posts 或 data 字段
+        assert "data" in data
 
     @pytest.mark.asyncio
     async def test_get_post_detail(self, async_client, auth_headers):
@@ -170,3 +173,4 @@ class TestBlogTags:
     async def test_list_tags(self, async_client):
         resp = await async_client.get("/api/blog/tags")
         assert resp.status_code == 200
+        assert "data" in resp.json()
