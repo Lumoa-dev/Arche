@@ -4,174 +4,24 @@ on:
   workflow_call:
     inputs:
       image_tag:
-        description: "Image tag to deploy (e.g., 0.1.3, latest)"
+        description: "Image tag to deploy"
         required: false
         type: string
         default: "latest"
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Image tag to deploy (e.g., 0.1.3, latest)"
+        description: "Image tag to deploy"
         required: false
         type: string
         default: "latest"
 
-env:
-  SYNC_FILES: docker-compose.yml .env scripts/deploy.sh
-
 jobs:
-  # ── 1a. 检查部署方式 ──
-  validate:
-    runs-on: ubuntu-latest
-    outputs:
-      mode: ${{ steps.check.outputs.mode }}
-    steps:
-      - name: Check deploy configuration
-        id: check
-        run: |
-          if [ "${{ vars.DEPLOY_SSH_HOST }}" != "" ]; then
-            echo "mode=ssh" >> $GITHUB_OUTPUT
-          elif [ "${{ vars.DEPLOY_WEBHOOK_URL }}" != "" ]; then
-            echo "mode=webhook" >> $GITHUB_OUTPUT
-          else
-            echo "Error: No deploy method configured."
-            exit 1
-          fi
-
-  # ── 1b. 检查文件变化 ──
-  sync-check:
-    runs-on: ubuntu-latest
-    outputs:
-      changed: ${{ steps.diff.outputs.changed }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Check if tracked files changed
-        id: diff
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$LAST_TAG" ]; then
-            echo "No previous tag, sync needed."
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            CHANGED=0
-            for FILE in $SYNC_FILES; do
-              if [ -f "$FILE" ] && git diff "$LAST_TAG" -- "$FILE" | grep -q .; then
-                echo "Changed: $FILE"
-                CHANGED=1
-              fi
-            done
-            echo "changed=$([ $CHANGED -eq 1 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          fi
-
-  # ── 2a. SSH（文件未变） ──
-  deploy-ssh:
-    needs: [validate, sync-check]
-    if: needs.validate.outputs.mode == 'ssh' && needs.sync-check.outputs.changed != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ vars.DEPLOY_SSH_HOST }}
-          port: ${{ vars.DEPLOY_SSH_PORT || '22' }}
-          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 10m
-          script: |
-            bash /home/admin/arche/scripts/deploy.sh
-            echo "${{ inputs.image_tag }}" > /home/admin/arche/.deployed-version
-
-  # ── 2b. SSH + 文件同步 ──
-  deploy-ssh-sync:
-    needs: [validate, sync-check]
-    if: needs.validate.outputs.mode == 'ssh' && needs.sync-check.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Sync files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.DEPLOY_SSH_HOST }}
-          port: ${{ vars.DEPLOY_SSH_PORT || '22' }}
-          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: ${{ env.SYNC_FILES }}
-          target: /home/admin/arche/
-          strip_components: 0
-          overwrite: true
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ vars.DEPLOY_SSH_HOST }}
-          port: ${{ vars.DEPLOY_SSH_PORT || '22' }}
-          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 10m
-          script: |
-            bash /home/admin/arche/scripts/deploy.sh
-            echo "${{ inputs.image_tag }}" > /home/admin/arche/.deployed-version
-
-  # ── 2c. Webhook（文件未变） ──
-  deploy-webhook:
-    needs: [validate, sync-check]
-    if: needs.validate.outputs.mode == 'webhook' && needs.sync-check.outputs.changed != 'true'
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy webhook
-        run: |
-          curl -sf -X POST "${{ vars.DEPLOY_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d '{"token":"${{ secrets.DEPLOY_TOKEN }}"}'
-
-  # ── 2d. Webhook + 文件同步 ──
-  deploy-webhook-sync:
-    needs: [validate, sync-check]
-    if: needs.validate.outputs.mode == 'webhook' && needs.sync-check.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Sync files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.DEPLOY_SSH_HOST }}
-          port: ${{ vars.DEPLOY_SSH_PORT || '22' }}
-          username: ${{ secrets.DEPLOY_SSH_USERNAME }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: ${{ env.SYNC_FILES }}
-          target: /home/admin/arche/
-          strip_components: 0
-          overwrite: true
-
-      - name: Trigger deploy webhook
-        run: |
-          curl -sf -X POST "${{ vars.DEPLOY_WEBHOOK_URL }}" \
-            -H "Content-Type: application/json" \
-            -d '{"token":"${{ secrets.DEPLOY_TOKEN }}"}'
-
-  # ── 3. 汇总 ──
-  summary:
-    needs: [validate, sync-check, deploy-ssh, deploy-ssh-sync, deploy-webhook, deploy-webhook-sync]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Summary
-        run: |
-          MODE="${{ needs.validate.outputs.mode }}"
-          CHANGED="${{ needs.sync-check.outputs.changed }}"
-          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Mode**: $MODE" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag**: \`${{ inputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Files changed**: $CHANGED" >> $GITHUB_STEP_SUMMARY
-          if [ "$MODE" = "ssh" ]; then
-            echo "- **Host**: \`${{ vars.DEPLOY_SSH_HOST }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Synced**: $CHANGED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "- **URL**: \`${{ vars.DEPLOY_WEBHOOK_URL }}\`" >> $GITHUB_STEP_SUMMARY
-          fi
+        run: >
+          curl -sf -X POST "${{ vars.DEPLOY_WEBHOOK_URL }}"
+          -H "Content-Type: application/json"
+          -d '{"token":"${{ secrets.DEPLOY_TOKEN }}","tag":"${{ inputs.image_tag }}"}'

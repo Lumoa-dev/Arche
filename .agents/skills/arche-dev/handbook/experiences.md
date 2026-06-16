@@ -237,3 +237,20 @@ Keep it tight — one or two sentences per field:
 - `--body-file` reads from disk, completely bypassing shell argument parsing — content arrives intact
 
 **Lesson:** On Windows, any `gh pr create` / `gh issue create` call with multi-line or special-character body should use `--body-file <tempfile>` + clean up the temp file afterward.
+
+---
+
+### 2026-06-16: Remove dangling jobs from CI/CD workflows
+
+**What:** Cleaned up all unused and conditional-skip jobs across CI/CD:
+- `test-unit.yml`: removed `find-changes` (separate scan job), removed `show-cover` (only triggered on schedule), scan logic inlined into each test job via shell loop
+- `test-integration.yml`: removed `alert-schedule` and `alert-fail` (conditional failure-only jobs that called report-fail.yml)
+- `deploy.yml`: removed `validate`/`sync-check`/all 4 deploy path variants/`summary` — kept only single SSH deploy
+- `report-fail.yml`: deleted entirely (130 lines, only called by removed alert jobs)
+- `label-sync.yml`: deleted entirely (90 lines of JS, unrelated to CI pipeline)
+
+**When:** Refactoring CI/CD. The 13-file pipeline had jobs that only ran conditionally (failure, schedule, webhook mode) or were leftover from incremental-detection logic.
+
+**Why:** Conditional jobs (`if: failure()`, `if: github.event_name == 'schedule'`) create "dangling" jobs that show as skipped in every run. They add visual noise without value — failure notification via auto-Issue/auto-branch is overkill for a personal project; checking Actions logs is sufficient. `find-changes` as a separate job required matrix dependencies and `if` guards — inlining the loop eliminates the dependency chain.
+
+**Lesson:** In GHA, a job that conditionally skips on every run is noise, not value. The three patterns to eliminate: (1) separate job just for matrix generation — inline the loop instead; (2) failure notification jobs — rely on Actions UI; (3) mode-dispatching jobs (SSH vs webhook, sync vs no-sync) — pick one mode and delete the rest. Result: 13 files → 10 files, ~650 lines → ~300 lines.
