@@ -20,6 +20,7 @@ class CreatePostRequest(BaseModel):
     introduction: str | None = Field(
         None, max_length=10000, description="引言（Markdown 富文本）"
     )
+    content: str | None = Field(None, description="正文（TipTap JSON 序列化字符串）")
     paragraphs: list[dict] | None = Field(
         None, description="段落列表，每项含 content/type/heading/media_url/caption"
     )
@@ -39,6 +40,7 @@ class UpdatePostRequest(BaseModel):
     introduction: str | None = Field(
         None, max_length=10000, description="引言（Markdown 富文本）"
     )
+    content: str | None = Field(None, description="正文（TipTap JSON 序列化字符串）")
     paragraphs: list[dict] | None = Field(None, description="段落列表")
     cover_url: str | None = Field(None, max_length=1024, description="封面图片 URL")
     required_level: int | None = Field(
@@ -142,6 +144,7 @@ async def create_post(req: CreatePostRequest, request: Request):
         title=req.title,
         subtitles=req.subtitles,
         introduction=req.introduction,
+        content=req.content,
         paragraphs_data=req.paragraphs,
         tags=req.tags,
         cover_url=req.cover_url,
@@ -191,6 +194,7 @@ async def update_post(post_id: str, req: UpdatePostRequest, request: Request):
         title=req.title,
         subtitles=req.subtitles,
         introduction=req.introduction,
+        content=req.content,
         paragraphs_data=req.paragraphs,
         cover_url=req.cover_url,
         required_level=req.required_level,
