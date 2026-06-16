@@ -3,15 +3,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const target = join(
-  __dirname,
-  '..',
-  'node_modules',
-  '@volar',
-  'language-core',
-  'lib',
-  'types.js'
-)
+const target = join(__dirname, '..', 'node_modules', '@volar', 'language-core', 'lib', 'types.js')
 
 if (!existsSync(target)) {
   process.exit(0)

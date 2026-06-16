@@ -325,7 +325,10 @@ onMounted(() => {
               :page="logPage"
               :page-size="20"
               :item-count="logTotal"
-              @update:page="logPage = $event; fetchLogs()"
+              @update:page="
+                logPage = $event
+                fetchLogs()
+              "
             />
           </div>
         </ArVBox>
@@ -381,7 +384,10 @@ onMounted(() => {
               :page="counterPage"
               :page-size="20"
               :item-count="counterTotal"
-              @update:page="counterPage = $event; fetchCounters()"
+              @update:page="
+                counterPage = $event
+                fetchCounters()
+              "
             />
           </div>
         </ArVBox>
