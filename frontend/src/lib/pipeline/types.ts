@@ -33,7 +33,7 @@ export interface PipelineResult {
 }
 
 /** 流水线阶段标识 */
-export type PipelineStageName = 'parse' | 'math' | 'image' | 'rearrange' | 'fill'
+export type PipelineStageName = 'frontmatter' | 'parse' | 'math' | 'image' | 'rearrange' | 'fill'
 
 /** 阶段进度状态 */
 export interface StageProgress {

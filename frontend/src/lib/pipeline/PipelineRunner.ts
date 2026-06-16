@@ -20,9 +20,11 @@ import type {
 } from './types'
 import { processMathFormulas } from './stages/stage2_math'
 import { processImages } from './stages/stage3_image'
+import { extractFrontmatter, type FrontmatterResult } from './stages/stage0_frontmatter'
 
 /** 流水线默认阶段定义 */
 const STAGE_DEFS: { name: PipelineStageName; label: string }[] = [
+  { name: 'frontmatter', label: '正在提取元数据...' },
   { name: 'parse', label: '正在解析源文本...' },
   { name: 'math', label: '正在转换数学公式...' },
   { name: 'image', label: '正在处理图片资源...' },
@@ -102,7 +104,7 @@ export function reassembleToMarkdown(
  * 2. heading 段落 → 如果下一个不是 text（code/separator/image/结尾）→ 自己独立成 text 段落
  * 3. 孤立的 heading 段落（无后续正文）→ 转为 text，heading 字段保留
  */
-function rearrangeParagraphs(raw: RawParagraph[]): RawParagraph[] {
+export function rearrangeParagraphs(raw: RawParagraph[]): RawParagraph[] {
   const result: RawParagraph[] = []
 
   for (let i = 0; i < raw.length; i++) {
@@ -143,40 +145,70 @@ function rearrangeParagraphs(raw: RawParagraph[]): RawParagraph[] {
  *
  * 从标准化的 RawParagraph[] 构建 PipelineResult。
  * 提取标题（第一个段落或第一行非空文本）和引言。
+ * 如有 Frontmatter 元数据，合并到结果中。
  */
-function buildResult(raw: RawParagraph[]): PipelineResult {
+function buildResult(raw: RawParagraph[], frontmatter?: FrontmatterResult): PipelineResult {
   const result: PipelineResult = {
     title: '',
     subtitles: [],
     introduction: '',
-    paragraphs: []
+    paragraphs: [],
   }
 
-  // 第一个非空 text/heading 段落 → 作为标题
-  let titleIdx = -1
-  for (let i = 0; i < raw.length; i++) {
-    const p = raw[i]!
-    if (p.type === 'text' && p.content.trim()) {
-      titleIdx = i
-      const firstLine = p.content.trim().split('\n')[0] || ''
-      result.title = firstLine
-      break
-    }
+  // Frontmatter 提取的标题优先
+  if (frontmatter?.title) {
+    result.title = frontmatter.title
   }
 
-  // 标题后的第一个 text 段落较短时作为引言
-  if (titleIdx >= 0) {
-    for (let j = titleIdx + 1; j < raw.length; j++) {
-      const p = raw[j]!
+  // Frontmatter 提取的引言（未知字段文本）
+  let hasIntroFromFrontmatter = false
+  if (frontmatter?.introText) {
+    result.introduction = frontmatter.introText
+    hasIntroFromFrontmatter = true
+  }
+
+  // 如果没有 Frontmatter 标题，从正文提取第一个非空段落作为标题
+  if (!result.title) {
+    for (let i = 0; i < raw.length; i++) {
+      const p = raw[i]!
       if (p.type === 'text' && p.content.trim()) {
-        if (p.content.trim().length < 100 && !p.heading) {
-          result.introduction = p.content.trim()
-          // 标记已消费，跳过
-          raw[j] = { type: 'text', content: '' }
-        }
+        const firstLine = p.content.trim().split('\n')[0] || ''
+        result.title = firstLine
         break
       }
     }
+  }
+
+  // 如果没有 Frontmatter 引言，从正文提取标题后第一个短段落作为引言
+  if (!hasIntroFromFrontmatter) {
+    let titleIdx = -1
+    for (let i = 0; i < raw.length; i++) {
+      const p = raw[i]!
+      if (p.type === 'text' && p.content.trim()) {
+        titleIdx = i
+        break
+      }
+    }
+    if (titleIdx >= 0) {
+      for (let j = titleIdx + 1; j < raw.length; j++) {
+        const p = raw[j]!
+        if (p.type === 'text' && p.content.trim()) {
+          if (p.content.trim().length < 100 && !p.heading) {
+            result.introduction = p.content.trim()
+            raw[j] = { type: 'text', content: '' }
+          }
+          break
+        }
+      }
+    }
+  }
+
+  // Frontmatter meta
+  if (frontmatter?.tags || frontmatter?.categories || frontmatter?.date) {
+    result.meta = {}
+    if (frontmatter.tags) result.meta.tags = frontmatter.tags
+    if (frontmatter.categories) result.meta.categories = frontmatter.categories
+    if (frontmatter.date) result.meta.date = frontmatter.date
   }
 
   // 剩余段落 → 输出（rearrangeParagraphs 已处理 heading 合并，不需要再 mergeSections）
@@ -248,30 +280,40 @@ export async function runPipeline(
   const notify = (p: PipelineProgress) => options.onProgress?.(p)
 
   try {
-    // ── Stage 1: 解析 ──
-    progress.currentStage = 'parse'
-    updateStage(progress, 'parse', {
-      status: 'running',
-      progress: 0,
-      message: '正在初始化解析器...'
-    })
+    // ── Stage 0: Frontmatter 提取 ──
+    progress.currentStage = 'frontmatter'
+    updateStage(progress, 'frontmatter', { status: 'running', progress: 0, message: '正在扫描元数据...' })
     notify(progress)
 
     let text: string
+    let frontmatterResult: FrontmatterResult | undefined
     const source = options.source
 
     if (source === 'manual' && Array.isArray(input)) {
-      updateStage(progress, 'parse', {
-        progress: 30,
-        message: '正在将编辑器内容回溯为 Markdown...'
-      })
+      updateStage(progress, 'frontmatter', { progress: 30, message: '手动编辑场景跳过 Frontmatter 提取' })
       notify(progress)
       text = reassembleToMarkdown(input)
     } else if (typeof input === 'string') {
-      text = input
+      frontmatterResult = extractFrontmatter(input)
+      text = frontmatterResult.body
+      updateStage(progress, 'frontmatter', {
+        progress: 80,
+        message: frontmatterResult.title
+          ? `发现元数据：标题="${frontmatterResult.title}"`
+          : '未发现元数据',
+      })
+      notify(progress)
     } else {
       throw new Error('输入格式不匹配：manual 场景需要段落数组，import 场景需要文本')
     }
+
+    updateStage(progress, 'frontmatter', { status: 'done', progress: 100, message: '元数据提取完成' })
+    notify(progress)
+
+    // ── Stage 1: 解析 ──
+    progress.currentStage = 'parse'
+    updateStage(progress, 'parse', { status: 'running', progress: 0, message: '正在初始化解析器...' })
+    notify(progress)
 
     updateStage(progress, 'parse', { progress: 60, message: '正在解析 Markdown 语法结构...' })
     notify(progress)
@@ -340,7 +382,7 @@ export async function runPipeline(
     updateStage(progress, 'fill', { status: 'running', progress: 0, message: '正在构建最终结果...' })
     notify(progress)
 
-    const result = buildResult(rearranged)
+    const result = buildResult(rearranged, frontmatterResult)
     updateStage(progress, 'fill', { status: 'done', progress: 100, message: '填充完成' })
     notify(progress)
 

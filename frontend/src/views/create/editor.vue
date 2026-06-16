@@ -23,6 +23,7 @@ import { useFileImporter } from '@/components/widgets/create/useFileImporter'
 import PipelineProgress from '@/components/widgets/create/PipelineProgress.vue'
 import type { Editor } from '@tiptap/vue-3'
 import { useMessage } from 'naive-ui'
+import { $notification } from '@/lib/utils/message'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,26 +47,66 @@ const showCover = ref(false)
 const pipelineDialogVisible = ref(false)
 const importPipelineDialogVisible = ref(false)
 
-// 监听流水线进度：手动编辑保存时
+/** 用户是否隐藏了弹窗（后台运行模式） */
+const savePipelineHidden = ref(false)
+const importPipelineHidden = ref(false)
+
+/** 监听流水线进度：手动编辑保存时 */
 const saveProgressWatcher = watch(
   () => editor.pipelineProgress.value,
   (p) => {
-    if (p && p.currentStage !== null) {
+    if (!p) return
+    if (p.currentStage !== null) {
       pipelineDialogVisible.value = true
     }
+    // 隐藏模式下完成 → 通知
+    if (savePipelineHidden.value && p.overallProgress === 100 && !p.error) {
+      savePipelineHidden.value = false
+      $notification.success({
+        title: '保存完成',
+        content: `段落已标准化，共 ${p.stages.find(s => s.stage === 'parse')?.message || ''} 个段落`,
+        duration: 3000,
+      })
+    }
+    // 隐藏模式下出错 → 通知
+    if (savePipelineHidden.value && p.error) {
+      savePipelineHidden.value = false
+      $notification.error({
+        title: '保存失败',
+        content: p.error,
+        duration: 5000,
+      })
+    }
   },
-  { immediate: true }
 )
 
 // 监听导入流水线进度
 const importProgressWatcher = watch(
   () => fileImporter.importProgress.value,
   (p) => {
-    if (p && p.currentStage !== null) {
+    if (!p) return
+    if (p.currentStage !== null) {
       importPipelineDialogVisible.value = true
     }
+    // 隐藏模式下完成 → 通知
+    if (importPipelineHidden.value && p.overallProgress === 100 && !p.error) {
+      importPipelineHidden.value = false
+      $notification.success({
+        title: '导入完成',
+        content: `文件已解析，共 ${p.stages.find(s => s.stage === 'parse')?.message || ''}`,
+        duration: 3000,
+      })
+    }
+    // 隐藏模式下出错 → 通知
+    if (importPipelineHidden.value && p.error) {
+      importPipelineHidden.value = false
+      $notification.error({
+        title: '导入失败',
+        content: p.error,
+        duration: 5000,
+      })
+    }
   },
-  { immediate: true }
 )
 
 onMounted(async () => {
@@ -260,7 +301,7 @@ async function handleImportFile() {
     :progress="editor.pipelineProgress.value"
     title="正在保存..."
     @close="pipelineDialogVisible = false"
-    @hide="pipelineDialogVisible = false"
+    @hide="pipelineDialogVisible = false; savePipelineHidden = true"
   />
 
   <!-- 导入流水线进度弹窗 -->
@@ -269,6 +310,6 @@ async function handleImportFile() {
     :progress="fileImporter.importProgress.value"
     title="正在导入文件..."
     @close="importPipelineDialogVisible = false"
-    @hide="importPipelineDialogVisible = false"
+    @hide="importPipelineDialogVisible = false; importPipelineHidden = true"
   />
 </template>

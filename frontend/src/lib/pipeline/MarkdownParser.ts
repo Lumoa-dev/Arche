@@ -206,7 +206,7 @@ export class MarkdownParser implements FileParser {
         const prefix = ordered ? `${idx + 1}. ` : '- '
         const text = this.renderTokenContent(item)
         // 检查是否为任务列表
-        if (item.task !== undefined) {
+        if (item.task === true) {
           const checked = item.checked ? 'x' : ' '
           return `${prefix}[${checked}] ${text}`
         }
