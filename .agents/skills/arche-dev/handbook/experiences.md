@@ -276,3 +276,39 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-06-16: Real integration tests must trigger lifespan events or tables won't exist
+
+**What:** `httpx.AsyncClient(app=app)` with `ASGITransport` does NOT trigger FastAPI lifespan startup events. The `on_event("startup")` hook (Alembic migration → ensure_tables → seed config) never runs, so middleware that queries tables (`ip_ban`, `request_log`) crashes with "no such table".
+
+**When:** Rewriting all backend tests as real integration tests — no mocks, real FastAPI app, real database.
+
+**Why:** HTTPX's `ASGITransport` is designed for lightweight ASGI testing and doesn't manage lifespan by default. FastAPI's `on_event` decorators hook into Starlette's lifespan protocol, which only runs within a lifespan context manager. Using `httpx.AsyncClient` without a lifespan context means startup tasks never execute.
+
+**Lesson:** Two solutions: (1) Use `fastapi.testclient.TestClient` which triggers lifespan automatically → subsequent `httpx.AsyncClient` tests work because tables are already created. (2) Keep the `app` fixture session-scoped and use `TestClient` context manager during fixture setup to trigger startup.
+
+---
+
+### 2026-06-16: `require_level(0)` routes need admin_headers fixture, not auth_headers
+
+**What:** Routes decorated with `@require_level(0)` return 403 for tokens from `auth_headers` fixture (which creates a level-5 user).
+
+**When:** Writing plugin tests for admin-only endpoints (ip_ban, request_log, config_mgmt).
+
+**Why:** `auth_headers` fixture creates a normal user who gets level 5. The `admin_headers` fixture must explicitly set level=0 via database UPDATE after registration, because the first-user-get-level-0 logic only applies to the very first user ever registered.
+
+**Lesson:** Two-tier auth fixtures: `auth_headers` (level-5 regular user for testing 403 forbidden), `admin_headers` (level-0 admin via DB update after registration).
+
+---
+
+### 2026-06-16: `/api/ping` must be in AuthMiddleware.PUBLIC_PATHS
+
+**What:** Health check endpoint `/api/ping` returned 401 because `AuthMiddleware` treats all non-public routes as requiring authentication.
+
+**When:** Writing real integration tests that hit `/api/ping` without auth headers.
+
+**Why:** The `AuthMiddleware` only whitelists `/api/auth/register`, `/api/auth/login`, `/api/auth/refresh`. Everything else requires a valid JWT. A health check endpoint should always be public.
+
+**Lesson:** Added `/api/ping` to `AuthMiddleware.PUBLIC_PATHS` — health checks are infrastructure, not application logic.

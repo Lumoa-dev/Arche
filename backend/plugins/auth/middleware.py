@@ -25,6 +25,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         "/api/auth/register",
         "/api/auth/login",
         "/api/auth/refresh",
+        "/api/ping",
     }
 
     # 博客公开 GET 路由前缀（列出具体前缀，含列表页 /api/blog/posts）

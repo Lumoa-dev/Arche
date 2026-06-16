@@ -175,6 +175,11 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Arche", version="0.1.0")
     app.state.container = container
 
+    # 4.1 健康检查端点（无依赖，用于 CI / 监控探活）
+    @app.get("/api/ping")
+    async def ping():
+        return {"code": "ok", "data": {"status": "healthy"}}
+
     # 5. Activate plugins (DAG-ordered setup)
     registry.activate_all(app)
 

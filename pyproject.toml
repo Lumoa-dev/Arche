@@ -61,7 +61,7 @@ dev = [
 [tool.coverage.run]
 source = ["backend"]
 omit = [
-    "backend/tests/*",
+    "backend/migrations/*",
     "backend/*/__init__.py",
     "backend/scripts/*",
 ]
@@ -78,6 +78,8 @@ markers = [
     "e2e: 标记端到端测试",
     "cli: 标记需要 GitHub CLI 的测试",
     "http: 标记需要 HTTP 连接的测试",
+    "real: 标记需要真实外部服务的测试（仅 CI 运行）",
+    "plugin: 标记插件级测试",
 ]
 
 [tool.ruff]
@@ -95,6 +97,7 @@ select = [
     "SIM", # flake8-simplify
     "ARG", # flake8-unused-arguments
     "RUF", # ruff-specific rules
+    "E501",  # line-too-long (tests have long fixture lines)
 ]
 ignore = [
     "RUF001",  # ambiguous-unicode-character-string — 项目使用中文，误报过多
