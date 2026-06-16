@@ -21,6 +21,7 @@
     "test:check": "node scripts/check-test-coverage.mjs"
   },
   "dependencies": {
+    "@tiptap/core": "^3.26.0",
     "@tiptap/extension-color": "^3.26.0",
     "@tiptap/extension-emoji": "^3.26.0",
     "@tiptap/extension-font-family": "^3.26.0",
