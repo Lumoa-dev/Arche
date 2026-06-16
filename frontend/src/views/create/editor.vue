@@ -5,7 +5,7 @@
  * 全页卡片式编辑，所有操作集中在工具栏。
  * 结构：工具栏 → 封面预览 → 标题区 → 引言 → 段落卡片
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArVBox from '@/components/ui/ArVBox.vue'
 import ArSortable from '@/components/ui/ArSortable.vue'
@@ -20,6 +20,7 @@ import {
   type ParagraphType
 } from '@/components/widgets/create/useParagraphEditor'
 import { useFileImporter } from '@/components/widgets/create/useFileImporter'
+import PipelineProgress from '@/components/widgets/create/PipelineProgress.vue'
 import type { Editor } from '@tiptap/vue-3'
 import { useMessage } from 'naive-ui'
 
@@ -40,6 +41,32 @@ const isEditing = computed(() => !!route.query.postId)
 
 /** 封面是否显示 */
 const showCover = ref(false)
+
+/** 流水线弹窗可见 */
+const pipelineDialogVisible = ref(false)
+const importPipelineDialogVisible = ref(false)
+
+// 监听流水线进度：手动编辑保存时
+const saveProgressWatcher = watch(
+  () => editor.pipelineProgress.value,
+  (p) => {
+    if (p && p.currentStage !== null) {
+      pipelineDialogVisible.value = true
+    }
+  },
+  { immediate: true }
+)
+
+// 监听导入流水线进度
+const importProgressWatcher = watch(
+  () => fileImporter.importProgress.value,
+  (p) => {
+    if (p && p.currentStage !== null) {
+      importPipelineDialogVisible.value = true
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(async () => {
   const postId = route.query.postId as string | undefined
@@ -226,4 +253,22 @@ async function handleImportFile() {
       </ArSortable>
     </EditorBody>
   </ArVBox>
+
+  <!-- 保存流水线进度弹窗 -->
+  <PipelineProgress
+    :visible="pipelineDialogVisible"
+    :progress="editor.pipelineProgress.value"
+    title="正在保存..."
+    @close="pipelineDialogVisible = false"
+    @hide="pipelineDialogVisible = false"
+  />
+
+  <!-- 导入流水线进度弹窗 -->
+  <PipelineProgress
+    :visible="importPipelineDialogVisible"
+    :progress="fileImporter.importProgress.value"
+    title="正在导入文件..."
+    @close="importPipelineDialogVisible = false"
+    @hide="importPipelineDialogVisible = false"
+  />
 </template>

@@ -1,16 +1,17 @@
 /**
  * useFileImporter — 文件导入 composable
  *
- * 读取 .md / .txt 文件 → 解析为结构化段落 → 填充到编辑器状态。
- * 供 EditorToolbar + editor.vue 使用。
+ * 读取 .md / .txt 文件 → 流水线解析为结构化段落 → 填充到编辑器状态。
+ * 所有解析逻辑委托给标准流水线（PipelineRunner）。
  */
 import { ref } from 'vue'
-import { parseImportFile, type ImportResult } from '@/lib/utils/parseImportFile'
+import { runPipeline, type PipelineResult, type PipelineProgress } from '@/lib/pipeline'
 import type { ParagraphType, EditorParagraph } from './useParagraphEditor'
 
 export function useFileImporter() {
   const importing = ref(false)
   const importError = ref<string | null>(null)
+  const importProgress = ref<PipelineProgress | null>(null)
 
   let uidCounter = Date.now()
 
@@ -21,13 +22,20 @@ export function useFileImporter() {
   /**
    * 读取并解析文件，返回结构化结果
    */
-  async function readAndParse(file: File): Promise<ImportResult | null> {
+  async function readAndParse(file: File): Promise<PipelineResult | null> {
     importing.value = true
     importError.value = null
+    importProgress.value = null
 
     try {
       const text = await file.text()
-      const result = parseImportFile(text, file.name)
+
+      const result = await runPipeline(text, file.name, {
+        source: 'import',
+        onProgress: (p) => {
+          importProgress.value = { ...p }
+        }
+      })
 
       if (!result.title && result.paragraphs.length === 0) {
         importError.value = '文件内容为空或无法识别'
@@ -46,7 +54,7 @@ export function useFileImporter() {
   /**
    * 将解析结果转换为 EditorParagraph 数组
    */
-  function toEditorParagraphs(result: ImportResult): EditorParagraph[] {
+  function toEditorParagraphs(result: PipelineResult): EditorParagraph[] {
     return result.paragraphs.map((p) => ({
       uid: generateUid(),
       type: p.type as ParagraphType,
@@ -60,7 +68,7 @@ export function useFileImporter() {
   /**
    * 打开文件选择器并解析
    */
-  function pickAndParse(): Promise<ImportResult | null> {
+  function pickAndParse(): Promise<PipelineResult | null> {
     return new Promise((resolve) => {
       const input = document.createElement('input')
       input.type = 'file'
@@ -88,6 +96,7 @@ export function useFileImporter() {
   return {
     importing,
     importError,
+    importProgress,
     readAndParse,
     toEditorParagraphs,
     pickAndParse,
