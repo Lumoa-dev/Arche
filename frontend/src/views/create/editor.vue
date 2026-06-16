@@ -124,6 +124,16 @@ function handleCancel() {
   router.push('/create')
 }
 
+function handleSavePipelineHide() {
+  savePipelineHidden.value = true
+  pipelineDialogVisible.value = false
+}
+
+function handleImportPipelineHide() {
+  importPipelineHidden.value = true
+  importPipelineDialogVisible.value = false
+}
+
 async function handleSaveDraft() {
   // 存草稿 = 保存但标记为 draft 状态，暂用普通保存
   await editor.save()
@@ -301,10 +311,7 @@ async function handleImportFile() {
     :progress="editor.pipelineProgress.value"
     title="正在保存..."
     @close="pipelineDialogVisible = false"
-    @hide="
-      pipelineDialogVisible = false
-      savePipelineHidden = true
-    "
+    @hide="handleSavePipelineHide"
   />
 
   <!-- 导入流水线进度弹窗 -->
@@ -313,9 +320,6 @@ async function handleImportFile() {
     :progress="fileImporter.importProgress.value"
     title="正在导入文件..."
     @close="importPipelineDialogVisible = false"
-    @hide="
-      importPipelineDialogVisible = false
-      importPipelineHidden = true
-    "
+    @hide="handleImportPipelineHide"
   />
 </template>
