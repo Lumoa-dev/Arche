@@ -5,7 +5,7 @@
  * 全页卡片式编辑，所有操作集中在工具栏。
  * 结构：工具栏 → 封面预览 → 标题区 → 引言 → 段落卡片
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArVBox from '@/components/ui/ArVBox.vue'
 import ArSortable from '@/components/ui/ArSortable.vue'
@@ -20,8 +20,10 @@ import {
   type ParagraphType
 } from '@/components/widgets/create/useParagraphEditor'
 import { useFileImporter } from '@/components/widgets/create/useFileImporter'
+import PipelineProgress from '@/components/widgets/create/PipelineProgress.vue'
 import type { Editor } from '@tiptap/vue-3'
 import { useMessage } from 'naive-ui'
+import { $notification } from '@/lib/utils/message'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,6 +43,72 @@ const isEditing = computed(() => !!route.query.postId)
 /** 封面是否显示 */
 const showCover = ref(false)
 
+/** 流水线弹窗可见 */
+const pipelineDialogVisible = ref(false)
+const importPipelineDialogVisible = ref(false)
+
+/** 用户是否隐藏了弹窗（后台运行模式） */
+const savePipelineHidden = ref(false)
+const importPipelineHidden = ref(false)
+
+/** 监听流水线进度：手动编辑保存时 */
+const _saveProgressWatcher = watch(
+  () => editor.pipelineProgress.value,
+  (p) => {
+    if (!p) return
+    if (p.currentStage !== null) {
+      pipelineDialogVisible.value = true
+    }
+    // 隐藏模式下完成 → 通知
+    if (savePipelineHidden.value && p.overallProgress === 100 && !p.error) {
+      savePipelineHidden.value = false
+      $notification.success({
+        title: '保存完成',
+        content: `段落已标准化，共 ${p.stages.find((s) => s.stage === 'parse')?.message || ''} 个段落`,
+        duration: 3000
+      })
+    }
+    // 隐藏模式下出错 → 通知
+    if (savePipelineHidden.value && p.error) {
+      savePipelineHidden.value = false
+      $notification.error({
+        title: '保存失败',
+        content: p.error,
+        duration: 5000
+      })
+    }
+  }
+)
+
+// 监听导入流水线进度
+const _importProgressWatcher = watch(
+  () => fileImporter.importProgress.value,
+  (p) => {
+    if (!p) return
+    if (p.currentStage !== null) {
+      importPipelineDialogVisible.value = true
+    }
+    // 隐藏模式下完成 → 通知
+    if (importPipelineHidden.value && p.overallProgress === 100 && !p.error) {
+      importPipelineHidden.value = false
+      $notification.success({
+        title: '导入完成',
+        content: `文件已解析，共 ${p.stages.find((s) => s.stage === 'parse')?.message || ''}`,
+        duration: 3000
+      })
+    }
+    // 隐藏模式下出错 → 通知
+    if (importPipelineHidden.value && p.error) {
+      importPipelineHidden.value = false
+      $notification.error({
+        title: '导入失败',
+        content: p.error,
+        duration: 5000
+      })
+    }
+  }
+)
+
 onMounted(async () => {
   const postId = route.query.postId as string | undefined
   if (postId) {
@@ -54,6 +122,16 @@ onMounted(async () => {
 
 function handleCancel() {
   router.push('/create')
+}
+
+function handleSavePipelineHide() {
+  savePipelineHidden.value = true
+  pipelineDialogVisible.value = false
+}
+
+function handleImportPipelineHide() {
+  importPipelineHidden.value = true
+  importPipelineDialogVisible.value = false
 }
 
 async function handleSaveDraft() {
@@ -226,4 +304,22 @@ async function handleImportFile() {
       </ArSortable>
     </EditorBody>
   </ArVBox>
+
+  <!-- 保存流水线进度弹窗 -->
+  <PipelineProgress
+    :visible="pipelineDialogVisible"
+    :progress="editor.pipelineProgress.value"
+    title="正在保存..."
+    @close="pipelineDialogVisible = false"
+    @hide="handleSavePipelineHide"
+  />
+
+  <!-- 导入流水线进度弹窗 -->
+  <PipelineProgress
+    :visible="importPipelineDialogVisible"
+    :progress="fileImporter.importProgress.value"
+    title="正在导入文件..."
+    @close="importPipelineDialogVisible = false"
+    @hide="handleImportPipelineHide"
+  />
 </template>

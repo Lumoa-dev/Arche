@@ -14,6 +14,7 @@ import {
   type CreatePostPayload,
   type ParagraphData
 } from '@/lib/services/api'
+import { runPipeline, type PipelineProgress, type PipelineResult } from '@/lib/pipeline'
 
 /** 编辑器可用的段落类型 */
 export type ParagraphType = 'text' | 'heading' | 'image' | 'video' | 'code' | 'table' | 'separator'
@@ -60,6 +61,7 @@ export function useParagraphEditor() {
   const loading = ref(false)
   const saving = ref(false)
   const activeParagraphUid = ref<string | null>(null) // 当前聚焦的段落
+  const pipelineProgress = ref<PipelineProgress | null>(null) // 流水线进度
 
   /** 是否编辑中（vs 新建） */
   const isEdit = computed(() => postId.value !== null)
@@ -227,6 +229,17 @@ export function useParagraphEditor() {
     requiredLevel.value = 5
   }
 
+  /** 执行流水线并返回归一化结果 */
+  async function runNormalization(alteredParagraphs: EditorParagraph[]): Promise<PipelineResult> {
+    const result = await runPipeline(alteredParagraphs, 'content.md', {
+      source: 'manual',
+      onProgress: (p) => {
+        pipelineProgress.value = { ...p }
+      }
+    })
+    return result
+  }
+
   /** 保存帖子 */
   async function save() {
     if (!title.value.trim()) {
@@ -236,8 +249,23 @@ export function useParagraphEditor() {
 
     saving.value = true
     try {
-      // 构建段落数据
-      const paragraphData = paragraphs.value.map((p) => ({
+      // 先运行流水线：重新归一化段落结构 + 清理
+      pipelineProgress.value = null
+      const pipelineResult = await runNormalization(paragraphs.value)
+
+      // 用归一化后的结果更新编辑器状态
+      if (pipelineResult.title) {
+        title.value = pipelineResult.title
+      }
+      if (pipelineResult.introduction && !introduction.value) {
+        introduction.value = pipelineResult.introduction
+      }
+      if (pipelineResult.meta?.tags) {
+        tags.value = [...new Set([...tags.value, ...pipelineResult.meta.tags])]
+      }
+
+      // 构建保存数据
+      const paragraphData = pipelineResult.paragraphs.map((p) => ({
         content: p.content,
         type: p.type,
         ...(p.heading ? { heading: p.heading } : {}),
@@ -261,14 +289,25 @@ export function useParagraphEditor() {
         await updatePostApi(postId.value!, payload)
         message.success('保存成功')
       } else {
-        // 新建时使用 createPostApi
-        const result = await createPostApi(payload as CreatePostPayload)
-        postId.value = result.id
+        const display = await createPostApi(payload as CreatePostPayload)
+        postId.value = display.id
         message.success('发布成功，帖子已提交审核')
       }
+
+      // 用归一化后的段落替换编辑器内容（用户可见的段落变化）
+      paragraphs.value = pipelineResult.paragraphs.map((p) => ({
+        uid: generateUid(),
+        type: p.type,
+        content: p.content,
+        heading: p.heading,
+        media_url: p.media_url,
+        caption: p.caption
+      }))
+
       return true
-    } catch {
-      message.error('保存失败，请重试')
+    } catch (e) {
+      const msg = (e as Error).message || '保存失败，请重试'
+      message.error(msg)
       return false
     } finally {
       saving.value = false
@@ -289,6 +328,7 @@ export function useParagraphEditor() {
     saving,
     activeParagraphUid,
     isEdit,
+    pipelineProgress,
 
     // 段落操作
     addParagraph,
