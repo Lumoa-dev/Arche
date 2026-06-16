@@ -23,12 +23,12 @@ Arche spans multiple language contexts. Adhere strictly to the following:
 
 ## 2. Skill Directory
 
-Skills are registered under `.trae/skills/`. The agent should determine which skill to load based on the task context.
+Skills are registered under `.agent/skills/`. The agent should determine which skill to load based on the task context.
 
 | Skill | File | Trigger |
 |-------|------|---------|
-| **arche-dev** | `.trae/skills/arche-dev/SKILL.md` | **Default skill** — every Arche development task (architecture, coding, testing, CI/CD, docs, etc.) must load this skill first |
-| **commands** | `.trae/skills/commans/SKILL.md` | User issues a slash-command-style request (e.g., "fix this function", "explain this code", "generate tests") |
+| **arche-dev** | `.agent/skills/arche-dev/SKILL.md` | **Default skill** — every Arche development task (architecture, coding, testing, CI/CD, docs, etc.) must load this skill first |
+| **commands** | `.agent/skills/commans/SKILL.md` | User issues a slash-command-style request (e.g., "fix this function", "explain this code", "generate tests") |
 
 > **Note**: `arche-dev` is the primary skill — **load it at the start of every task**. `commands` is a quick-command registry, triggered only when the user gives a slash-command-style instruction.
 
@@ -36,7 +36,7 @@ Skills are registered under `.trae/skills/`. The agent should determine which sk
 
 ## 3. Rule Index
 
-Workflow rules are defined under `.trae/rules/`. The agent must follow them in the applicable scenarios.
+Workflow rules are defined under `.agent/rules/`. The agent must follow them in the applicable scenarios.
 
 | Rule File | When to Apply |
 |-----------|---------------|
