@@ -13,7 +13,7 @@
     "collect:css": "node scripts/collect-css.mjs",
     "generate:api": "node scripts/generate-api-types.mjs",
     "generate:api:check": "node scripts/generate-api-types.mjs && git diff --exit-code src/services/api/generated.d.ts",
-    "postinstall": "node scripts/patch-volar.mjs",
+    "postinstall": "node scripts/patch-volar.mjs && node -e \"require('fs').rmSync('node_modules/@tiptap/starter-kit/node_modules/@tiptap/core',{recursive:true,force:true})\"",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
