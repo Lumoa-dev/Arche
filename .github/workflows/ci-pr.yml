@@ -1,0 +1,24 @@
+name: CI - PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - ".github/**"
+  workflow_dispatch:
+
+jobs:
+  check-lint:
+    uses: ./.github/workflows/check-lint.yml
+
+  check-security:
+    uses: ./.github/workflows/check-security.yml
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  test-unit:
+    uses: ./.github/workflows/test-unit.yml
