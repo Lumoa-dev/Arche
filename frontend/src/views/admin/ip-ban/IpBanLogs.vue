@@ -63,10 +63,7 @@ const columns = [
       :page="page"
       :page-size="pageSize"
       :item-count="total"
-      @update:page="
-        page = $event
-        loadLogs()
-      "
+      @update:page="page = $event; loadLogs()"
     />
   </div>
 </template>

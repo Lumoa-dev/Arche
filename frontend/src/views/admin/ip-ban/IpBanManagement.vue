@@ -243,10 +243,7 @@ const columns = [
       :page="page"
       :page-size="pageSize"
       :item-count="total"
-      @update:page="
-        page = $event
-        loadBans()
-      "
+      @update:page="page = $event; loadBans()"
     />
 
     <!-- 封禁对话框 -->
