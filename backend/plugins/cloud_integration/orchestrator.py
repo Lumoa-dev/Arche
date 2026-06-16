@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from backend.plugins.cloud_integration.log_parser import LogParser
 from backend.plugins.cloud_integration.models import (
@@ -80,7 +80,7 @@ class TrainingOrchestrator:
         self.container = container
         self._running = False
         self._task: asyncio.Task | None = None
-        self._engine: AsyncEngine | None = None
+        self._session_factory_instance: async_sessionmaker[AsyncSession] | None = None
 
     # --- 公开接口 ---
 
@@ -88,8 +88,7 @@ class TrainingOrchestrator:
         if self._running:
             return
         self._running = True
-        db = self.container.get("db")
-        self._engine = db["engine"]
+        self._init_session_factory()
         self._task = asyncio.create_task(self._daemon_loop())
         logger.info("训练编排器已启动")
 
@@ -99,7 +98,7 @@ class TrainingOrchestrator:
             self._task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-        self._engine = None
+        self._session_factory_instance = None
         logger.info("训练编排器已停止")
 
     # --- Daemon Loop ---
@@ -111,6 +110,7 @@ class TrainingOrchestrator:
                 await self._update_progress_for_running_jobs()
             except Exception:
                 logger.exception("编排器循环异常")
+                self._try_recover_session_factory()
             await asyncio.sleep(self.SCAN_INTERVAL)
 
     async def _process_active_jobs(self) -> None:
@@ -682,17 +682,36 @@ class TrainingOrchestrator:
                 raise RuntimeError(f"任务 {job_id} 没有运行中的实例")
             return f"{inst.ssh_host}:{inst.ssh_port}"
 
-    # --- 延迟初始化 ---
+    # --- 会话工厂管理 ---
+
+    def _init_session_factory(self) -> None:
+        """从容器初始化会话工厂（惰性缓存）。"""
+        if self._session_factory_instance is not None:
+            return
+        db = self.container.get("db")
+        self._session_factory_instance = db["session_factory"]
+
+    def _reset_session_factory(self) -> None:
+        """重置会话工厂，强制下次访问时重新从容器获取。"""
+        self._session_factory_instance = None
+
+    def _try_recover_session_factory(self) -> None:
+        """尝试从容器恢复会话工厂（连接失效后的恢复路径）。"""
+        try:
+            self._reset_session_factory()
+            db = self.container.get("db")
+            self._session_factory_instance = db["session_factory"]
+            logger.info("编排器会话工厂已重新初始化")
+        except Exception as e:
+            logger.warning("编排器会话工厂恢复失败: %s", e)
 
     @property
     def _session_factory(self):
-        if self._engine is not None:
-            return async_sessionmaker(
-                self._engine, class_=AsyncSession, expire_on_commit=False
-            )
-        # 回退到容器的 session factory（用于测试或未调用 start 的场景）
-        db = self.container.get("db")
-        return db["session_factory"]
+        if self._session_factory_instance is not None:
+            return self._session_factory_instance
+        # 回退：惰性初始化或从容器重新获取
+        self._init_session_factory()
+        return self._session_factory_instance
 
     def _get_service(self):
         return self.container.get("cloud_training")

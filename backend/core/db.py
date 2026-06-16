@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -56,13 +58,28 @@ def init_db(
 
 
 async def close_db() -> None:
-    """关闭数据库引擎，释放连接池。"""
+    """关闭数据库引擎，释放连接池。
+
+    如果事件循环已关闭（如 Uvicorn 热重载或异常退出），
+    则绕过异步 dispose 直接释放全局引用。
+    """
     global engine, session_factory, _initialized
     if engine is not None:
-        await engine.dispose()
-        engine = None
-        session_factory = None
-        _initialized = False
+        try:
+            loop = asyncio.get_running_loop()
+            if loop.is_closed():
+                raise RuntimeError("Event loop is closed")
+            await engine.dispose()
+        except (RuntimeError, AssertionError):
+            # 事件循环已关闭或不在运行中 — 通过 sync_engine 同步释放
+            from contextlib import suppress
+
+            with suppress(Exception):
+                engine.sync_engine.dispose()
+        finally:
+            engine = None
+            session_factory = None
+            _initialized = False
 
 
 async def validate_schema() -> None:

@@ -53,11 +53,38 @@ def pytest_addoption(parser):
 
 
 def _get_changed_files() -> set[str]:
-    """获取与 master/main 相比有变更的文件列表。"""
+    """获取与 master/main 相比有变更的文件列表（含未跟踪文件）。"""
+    files: set[str] = set()
+
     # 优先用 CI 提供的变更列表
     if os.environ.get("GITHUB_EVENT_NAME"):
-        return set()
+        return files
 
+    # 包含未跟踪文件（如新增的测试文件）
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=PROJECT_ROOT,
+        )
+        for line in result.stdout.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            # 格式: "?? path/to/file" 或 " M path/to/file" 或 "A  path/to/file"
+            status = line[:2]
+            path = line[3:].strip()
+            if status != "D " and path:  # 跳过删除的文件
+                files.add(path)
+    except subprocess.CalledProcessError:
+        pass
+
+    if files:
+        return files
+
+    # 回退：用 git diff 检查已跟踪文件的变更
     for branch in ("HEAD~1", "main", "master"):
         try:
             result = subprocess.run(

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import TYPE_CHECKING
 
 from backend.core.base_plugin import BasePlugin
@@ -37,6 +38,7 @@ from backend.plugins.cloud_integration.services import CloudTrainingService
 
 # 全局引用，用于 on_shutdown
 _orchestrator_ref = None
+logger = logging.getLogger(__name__)
 
 
 class CloudIntegrationPlugin(BasePlugin):
@@ -66,9 +68,18 @@ class CloudIntegrationPlugin(BasePlugin):
             if orchestrator:
                 _orchestrator_ref = orchestrator
                 loop = asyncio.get_running_loop()
-                loop.create_task(orchestrator.start())  # noqa: RUF006
+                task = loop.create_task(orchestrator.start())
+
+                def _log_error(fut: asyncio.Task) -> None:
+                    exc = fut.exception()
+                    if exc:
+                        logger.error("编排器启动失败: %s", exc)
+
+                task.add_done_callback(_log_error)
         except RuntimeError:
-            pass
+            logger.warning("没有运行中的事件循环，编排器推迟到异步上下文中启动")
+        except Exception:
+            logger.exception("编排器启动异常")
 
     def on_shutdown(self) -> None:
         """停止训练任务编排守护进程。"""
@@ -76,9 +87,22 @@ class CloudIntegrationPlugin(BasePlugin):
         if _orchestrator_ref:
             try:
                 loop = asyncio.get_running_loop()
-                loop.create_task(_orchestrator_ref.stop())  # noqa: RUF006
+                if loop.is_closed():
+                    logger.warning("事件循环已关闭，跳过编排器停止")
+                    _orchestrator_ref = None
+                    return
+                task = loop.create_task(_orchestrator_ref.stop())
+
+                def _log_error(fut: asyncio.Task) -> None:
+                    exc = fut.exception()
+                    if exc:
+                        logger.error("编排器停止失败: %s", exc)
+
+                task.add_done_callback(_log_error)
             except RuntimeError:
-                pass
+                logger.warning("没有运行中的事件循环，跳过编排器停止")
+            finally:
+                _orchestrator_ref = None
 
 
 # 注册插件配置
