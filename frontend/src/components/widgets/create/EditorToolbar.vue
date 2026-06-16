@@ -1,19 +1,13 @@
 <script setup lang="ts">
 /**
- * EditorToolbar — 纸面内嵌工具栏
+ * EditorToolbar — 编辑器工具栏
  *
- * 位于纸面（EditorBody）顶部，与正文内容构成一体。
- * 无 sticky 无通栏背景，融入纸面色。
+ * 省去了段落类型插入/拖拽，专注于格式化命令 + 保存操作。
  */
 import ArButton from '@/components/ui/ArButton.vue'
-import type { ParagraphType } from '@/components/widgets/create/useParagraphEditor'
 import {
   ListOutline,
   ColorPaletteOutline,
-  ImageOutline,
-  VideocamOutline,
-  CodeSlashOutline,
-  RemoveOutline,
   SaveOutline,
   SendOutline,
   ChatbubbleOutline
@@ -27,31 +21,12 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  insert: [type: ParagraphType]
-  insertSeparator: []
   toggleCover: []
   importFile: []
   saveDraft: []
   publish: []
   cancel: []
 }>()
-
-/** 拖拽插入：给 dataTransfer 写入段落类型（SortableJS 读 'Text' 键） */
-function handleDragStart(type: ParagraphType, e: DragEvent) {
-  e.dataTransfer?.setData('Text', `paragraph:${type}`)
-  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy'
-
-  // 创建一个卡片样式的拖拽预览，代替默认的小图标拖影
-  const label = type === 'separator' ? '分隔线' : type
-  const preview = document.createElement('div')
-  preview.textContent = `插入 ${label}`
-  preview.style.cssText =
-    'padding:8px 16px;background:#fff;border:1px solid var(--border-color,#ddd);border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);font-size:14px;color:var(--text-primary,#333);white-space:nowrap;position:absolute;top:-1000px;left:-1000px;font-family:system-ui,sans-serif;'
-  document.body.appendChild(preview)
-  e.dataTransfer?.setDragImage(preview, 40, 20)
-  // 移除临时元素（setDragImage 已捕获其外观）
-  setTimeout(() => preview.remove(), 0)
-}
 </script>
 
 <template>
@@ -328,72 +303,8 @@ function handleDragStart(type: ParagraphType, e: DragEvent) {
 
     <div class="separator" />
 
-    <!-- ── 插入 ── -->
+    <!-- ── 附加操作 ── -->
     <div class="toolbar-group">
-      <span
-        draggable="true"
-        @dragstart="handleDragStart('text', $event)"
-        style="display: inline-flex"
-        title="拖拽插入段落"
-      >
-        <ArButton size="xs" type="ghost" icon title="插入段落" @click="emit('insert', 'text')">
-          <template #icon>
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 5v14" />
-              <path d="M5 12h14" />
-            </svg>
-          </template>
-        </ArButton>
-      </span>
-      <span
-        draggable="true"
-        @dragstart="handleDragStart('image', $event)"
-        style="display: inline-flex"
-        title="拖拽插入图片"
-      >
-        <ArButton size="xs" type="ghost" icon title="插入图片" @click="emit('insert', 'image')">
-          <template #icon><ImageOutline /></template>
-        </ArButton>
-      </span>
-      <span
-        draggable="true"
-        @dragstart="handleDragStart('video', $event)"
-        style="display: inline-flex"
-        title="拖拽插入视频"
-      >
-        <ArButton size="xs" type="ghost" icon title="插入视频" @click="emit('insert', 'video')">
-          <template #icon><VideocamOutline /></template>
-        </ArButton>
-      </span>
-      <span
-        draggable="true"
-        @dragstart="handleDragStart('code', $event)"
-        style="display: inline-flex"
-        title="拖拽插入代码块"
-      >
-        <ArButton size="xs" type="ghost" icon title="插入代码块" @click="emit('insert', 'code')">
-          <template #icon><CodeSlashOutline /></template>
-        </ArButton>
-      </span>
-      <span
-        draggable="true"
-        @dragstart="handleDragStart('separator', $event)"
-        style="display: inline-flex"
-        title="拖拽插入分隔线"
-      >
-        <ArButton size="xs" type="ghost" icon title="插入分隔线" @click="emit('insertSeparator')">
-          <template #icon><RemoveOutline /></template>
-        </ArButton>
-      </span>
       <ArButton size="xs" type="ghost" icon title="设置封面" @click="emit('toggleCover')">
         <template #icon>
           <svg
@@ -412,12 +323,6 @@ function handleDragStart(type: ParagraphType, e: DragEvent) {
           </svg>
         </template>
       </ArButton>
-    </div>
-
-    <div class="separator" />
-
-    <!-- ── 导入 ── -->
-    <div class="toolbar-group">
       <ArButton size="xs" type="ghost" icon title="导入文件 (.md/.txt)" @click="emit('importFile')">
         <template #icon>
           <svg

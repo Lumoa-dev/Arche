@@ -349,6 +349,7 @@ class BlogService:
         title: str,
         subtitles: list[str] | None = None,
         introduction: str | None = None,
+        content: str | None = None,
         paragraphs_data: list[dict] | None = None,
         tags: list[str] | None = None,
         cover_url: str | None = None,
@@ -370,6 +371,8 @@ class BlogService:
         # 敏感词检查
         word_filter = get_filter()
         text_to_check = title
+        if content:
+            text_to_check += " " + content
         if paragraphs_data:
             text_to_check += " " + " ".join(
                 p.get("content", "") for p in paragraphs_data
@@ -410,6 +413,7 @@ class BlogService:
                 slug=slug,
                 cover_url=cover_url,
                 introduction=introduction,
+                content=content,
                 subtitles=subtitles,
                 status="pending",
                 required_level=required_level,
@@ -486,6 +490,7 @@ class BlogService:
         title: str | None = None,
         subtitles: list[str] | None = None,
         introduction: str | None = None,
+        content: str | None = None,
         paragraphs_data: list[dict] | None = None,
         required_level: int | None = None,
         tags: list[str] | None = None,
@@ -511,6 +516,8 @@ class BlogService:
                 post.slug = await self.generate_slug(title, exclude_slug=post.slug)
             if introduction is not None:
                 post.introduction = introduction
+            if content is not None:
+                post.content = content
             if subtitles is not None:
                 post.subtitles = subtitles
             if cover_url is not None:
@@ -1950,6 +1957,7 @@ class BlogService:
             "cover_url": post.cover_url,
             "subtitles": post.subtitles,
             "introduction": post.introduction,
+            "content": post.content,
             "paragraph_ids": post.paragraph_ids,
             "status": post.status,
             "views": post.views,

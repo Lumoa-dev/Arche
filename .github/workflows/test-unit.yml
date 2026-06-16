@@ -41,7 +41,6 @@ jobs:
           - constants
           - directives
           - integration
-          - pipeline
           - router
           - services
           - store

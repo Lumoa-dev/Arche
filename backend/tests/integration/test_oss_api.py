@@ -149,7 +149,7 @@ class TestOSSUploadAPI:
 class TestOSSAdminAPI:
     """OSS 管理员端全链路测试。"""
 
-    async def test_管理员统计(
+    async def test_admin_statistics(
         self, client, admin_headers, oss_service_with_mock_backend
     ):
         """管理员统计接口应返回完整统计结构。"""
@@ -217,7 +217,7 @@ class TestOSSAdminAPI:
         assert user_rate_resp.status_code == 200
         assert limiter.set_user_multiplier.called
 
-    async def test_管理员删除文件(
+    async def test_admin_delete_file(
         self, client, admin_headers, oss_service_with_mock_backend
     ):
         """管理员删除任意文件。"""

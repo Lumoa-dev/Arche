@@ -27,7 +27,7 @@ class TestUserJourney:
             },
         )
         body = await resp.json()
-        assert body["code"] == "ok", f"注册失败: {body}"
+        assert body["code"] == "ok", f"register failed: {body}"
         return body["data"]
 
     async def _login(
@@ -42,7 +42,7 @@ class TestUserJourney:
             },
         )
         body = await resp.json()
-        assert body["code"] == "ok", f"登录失败: {body}"
+        assert body["code"] == "ok", f"login failed: {body}"
         return body["data"]
 
     async def test_user_registration_and_login(self, page, frontend_url, backend_url):
@@ -100,7 +100,7 @@ class TestUserJourney:
         # 首页应有内容卡片
         posts = page.locator(".post-card, .grid-item, [class*=post]")
         count = await posts.count()
-        assert count > 0, "首页没有显示任何帖子卡片"
+        assert count > 0, "homepage shows no post cards"
 
         # 点击第一篇文章
         first_post = posts.first
@@ -108,7 +108,7 @@ class TestUserJourney:
         await page.wait_for_timeout(2000)
 
         # 应跳转到文章详情页（路径含 /blog/）
-        assert "/blog/" in page.url, f"未进入文章详情页，当前 URL: {page.url}"
+        assert "/blog/" in page.url, f"not on post detail page, url: {page.url}"
 
         # 评论区应可见
         comments = page.locator(".comment-list, [class*=comment]")
@@ -210,7 +210,7 @@ class TestUserJourney:
             headers={"Authorization": f"Bearer {user_token}"},
         )
         post_body = await post_resp.json()
-        assert post_body["code"] == "ok", f"创建帖子失败: {post_body}"
+        assert post_body["code"] == "ok", f"create post failed: {post_body}"
 
         # 用第一个用户身份登录 UI
         await page.goto(f"{frontend_url}/login", wait_until="networkidle")
@@ -260,7 +260,7 @@ class TestUserJourney:
             body_text = await page.inner_text("body")
             assert any(
                 text in body_text for text in ["403", "无权限", "Forbidden", "首页"]
-            ), f"非管理员访问审核页面未显示预期保护提示: {body_text[:200]}"
+            ), f"non-admin should see protection on admin page: {body_text[:200]}"
 
     async def test_404_error_page(self, page, frontend_url):
         """访问不存在的路由 → 显示 404 页面。"""
@@ -272,4 +272,4 @@ class TestUserJourney:
 
         # 404 提示应可见
         body_text = await page.inner_text("body")
-        assert "404" in body_text, f"页面未显示 404 错误: {body_text[:200]}"
+        assert "404" in body_text, f"expected 404 not shown: {body_text[:200]}"

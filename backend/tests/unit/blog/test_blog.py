@@ -311,7 +311,7 @@ class TestBlogServicePostCRUD:
             await service.create_post(
                 author_id=uuid.uuid4(),
                 title="Test Post",
-                paragraphs_data=[{"content": "This contains 敏感词"}],
+                content="This contains 敏感词",
             )
         assert "敏感词" in str(excinfo.value)
 

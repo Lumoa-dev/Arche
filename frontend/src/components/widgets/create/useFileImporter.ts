@@ -1,48 +1,34 @@
 /**
- * useFileImporter — 文件导入 composable
+ * useFileImporter — 文件导入 composable（简化版）
  *
- * 读取 .md / .txt 文件 → 流水线解析为结构化段落 → 填充到编辑器状态。
- * 所有解析逻辑委托给标准流水线（PipelineRunner）。
+ * 读取 .md / .txt 文件内容，直接返回文本字符串。
+ * 不进行任何解析，由 TipTap 编辑器自行处理渲染。
  */
 import { ref } from 'vue'
-import { runPipeline, type PipelineResult, type PipelineProgress } from '@/lib/pipeline'
-import type { ParagraphType, EditorParagraph } from './useParagraphEditor'
+
+export interface FileImportResult {
+  text: string
+  fileName: string
+}
 
 export function useFileImporter() {
   const importing = ref(false)
   const importError = ref<string | null>(null)
-  const importProgress = ref<PipelineProgress | null>(null)
-
-  let uidCounter = Date.now()
-
-  function generateUid(): string {
-    return `imp_${++uidCounter}`
-  }
 
   /**
-   * 读取并解析文件，返回结构化结果
+   * 读取文件内容
    */
-  async function readAndParse(file: File): Promise<PipelineResult | null> {
+  async function readFile(file: File): Promise<FileImportResult | null> {
     importing.value = true
     importError.value = null
-    importProgress.value = null
 
     try {
       const text = await file.text()
-
-      const result = await runPipeline(text, file.name, {
-        source: 'import',
-        onProgress: (p) => {
-          importProgress.value = { ...p }
-        }
-      })
-
-      if (!result.title && result.paragraphs.length === 0) {
-        importError.value = '文件内容为空或无法识别'
+      if (!text.trim()) {
+        importError.value = '文件内容为空'
         return null
       }
-
-      return result
+      return { text, fileName: file.name }
     } catch (e) {
       importError.value = `文件读取失败: ${(e as Error).message}`
       return null
@@ -52,54 +38,30 @@ export function useFileImporter() {
   }
 
   /**
-   * 将解析结果转换为 EditorParagraph 数组
+   * 打开文件选择器并读取
    */
-  function toEditorParagraphs(result: PipelineResult): EditorParagraph[] {
-    return result.paragraphs.map((p) => ({
-      uid: generateUid(),
-      type: p.type as ParagraphType,
-      content: p.content,
-      heading: p.heading,
-      media_url: p.media_url,
-      caption: p.caption
-    }))
-  }
-
-  /**
-   * 打开文件选择器并解析
-   */
-  function pickAndParse(): Promise<PipelineResult | null> {
+  function pickAndRead(): Promise<FileImportResult | null> {
     return new Promise((resolve) => {
       const input = document.createElement('input')
       input.type = 'file'
-      input.accept = '.md,.txt,.markdown'
+      input.accept = '.md,.txt,.markdown,.html'
       input.onchange = async () => {
         const file = input.files?.[0]
         if (!file) {
           resolve(null)
           return
         }
-        const result = await readAndParse(file)
+        const result = await readFile(file)
         resolve(result)
       }
       input.click()
     })
   }
 
-  /**
-   * 获取接受的文件类型标签
-   */
-  function acceptLabel(): string {
-    return '.md, .txt, .markdown'
-  }
-
   return {
     importing,
     importError,
-    importProgress,
-    readAndParse,
-    toEditorParagraphs,
-    pickAndParse,
-    acceptLabel
+    readFile,
+    pickAndRead
   }
 }

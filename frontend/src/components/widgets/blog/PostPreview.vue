@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import ParagraphComponent from '@/components/widgets/blog/ParagraphComponent.vue'
-import type { BlogPost, ParagraphData } from '@/lib/services/api'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { StarterKit } from '@tiptap/starter-kit'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Underline } from '@tiptap/extension-underline'
+import { Image } from '@tiptap/extension-image'
+import type { BlogPost } from '@/lib/services/api'
 
 const props = defineProps<{
   post: BlogPost
-  paragraphs: ParagraphData[]
   postId: string
 }>()
 
@@ -14,9 +18,40 @@ const router = useRouter()
 const subtitles = computed(() => props.post?.subtitles || [])
 const introduction = computed(() => props.post?.introduction || '')
 
+/** TipTap 只读编辑器（预览 content） */
+const contentEditor = ref<ReturnType<typeof useEditor> | null>(null)
+
 function goBack() {
   router.push(`/create/editor?postId=${props.postId}`)
 }
+
+onMounted(() => {
+  if (props.post?.content) {
+    try {
+      const json = JSON.parse(props.post.content)
+      contentEditor.value = useEditor({
+        content: json,
+        editable: false,
+        extensions: [
+          StarterKit.configure({ heading: { levels: [1, 2, 3, 4] } }),
+          TextStyle,
+          TextAlign.configure({ types: ['heading', 'paragraph'] }),
+          Underline,
+          Image.configure({ inline: false })
+        ],
+        editorProps: {
+          attributes: { class: 'preview-content-editor' }
+        }
+      })
+    } catch {
+      contentEditor.value = null
+    }
+  }
+})
+
+onBeforeUnmount(() => {
+  contentEditor.value?.destroy()
+})
 </script>
 
 <template>
@@ -40,15 +75,10 @@ function goBack() {
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-if="introduction" class="preview-introduction" v-html="introduction" />
 
-    <!-- 段落 -->
-    <article class="preview-paragraphs">
-      <ParagraphComponent
-        v-for="(para, idx) in paragraphs"
-        :key="para.pid"
-        :paragraph="para"
-        :index="idx + 1"
-      />
-    </article>
+    <!-- 正文：TipTap 渲染 -->
+    <div v-if="contentEditor" class="preview-content-wrapper">
+      <EditorContent :editor="contentEditor" />
+    </div>
   </div>
 </template>
 
@@ -97,7 +127,32 @@ function goBack() {
   line-height: 1.7;
   color: var(--text-secondary);
 }
-.preview-paragraphs {
+.preview-content-wrapper {
+  font-family: var(--font-serif);
+  line-height: 1.8;
+  color: var(--text-primary);
   margin-top: var(--spacing-lg);
+}
+.preview-content-wrapper :deep(.ProseMirror) {
+  outline: none;
+}
+.preview-content-wrapper :deep(.ProseMirror p) {
+  margin: 0.6em 0;
+}
+.preview-content-wrapper :deep(.ProseMirror h2) {
+  font-size: 1.5em;
+  font-weight: var(--font-weight-bold);
+  margin: 0.7em 0 0.3em;
+}
+.preview-content-wrapper :deep(.ProseMirror h3) {
+  font-size: 1.25em;
+  font-weight: var(--font-weight-semibold);
+  margin: 0.6em 0 0.3em;
+}
+.preview-content-wrapper :deep(.ProseMirror img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: var(--spacing-md) 0;
 }
 </style>

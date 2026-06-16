@@ -23,7 +23,7 @@ from backend.core.models import HasSID
 
 
 class BlogPost(Base, HasSID):
-    """博客文章表（metadata + 引言 + 段落索引）。"""
+    """博客文章表（metadata + 正文）。"""
 
     __tablename__ = "blog_posts"
 
@@ -47,6 +47,8 @@ class BlogPost(Base, HasSID):
     paragraph_ids: Mapped[list | None] = mapped_column(
         JSON, nullable=True, default=None
     )
+    # 正文内容（TipTap JSON 序列化字符串 — 新编辑器使用，不走段落表）
+    content: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     # 功能标记
     is_pinned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_featured: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

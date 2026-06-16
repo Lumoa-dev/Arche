@@ -159,7 +159,7 @@ class TestSystemMonitorAPI:
         assert net["bytes_recv"] == 20000
         assert "packets_sent" in net
 
-    async def test_历史记录(self, client, admin_headers, system_monitor_service):
+    async def test_history_records(self, client, admin_headers, system_monitor_service):
         """历史记录接口应返回空历史。"""
         response = await client.get(
             "/api/system/history",

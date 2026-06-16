@@ -7,19 +7,6 @@
         ></template>
         写文章
       </ArButton>
-      <ArButton type="secondary" size="lg" @click="handleUploadFile">
-        <template #icon
-          ><NIcon size="18"><CloudUploadOutline /></NIcon
-        ></template>
-        上传文件
-      </ArButton>
-      <input
-        ref="fileInputRef"
-        type="file"
-        accept=".txt,.md"
-        style="display: none"
-        @change="handleFileSelected"
-      />
     </ArPageHeader>
     <PostStatsCards :stat-cards="manager.statCards.value" />
     <PostListPanel
@@ -35,42 +22,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { NIcon, useMessage } from 'naive-ui'
-import { CreateOutline, CloudUploadOutline } from '@vicons/ionicons5'
+import { NIcon } from 'naive-ui'
+import { CreateOutline } from '@vicons/ionicons5'
 import ArVBox from '@/components/ui/ArVBox.vue'
 import ArButton from '@/components/ui/ArButton.vue'
 import ArPageHeader from '@/components/ui/ArPageHeader.vue'
 import PostStatsCards from '@/components/widgets/create/PostStatsCards.vue'
 import PostListPanel from '@/components/widgets/create/PostListPanel.vue'
 import { usePostManager } from '@/components/widgets/create/usePostManager'
-import { uploadPostFileApi } from '@/lib/services/api'
 import type { BlogPost } from '@/lib/services/api'
 
 const router = useRouter()
-const message = useMessage()
-const fileInputRef = ref<HTMLInputElement | null>(null)
 const manager = usePostManager()
-
-function handleUploadFile() {
-  fileInputRef.value?.click()
-}
-
-async function handleFileSelected(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  try {
-    await uploadPostFileApi(file, { silent: true })
-    message.success('文件导入成功')
-    router.push('/create/editor')
-  } catch {
-    message.error('文件导入失败')
-  } finally {
-    input.value = ''
-  }
-}
 
 function handleOpenPost(post: BlogPost) {
   router.push(`/blog/${post.slug}`)
