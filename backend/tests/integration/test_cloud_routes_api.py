@@ -144,7 +144,9 @@ class TestCloudRoutesAPI:
         )
         assert started.status_code == 200
 
-    async def test_dataset_management(self, client, admin_headers, cloud_training_service):
+    async def test_dataset_management(
+        self, client, admin_headers, cloud_training_service
+    ):
         """数据集的 CRUD 和同步操作。"""
         ds_payload = {
             "name": "my-dataset",
