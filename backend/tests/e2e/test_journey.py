@@ -98,7 +98,7 @@ class TestUserJourney:
         await page.wait_for_timeout(2000)
 
         # 首页应有内容卡片
-        posts = page.locator(".post-card, .grid-item, [class*=post]")
+        posts = page.locator(".card-in")
         count = await posts.count()
         assert count > 0, "homepage shows no post cards"
 
@@ -111,7 +111,7 @@ class TestUserJourney:
         assert "/blog/" in page.url, f"not on post detail page, url: {page.url}"
 
         # 评论区应可见
-        comments = page.locator(".comment-list, [class*=comment]")
+        comments = page.locator("h3:has-text(\"评论\")")
         await comments.first.wait_for(state="visible", timeout=5000)
 
     async def test_create_blog_post(self, page, frontend_url, backend_url):
@@ -155,7 +155,7 @@ class TestUserJourney:
 
         # 填写正文
         content_editor = page.locator(
-            ".ProseMirror, [contenteditable=true], textarea"
+            "textarea, .ProseMirror, [contenteditable=true]"
         ).first
         if await content_editor.count() > 0:
             await content_editor.fill(content)
@@ -166,7 +166,7 @@ class TestUserJourney:
 
         # 提交
         submit_btn = page.locator(
-            'button:has-text("发布"), button:has-text("提交")'
+            'button:has-text("发布"), button:has-text("保存修改"), button:has-text("提交")'
         ).first
         if await submit_btn.count() > 0:
             await submit_btn.click()
@@ -246,7 +246,7 @@ class TestUserJourney:
                 await approve_btn.click()
                 await page.wait_for_timeout(1000)
                 confirm = page.locator(
-                    ".n-popconfirm__action button:has-text('确认'), button:has-text('确定')"
+                    ".ar-popconfirm__actions button:has-text('确认'), button:has-text('确定')"
                 ).first
                 if await confirm.count() > 0:
                     await confirm.click()
@@ -271,5 +271,7 @@ class TestUserJourney:
         await page.wait_for_timeout(2000)
 
         # 404 提示应可见
-        body_text = await page.inner_text("body")
-        assert "404" in body_text, f"expected 404 not shown: {body_text[:200]}"
+        error_code = page.locator(".error-code")
+        await error_code.wait_for(state="visible", timeout=5000)
+        code_text = await error_code.inner_text()
+        assert code_text == "404", f"expected 404 error code, got: {code_text}"

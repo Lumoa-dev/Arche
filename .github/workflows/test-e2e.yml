@@ -2,13 +2,18 @@ name: Test E2E
 
 on:
   workflow_call:
+    inputs:
+      browsers:
+        description: 'Browsers to run (JSON array)'
+        default: '["chromium", "firefox"]'
+        type: string
 
 jobs:
   test-e2e:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chromium, firefox]
+        browser: ${{ fromJSON(inputs.browsers) }}
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v8.0.0
