@@ -5,63 +5,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ── 找改动（判断跑哪些扫描） ──
-  find-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      languages: ${{ steps.build.outputs.languages }}
-      run-py-scan: ${{ steps.build.outputs.run-py-scan }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Find changed code
-        id: filter
-        uses: dorny/paths-filter@v4.0.1
-        with:
-          filters: |
-            python:
-              - 'backend/**/*.py'
-              - 'scripts/**/*.py'
-              - 'pyproject.toml'
-              - 'backend/pyproject.toml'
-            javascript:
-              - 'frontend/src/**/*.{ts,js,vue}'
-              - 'frontend/src/**/*.{tsx,jsx}'
-              - 'frontend/package.json'
-              - 'frontend/tsconfig*.json'
-              - 'frontend/vite.config.ts'
-
-      - name: Build language list
-        id: build
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo 'languages=["python","javascript"]' >> $GITHUB_OUTPUT
-            echo "run-py-scan=true" >> $GITHUB_OUTPUT
-          else
-            CHANGES='${{ steps.filter.outputs.changes }}'
-
-            # PR 事件：branch protection 要求所有语言的 CodeQL 都跑，
-            # 不能按变更内容有条件跳过，否则 check 永远等不到不存在的 job。
-            if [ "${{ github.event_name }}" = "pull_request" ]; then
-              echo 'languages=["python","javascript"]' >> $GITHUB_OUTPUT
-            else
-              echo "languages=$CHANGES" >> $GITHUB_OUTPUT
-            fi
-
-            # Bandit 扫描（非 required check）仅 python 有变更时跑
-            if echo "$CHANGES" | jq -e 'contains(["python"])' > /dev/null 2>&1; then
-              echo "run-py-scan=true" >> $GITHUB_OUTPUT
-            else
-              echo "run-py-scan=false" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-  # ── 扫 Python 安全 ──
+  # ── 扫 Python 安全（Bandit） ──
   scan-py:
-    needs: [find-changes]
-    if: needs.find-changes.outputs.run-py-scan == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -78,15 +23,11 @@ jobs:
           --severity-level high
           --quiet
 
-  # ── 扫代码（CodeQL，PR 才跑） ──
+  # ── 扫代码（CodeQL） ──
   scan-code:
-    needs: [find-changes]
-    if: |
-      needs.find-changes.outputs.languages != '[]' &&
-      github.event_name != 'push'
     strategy:
       matrix:
-        language: ${{ fromJSON(needs.find-changes.outputs.languages) }}
+        language: ["python", "javascript"]
     runs-on: ubuntu-latest
     permissions:
       actions: read
