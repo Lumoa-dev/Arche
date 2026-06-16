@@ -119,6 +119,7 @@ class AuthService:
                     "admin_ops",
                     "admin_permissions",
                     "tasks",
+                    "ip_ban",
                 ]
                 for page_name in all_pages:
                     session.add(

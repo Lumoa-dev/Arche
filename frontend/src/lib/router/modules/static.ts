@@ -288,6 +288,46 @@ export const staticRoutes: RouteRecordRaw[] = [
           searchScope: { type: 'ops', placeholder: '搜索配置项...', label: '配置' }
         }
       },
+      {
+        path: '/admin/ops/ip-ban',
+        name: 'AdminOpsIpBan',
+        component: () => import('@/views/admin/ip-ban/IpBanOverview.vue'),
+        meta: {
+          pageName: 'admin_ops',
+          title: 'IP 封禁管理',
+          searchScope: { type: 'ops', placeholder: '搜索 IP...', label: 'IP 封禁' }
+        }
+      },
+      {
+        path: '/admin/ops/ip-ban/list',
+        name: 'AdminOpsIpBanList',
+        component: () => import('@/views/admin/ip-ban/IpBanManagement.vue'),
+        meta: {
+          pageName: 'admin_ops',
+          title: '封禁列表',
+          searchScope: { type: 'ops', placeholder: '搜索 IP/CIDR...', label: 'IP 封禁' }
+        }
+      },
+      {
+        path: '/admin/ops/ip-ban/logs',
+        name: 'AdminOpsIpBanLogs',
+        component: () => import('@/views/admin/ip-ban/IpBanLogs.vue'),
+        meta: {
+          pageName: 'admin_ops',
+          title: '封禁日志',
+          searchScope: { type: 'ops', placeholder: '搜索操作记录...', label: '操作日志' }
+        }
+      },
+      {
+        path: '/admin/ops/ip-ban/rules',
+        name: 'AdminOpsIpBanRules',
+        component: () => import('@/views/admin/ip-ban/IpBanRules.vue'),
+        meta: {
+          pageName: 'admin_ops',
+          title: '自动封禁规则',
+          searchScope: { type: 'ops', placeholder: '搜索规则...', label: '封禁规则' }
+        }
+      },
       // 权限管理
       {
         path: '/admin/permissions',

@@ -1,6 +1,6 @@
 import re
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
 DESCRIBE_PATTERN = re.compile(
     r"(?:describe|class)\s*\(\s*['\"]([^'\"]+)['\"]",

@@ -1,6 +1,5 @@
 import ast
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -116,7 +115,7 @@ def _extract_container_deps(tree: ast.Module) -> list[str]:
     return list(set(deps))
 
 
-def scan_service(content: str) -> Optional[ServiceClassInfo]:
+def scan_service(content: str) -> ServiceClassInfo | None:
     """扫描后端 Service 类，提取类和方法信息"""
     try:
         tree = ast.parse(content)

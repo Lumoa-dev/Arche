@@ -9,19 +9,25 @@
 如果 tree-sitter 不可用，自动回退到正则方案。
 """
 
-from typing import Optional
-
 from scripts.testgen.scanner.frontend import (
     ApiEndpoint,
+)
+from scripts.testgen.scanner.frontend import (
     scan_api_service as regex_scan_api,
-    scan_utils as regex_scan_utils,
+)
+from scripts.testgen.scanner.frontend import (
     scan_composable as regex_scan_composable,
+)
+from scripts.testgen.scanner.frontend import (
     scan_store as regex_scan_store,
+)
+from scripts.testgen.scanner.frontend import (
+    scan_utils as regex_scan_utils,
 )
 
 try:
-    from tree_sitter import Language, Parser
     import tree_sitter_typescript as ts_typescript
+    from tree_sitter import Language, Parser
 
     _TS_LANG = Language(ts_typescript.language_typescript())
     _PARSER = Parser(_TS_LANG)
@@ -148,7 +154,7 @@ def _walk_exports(node, apis: list[ApiEndpoint], source: str, depth: int = 0):
         _walk_exports(child, apis, source, depth + 1)
 
 
-def _extract_api(value_node, name: str, source: str) -> Optional[ApiEndpoint]:
+def _extract_api(value_node, name: str, source: str) -> ApiEndpoint | None:
     """从赋值表达式右侧提取 API 信息"""
     http_result = _find_http_call(value_node)
     if not http_result:

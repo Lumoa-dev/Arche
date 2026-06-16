@@ -1,7 +1,5 @@
 import re
 from dataclasses import dataclass, field
-from typing import Optional
-
 
 # ── API Service 扫描 ──────────────────────────────────────────────
 
@@ -164,7 +162,7 @@ COMPOSABLE_PATTERN = re.compile(
 RETURN_KEYS_PATTERN = re.compile(r"return\s*\{([^}]+)\}", re.MULTILINE | re.DOTALL)
 
 
-def scan_composable(content: str) -> Optional[ComposableInfo]:
+def scan_composable(content: str) -> ComposableInfo | None:
     """扫描前端 Composable 文件，提取组合式函数信息"""
     match = COMPOSABLE_PATTERN.search(content)
     if not match:
@@ -224,7 +222,7 @@ ACTION_PATTERN = re.compile(
 PERSIST_PATTERN = re.compile(r"persist\s*:")
 
 
-def scan_store(content: str) -> Optional[StoreInfo]:
+def scan_store(content: str) -> StoreInfo | None:
     """扫描前端 Pinia Store 文件，提取 Store 信息"""
     store_match = STORE_PATTERN.search(content)
     if not store_match:

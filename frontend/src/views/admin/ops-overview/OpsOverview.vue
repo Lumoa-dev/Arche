@@ -3,6 +3,7 @@ import {
   PulseOutline,
   SettingsOutline,
   CloudOutline,
+  BanOutline,
   ShieldCheckmarkOutline,
   ExtensionPuzzleOutline,
   ServerOutline
@@ -39,6 +40,16 @@ const cards = [
       { label: '用户', value: '128 人' }
     ],
     to: '/admin/ops/storage'
+  },
+  {
+    title: 'IP 封禁管理',
+    icon: BanOutline,
+    stats: [
+      { label: '封禁列表', value: '管理' },
+      { label: '自动规则', value: '配置' },
+      { label: '操作日志', value: '查看' }
+    ],
+    to: '/admin/ops/ip-ban'
   },
   {
     title: '权限管理',

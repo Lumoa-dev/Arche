@@ -105,9 +105,7 @@ async def get_top_ips(
             stmt = stmt.where(IpActionCounter.action == action)
         result = await session.execute(stmt)
         rows = result.all()
-        return [
-            {"ip": row.ip, "count": int(row.total_count)} for row in rows
-        ]
+        return [{"ip": row.ip, "count": int(row.total_count)} for row in rows]
 
 
 @router.get("/trend")
@@ -137,9 +135,7 @@ async def get_trend(
             stmt = stmt.where(RequestLog.action == action)
         result = await session.execute(stmt)
         rows = result.all()
-        return [
-            {"date": str(row.log_date), "count": int(row.cnt)} for row in rows
-        ]
+        return [{"date": str(row.log_date), "count": int(row.cnt)} for row in rows]
 
 
 @router.get("/counters")
@@ -207,8 +203,6 @@ async def list_actions(request: Request) -> list[str]:
     session_factory = _get_session_factory()
     async with session_factory() as session:
         result = await session.execute(
-            select(IpActionCounter.action)
-            .distinct()
-            .order_by(IpActionCounter.action)
+            select(IpActionCounter.action).distinct().order_by(IpActionCounter.action)
         )
         return [row[0] for row in result.all()]

@@ -157,4 +157,3 @@ check = "task format && task lint && task type-check && task test && task build"
 
 # ── 清理 ──
 clean = "uv run python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in [pathlib.Path('frontend/dist'), pathlib.Path('.ruff_cache'), pathlib.Path('.mypy_cache'), pathlib.Path('.pytest_cache')] if p.exists()]\""
-

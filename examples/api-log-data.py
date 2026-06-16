@@ -9,34 +9,29 @@
 
 api_logs = {
     "0000000001": {
-        "log_id": "0000000001",         # 日志编号（10位顺序号）
-        "timestamp": "",                 # 请求时间
-
+        "log_id": "0000000001",  # 日志编号（10位顺序号）
+        "timestamp": "",  # 请求时间
         # ========== 请求信息 ==========
-        "method": "",                    # HTTP 方法: GET / POST / PUT / DELETE / PATCH
-        "endpoint": "",                  # API 路径
-        "query_params": {},              # 查询参数（仅记录参数名和值，不记录请求体）
-        "headers": {                     # 关键请求头
+        "method": "",  # HTTP 方法: GET / POST / PUT / DELETE / PATCH
+        "endpoint": "",  # API 路径
+        "query_params": {},  # 查询参数（仅记录参数名和值，不记录请求体）
+        "headers": {  # 关键请求头
             "content_type": "",
             "referer": "",
             "origin": "",
         },
-
         # ========== 客户端信息 ==========
-        "ip": "",                        # 客户端 IP
-        "user_agent": "",                # 客户端 User-Agent
-        "device": "",                    # 设备信息（解析后的设备类型）
-
+        "ip": "",  # 客户端 IP
+        "user_agent": "",  # 客户端 User-Agent
+        "device": "",  # 设备信息（解析后的设备类型）
         # ========== 认证信息 ==========
-        "user_id": "",                   # 发起请求的用户ID（未登录则为空）
-        "token_prefix": "",              # Token 前缀（完整token不记录，仅存前几位用于排查）
-
+        "user_id": "",  # 发起请求的用户ID（未登录则为空）
+        "token_prefix": "",  # Token 前缀（完整token不记录，仅存前几位用于排查）
         # ========== 响应信息 ==========
-        "status_code": 0,                # 响应状态码
-        "response_size": 0,              # 响应体大小（字节）
-        "duration_ms": 0,                # 处理耗时（毫秒）
-
+        "status_code": 0,  # 响应状态码
+        "response_size": 0,  # 响应体大小（字节）
+        "duration_ms": 0,  # 处理耗时（毫秒）
         # ========== 错误信息 ==========
-        "error_message": "",             # 错误信息（请求失败时记录）
+        "error_message": "",  # 错误信息（请求失败时记录）
     },
 }

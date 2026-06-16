@@ -29,9 +29,18 @@ console = Console()
 # ── 源码目录 → 测试目录映射 ──
 TEST_MAP: dict[str, list[str]] = {
     "backend/core/": ["backend/tests/unit/core/"],
-    "backend/plugins/auth/": ["backend/tests/unit/auth/", "backend/tests/integration/test_auth_api.py"],
-    "backend/plugins/blog/": ["backend/tests/unit/blog/", "backend/tests/integration/test_blog_api.py"],
-    "backend/plugins/oss/": ["backend/tests/unit/oss/", "backend/tests/integration/test_oss_api.py"],
+    "backend/plugins/auth/": [
+        "backend/tests/unit/auth/",
+        "backend/tests/integration/test_auth_api.py",
+    ],
+    "backend/plugins/blog/": [
+        "backend/tests/unit/blog/",
+        "backend/tests/integration/test_blog_api.py",
+    ],
+    "backend/plugins/oss/": [
+        "backend/tests/unit/oss/",
+        "backend/tests/integration/test_oss_api.py",
+    ],
     "backend/plugins/github_proxy/": [
         "backend/tests/unit/github_proxy/",
         "backend/tests/integration/test_github_proxy_api.py",
@@ -56,7 +65,9 @@ TEST_MAP: dict[str, list[str]] = {
         "backend/tests/unit/system_monitor/",
         "backend/tests/integration/test_system_monitor_api.py",
     ],
-    "backend/plugins/config_mgmt/": ["backend/tests/integration/test_config_mgmt_api.py"],
+    "backend/plugins/config_mgmt/": [
+        "backend/tests/integration/test_config_mgmt_api.py"
+    ],
     "frontend/src/": ["frontend/"],
     "pyproject.toml": ["backend/"],
     "frontend/package.json": ["frontend/"],
@@ -71,7 +82,10 @@ def get_changed_files(branch: str = "HEAD~1") -> list[str]:
     try:
         result = subprocess.run(
             ["git", "diff", "--name-only", branch],
-            capture_output=True, text=True, check=True, cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=PROJECT_ROOT,
         )
         files = [f.strip() for f in result.stdout.split("\n") if f.strip()]
         return files
@@ -97,7 +111,9 @@ def get_affected_dirs(changed_files: list[str]) -> list[str]:
     return sorted(affected)
 
 
-def run_tests_sequential(test_dirs: list[str], extra_args: list[str]) -> tuple[int, int]:
+def run_tests_sequential(
+    test_dirs: list[str], extra_args: list[str]
+) -> tuple[int, int]:
     """顺序执行多个测试目录，返回 (passed, failed)。"""
     total_passed = 0
     total_failed = 0
@@ -109,11 +125,24 @@ def run_tests_sequential(test_dirs: list[str], extra_args: list[str]) -> tuple[i
         console=console,
     ) as progress:
         for i, test_dir in enumerate(test_dirs):
-            task = progress.add_task(f"[cyan]测试 {i+1}/{len(test_dirs)}: {test_dir}", total=None)
+            task = progress.add_task(
+                f"[cyan]测试 {i + 1}/{len(test_dirs)}: {test_dir}", total=None
+            )
 
             start = time.time()
-            cmd = ["uv", "run", "pytest", test_dir, "-n", "auto", "--tb=short", "--no-header"] + extra_args
-            result = subprocess.run(cmd, capture_output=True, text=True, cwd=PROJECT_ROOT)
+            cmd = [
+                "uv",
+                "run",
+                "pytest",
+                test_dir,
+                "-n",
+                "auto",
+                "--tb=short",
+                "--no-header",
+            ] + extra_args
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, cwd=PROJECT_ROOT
+            )
             elapsed = time.time() - start
 
             progress.remove_task(task)

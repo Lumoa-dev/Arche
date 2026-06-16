@@ -64,7 +64,10 @@ class IpActionCounter(Base):
     __allow_unmapped__ = True
     __table_args__ = (
         UniqueConstraint(
-            "ip", "action", "action_date", "hour",
+            "ip",
+            "action",
+            "action_date",
+            "hour",
             name="uq_ip_action_window",
         ),
     )

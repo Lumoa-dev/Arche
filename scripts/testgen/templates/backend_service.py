@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from scripts.testgen.scanner.backend import ServiceClassInfo
 
 
@@ -56,9 +57,7 @@ def test_placeholder():
     lines.append("")
     lines.append("# TODO: 导入 Service 类")
     lines.append(
-        "# from backend.plugins.{module_name}.services import {class_name}".format(
-            module_name=source_path.parent.name, class_name=class_name
-        )
+        f"# from backend.plugins.{source_path.parent.name}.services import {class_name}"
     )
     lines.append("")
 

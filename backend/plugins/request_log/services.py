@@ -8,6 +8,7 @@ import time
 from datetime import date, datetime, timedelta
 
 from fastapi import Request, Response
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import extract, select
 from sqlalchemy import func as sa_func
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -34,12 +35,14 @@ def classify_action(method: str, path: str, status_code: int) -> str:
 
 # ── 跳过列表 ──
 
-_SKIP_PATHS = frozenset({
-    "/docs",
-    "/openapi.json",
-    "/redoc",
-    "/favicon.ico",
-})
+_SKIP_PATHS = frozenset(
+    {
+        "/docs",
+        "/openapi.json",
+        "/redoc",
+        "/favicon.ico",
+    }
+)
 
 _SKIP_PREFIXES = (
     "/static/",
@@ -278,9 +281,7 @@ class LogAggregationService:
             async with session_factory() as session:
                 cutoff = datetime.now() - timedelta(days=7)
                 count_subq = (
-                    select(RequestLog)
-                    .where(RequestLog.created_at < cutoff)
-                    .subquery()
+                    select(RequestLog).where(RequestLog.created_at < cutoff).subquery()
                 )
                 result = await session.execute(
                     select(sa_func.count()).select_from(count_subq)
@@ -288,7 +289,7 @@ class LogAggregationService:
                 total = result.scalar() or 0
 
                 await session.execute(
-                    RequestLog.__table__.delete().where(RequestLog.created_at < cutoff)
+                    sa_delete(RequestLog).where(RequestLog.created_at < cutoff)
                 )
                 await session.commit()
                 logger.info("请求日志 TTL 清理完成，删除 %d 条", total)
