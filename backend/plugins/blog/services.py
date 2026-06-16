@@ -371,6 +371,8 @@ class BlogService:
         # 敏感词检查
         word_filter = get_filter()
         text_to_check = title
+        if content:
+            text_to_check += " " + content
         if paragraphs_data:
             text_to_check += " " + " ".join(
                 p.get("content", "") for p in paragraphs_data
