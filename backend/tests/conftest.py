@@ -102,6 +102,7 @@ async def app():
     if sf is not None:
         config_manager.set_session_factory(sf)
         from backend.core import _seed_default_config
+
         await _seed_default_config(sf)
 
     yield application
@@ -128,8 +129,6 @@ async def async_client(app) -> AsyncGenerator[httpx.AsyncClient, None]:
         base_url="http://testserver",
     ) as client:
         yield client
-
-
 
 
 # ── 认证工具 ────────────────────────────────────────────────────────
@@ -160,9 +159,7 @@ async def auth_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
             select(User).where(User.username == reg_payload["username"])
         )
         user = result.scalar_one()
-        await session.execute(
-            update(User).where(User.id == user.id).values(level=5)
-        )
+        await session.execute(update(User).where(User.id == user.id).values(level=5))
         await session.commit()
 
     login_payload = {
@@ -204,9 +201,7 @@ async def admin_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
             select(User).where(User.username == reg_payload["username"])
         )
         user = result.scalar_one()
-        await session.execute(
-            update(User).where(User.id == user.id).values(level=0)
-        )
+        await session.execute(update(User).where(User.id == user.id).values(level=0))
         await session.commit()
 
     login_payload = {

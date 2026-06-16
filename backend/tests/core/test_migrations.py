@@ -55,9 +55,7 @@ class TestAlembicMigrations:
     def test_migration_files_exist(self):
         """迁移版本文件存在。"""
         versions_dir = (
-            Path(__file__).resolve().parent.parent.parent
-            / "migrations"
-            / "versions"
+            Path(__file__).resolve().parent.parent.parent / "migrations" / "versions"
         )
         py_files = sorted(versions_dir.glob("*.py"))
         assert len(py_files) >= 1, "no migration version files"

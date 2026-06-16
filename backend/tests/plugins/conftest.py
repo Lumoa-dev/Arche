@@ -20,7 +20,11 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     """
     from backend.core.container import ServiceContainer
     from backend.core.db import init_db
-    from backend.core.middleware import register_error_handlers, setup_cors, setup_security_headers
+    from backend.core.middleware import (
+        register_error_handlers,
+        setup_cors,
+        setup_security_headers,
+    )
     from backend.core.plugin_registry import discover_plugins, registry
 
     registry.reset()
@@ -42,11 +46,11 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     if db_path.exists():
         db_path.unlink()
 
-    database_url = os.environ.get(
-        "ARCHE_TEST_DB_URL", f"sqlite+aiosqlite:///{db_path}"
-    )
+    database_url = os.environ.get("ARCHE_TEST_DB_URL", f"sqlite+aiosqlite:///{db_path}")
     engine, session_factory = init_db(database_url)
-    container.register("db", lambda c: {"engine": engine, "session_factory": session_factory})
+    container.register(
+        "db", lambda c: {"engine": engine, "session_factory": session_factory}
+    )
 
     # 创建 FastAPI 应用
     app = FastAPI(title=f"Arche Plugin Test ({plugin_name})", version="0.1.0")
@@ -55,7 +59,9 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     # 收集目标插件及其所有依赖
     plugin_obj = registry._plugins.get(plugin_name)
     if plugin_obj is None:
-        raise ValueError(f"插件 '{plugin_name}' 未注册，可用插件: {list(registry._plugins.keys())}")
+        raise ValueError(
+            f"插件 '{plugin_name}' 未注册，可用插件: {list(registry._plugins.keys())}"
+        )
 
     deps = set()
     deps.add(plugin_name)
@@ -89,6 +95,7 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     async def _create_tables():
         async with engine.begin() as conn:
             from backend.core.db import Base
+
             await conn.run_sync(Base.metadata.create_all)
 
     asyncio.run(_create_tables())

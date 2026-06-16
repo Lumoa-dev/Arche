@@ -29,7 +29,9 @@ class TestEmptyInput:
             else:
                 resp = await async_client.put(path, json={})
             # 空 body 应触发验证错误，不崩贵
-            assert resp.status_code in (401, 422), f"{method} {path}: {resp.status_code}"
+            assert resp.status_code in (401, 422), (
+                f"{method} {path}: {resp.status_code}"
+            )
 
     @pytest.mark.asyncio
     async def test_missing_required_field(self, async_client):
@@ -101,7 +103,9 @@ class TestMethodNotAllowed:
     @pytest.mark.asyncio
     async def test_post_on_list_endpoint(self, async_client):
         """POST 请求列表端点返回 405。"""
-        resp = await async_client.post("/api/blog/posts?page=1", headers={"Content-Type": "application/json"})
+        resp = await async_client.post(
+            "/api/blog/posts?page=1", headers={"Content-Type": "application/json"}
+        )
         assert resp.status_code in (405, 401, 422)
 
     @pytest.mark.asyncio
@@ -186,7 +190,7 @@ class TestUnicode:
                 "password": "Test1234!",
             },
         )
-        assert resp.status_code in (200, 422, 500)  # 500: 已知 bug — emoji 在注册时 500
+        assert resp.status_code == 200, f"emoji 注册应成功: {resp.status_code}"
 
     @pytest.mark.asyncio
     async def test_zero_width_chars(self, async_client):

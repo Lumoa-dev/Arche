@@ -69,7 +69,8 @@ class TestDatabaseInit:
             # ConfigEntry
             config_cols = await conn.run_sync(
                 lambda sync_conn: {
-                    c["name"] for c in sa_inspect(sync_conn).get_columns("config_entries")
+                    c["name"]
+                    for c in sa_inspect(sync_conn).get_columns("config_entries")
                 }
             )
             assert "key" in config_cols
@@ -146,4 +147,6 @@ class TestConfigSeed:
         result = await db_session.execute(select(func.count()).select_from(ConfigEntry))
         count_after = result.scalar()
 
-        assert count_after == count_before, f"种子不幂等: {count_before} → {count_after}"
+        assert count_after == count_before, (
+            f"种子不幂等: {count_before} → {count_after}"
+        )

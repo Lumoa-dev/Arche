@@ -285,7 +285,10 @@ class TestRefreshToken:
 
         login_resp = await async_client.post(
             "/api/auth/login",
-            json={"identity": reg_payload["username"], "password": reg_payload["password"]},
+            json={
+                "identity": reg_payload["username"],
+                "password": reg_payload["password"],
+            },
         )
         refresh_token = login_resp.json()["data"]["refresh_token"]
 
@@ -339,7 +342,9 @@ class TestUserManagement:
         assert len(data["data"]["list"]) >= 1
 
     @pytest.mark.asyncio
-    async def test_list_users_forbidden_for_regular_user(self, async_client, auth_headers):
+    async def test_list_users_forbidden_for_regular_user(
+        self, async_client, auth_headers
+    ):
         """普通用户不能访问用户列表。"""
         resp = await async_client.get("/api/auth/users", headers=auth_headers)
         assert resp.status_code == 403

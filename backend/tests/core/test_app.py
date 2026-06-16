@@ -51,7 +51,6 @@ class TestHealthEndpoint:
         assert data["data"]["status"] == "healthy"
 
 
-
 class TestLifecycle:
     """应用生命周期测试。"""
 

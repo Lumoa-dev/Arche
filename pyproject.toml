@@ -106,8 +106,23 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"backend/tests/*" = ["ARG001", "ARG002", "ARG005", "N802", "N806", "E501"]
-"backend/migrations/*" = ["ARG001", "ARG002", "E501", "F821", "I001", "UP", "W291"]
+"backend/tests/*" = [
+    "ARG001",
+    "ARG002",
+    "ARG005",
+    "N802",
+    "N806",
+    "E501"
+]
+"backend/migrations/*" = [
+    "ARG001",
+    "ARG002",
+    "E501",
+    "F821",
+    "I001",
+    "UP",
+    "W291"
+]
 
 [tool.mypy]
 python_version = "3.10"
@@ -164,6 +179,7 @@ build = "cd frontend && npm run build"
 
 # ── 本地质量门（format → lint → type → test → build） ──
 check = "task format && task lint && task type-check && task test && task build"
+check-on-test = "task format && task lint && task type-check  && task build"
 
 # ── 清理 ──
 clean = "uv run python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in [pathlib.Path('frontend/dist'), pathlib.Path('.ruff_cache'), pathlib.Path('.mypy_cache'), pathlib.Path('.pytest_cache')] if p.exists()]\""

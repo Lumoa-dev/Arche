@@ -19,9 +19,7 @@ class TestDeployWebhook:
     @pytest.mark.asyncio
     async def test_deploy_with_invalid_token(self, async_client):
         """无效 Token 返回 401。"""
-        resp = await async_client.post(
-            self.DEPLOY_URL, json={"token": "wrong-token"}
-        )
+        resp = await async_client.post(self.DEPLOY_URL, json={"token": "wrong-token"})
         assert resp.status_code == 401
 
     @pytest.mark.asyncio

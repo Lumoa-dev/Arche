@@ -92,7 +92,9 @@ class TestAppError:
         """AppError 可以自定义所有字段。"""
         from backend.core.middleware import AppError
 
-        err = AppError("自定义错误", code="custom", status_code=418, data={"key": "val"})
+        err = AppError(
+            "自定义错误", code="custom", status_code=418, data={"key": "val"}
+        )
         assert err.message == "自定义错误"
         assert err.code == "custom"
         assert err.status_code == 418

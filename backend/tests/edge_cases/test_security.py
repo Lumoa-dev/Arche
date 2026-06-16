@@ -77,13 +77,22 @@ class TestXSS:
             "/api/blog/posts",
             json={
                 "title": "<script>document.cookie</script>",
-                "content": json.dumps({
-                    "type": "doc",
-                    "content": [{
-                        "type": "paragraph",
-                        "content": [{"text": "<img src=x onerror=alert('XSS')>", "type": "text"}]
-                    }]
-                }),
+                "content": json.dumps(
+                    {
+                        "type": "doc",
+                        "content": [
+                            {
+                                "type": "paragraph",
+                                "content": [
+                                    {
+                                        "text": "<img src=x onerror=alert('XSS')>",
+                                        "type": "text",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ),
                 "tags": ["<script>"],
             },
             headers=auth_headers,
@@ -173,7 +182,9 @@ class TestJWTSecurity:
         """篡改 token 被拒接。"""
         resp = await async_client.get(
             "/api/auth/me",
-            headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImxldmVsIjowfQ.tampered"},
+            headers={
+                "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImxldmVsIjowfQ.tampered"
+            },
         )
         assert resp.status_code == 401
 
@@ -182,8 +193,16 @@ class TestJWTSecurity:
         """none 算法攻击被拒接。"""
         import base64, json
 
-        header = base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode()).rstrip(b"=").decode()
-        payload = base64.urlsafe_b64encode(json.dumps({"sub": "admin", "level": 0}).encode()).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
+        payload = (
+            base64.urlsafe_b64encode(json.dumps({"sub": "admin", "level": 0}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
         fake_token = f"{header}.{payload}."
         resp = await async_client.get(
             "/api/auth/me",

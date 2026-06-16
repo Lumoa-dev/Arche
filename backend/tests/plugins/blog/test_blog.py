@@ -44,7 +44,9 @@ class TestBlogPosts:
         post_data = data.get("post") or data
         post_id = post_data["id"]
 
-        resp = await async_client.get(f"{POSTS_URL}/by-id/{post_id}", headers=auth_headers)
+        resp = await async_client.get(
+            f"{POSTS_URL}/by-id/{post_id}", headers=auth_headers
+        )
         assert resp.status_code == 200
 
     @pytest.mark.asyncio
