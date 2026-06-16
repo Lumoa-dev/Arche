@@ -6,6 +6,7 @@
  * 支持 GFM / CommonMark / ``` / ~~~ / 表格 / 任务列表 / 链接引用等。
  */
 import { marked } from 'marked'
+import type { Token } from 'marked'
 import type { FileParser } from './FileParser'
 import type { RawParagraph } from './types'
 
@@ -48,7 +49,7 @@ export class MarkdownParser implements FileParser {
     return result
   }
 
-  private handleToken(token: marked.Token, result: RawParagraph[]): void {
+  private handleToken(token: Token, result: RawParagraph[]): void {
     switch (token.type) {
       case 'heading': {
         const content = this.renderTokenContent(token)
@@ -153,18 +154,18 @@ export class MarkdownParser implements FileParser {
   }
 
   /** 渲染 token 的文本内容（递归处理子 token） */
-  private renderTokenContent(token: marked.Token): string {
+  private renderTokenContent(token: Token): string {
     // marked 的 heading / paragraph / blockquote 等都有 tokens 子数组
     const t = token as any
     if (t.tokens && Array.isArray(t.tokens)) {
-      return t.tokens.map((sub: marked.Token) => this.renderInlineToken(sub)).join('')
+      return t.tokens.map((sub: Token) => this.renderInlineToken(sub)).join('')
     }
     // 兜底取 text 字段
     return t.text || ''
   }
 
   /** 渲染行内 token */
-  private renderInlineToken(token: marked.Token): string {
+  private renderInlineToken(token: Token): string {
     switch (token.type) {
       case 'text':
         return (token as any).text || ''
@@ -194,7 +195,7 @@ export class MarkdownParser implements FileParser {
   }
 
   /** 渲染列表 token 为纯文本 */
-  private renderList(token: marked.Token): string {
+  private renderList(token: Token): string {
     const t = token as any
     if (!t.items || !Array.isArray(t.items)) {
       return ''
@@ -215,7 +216,7 @@ export class MarkdownParser implements FileParser {
   }
 
   /** 渲染 table token 为类 MD 表格文本 */
-  private renderTable(token: marked.Token): string {
+  private renderTable(token: Token): string {
     const t = token as any
     if (!t.header || !t.rows) return ''
 
