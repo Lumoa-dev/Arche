@@ -4,8 +4,8 @@
 每个 fixture 返回真实对象，没有 MagicMock，没有模拟数据库。
 
 数据库策略：
-  - 使用文件型 SQLite（`test_arche.db`）确保 Alembic 迁移正常工作
-  - 会话级作用域复用，降低创建开销
+  - 每个测试使用独立 SQLite 文件（tmp_path），完全隔离
+  - 启动时执行 Alembic 迁移 + ensure_tables + 种子配置
   - CI 中可通过 `ARCHE_TEST_DB_URL` 环境变量切换为 PostgreSQL
 """
 
@@ -15,20 +15,14 @@ import asyncio
 import os
 import uuid
 from pathlib import Path
-from typing import Any, AsyncGenerator
+from typing import AsyncGenerator
 
 import httpx
 import pytest
 import pytest_asyncio
-from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # ── 测试环境变量（在导入任何 backend 模块前生效） ──────────────────────
-_TEST_DB = str(Path(__file__).parent / "test_arche.db")
-# 直接覆盖 os.environ（防止 .env 文件中的值通过 ConfigManager 读取）
-os.environ["DATABASE_URL"] = os.environ.get(
-    "ARCHE_TEST_DB_URL", f"sqlite+aiosqlite:///{_TEST_DB}"
-)
 os.environ["SECRET_KEY"] = "test-secret-key-for-pytest"
 os.environ["LOG_LEVEL"] = "CRITICAL"
 os.environ["CORS_ORIGINS"] = "http://testserver"
@@ -47,51 +41,79 @@ def event_loop():
     loop.close()
 
 
-# ── FastAPI 应用 ────────────────────────────────────────────────────
+# ── FastAPI 应用（function-scoped，每个测试独立 DB） ────────────────
 
 
-@pytest_asyncio.fixture(scope="session")
-async def app():
-    """创建真实 FastAPI 应用 —— 所有插件激活、文件型 SQLite 数据库。
+def _build_app(db_url: str):
+    """构建 FastAPI 应用，使用指定数据库 URL。
 
-    使用 TestClient 触发 lifespan startup（Alembic 迁移、建表、种子配置），
-    之后 async_client 使用纯 ASGI transport（lifespan 已运行无需再次触发）。
+    首次调用时发现插件并注册到全局 registry，
+    后续调用复用已发现的插件列表，仅创建新的 FastAPI 实例。
     """
-    # 清理上次测试的数据库文件
-    db_path = Path(_TEST_DB)
-    if db_path.exists():
-        db_path.unlink()
+    import os
+
+    # 确保测试环境变量始终覆盖
+    os.environ["DATABASE_URL"] = db_url
+    os.environ["SECRET_KEY"] = "test-secret-key-for-pytest"
+    os.environ["LOG_LEVEL"] = "CRITICAL"
+
+    from backend.core.config import config_manager
+
+    # ConfigManager 是单例，_load 只执行一次。
+    # 后续测试需要手动更新 _values 确保正确的数据库 URL。
+    config_manager._values["DATABASE_URL"] = db_url
+    config_manager._values["SECRET_KEY"] = "test-secret-key-for-pytest"
+    config_manager._values["LOG_LEVEL"] = "CRITICAL"
+    config_manager._cache.clear()
+    config_manager._app_settings = None
 
     from backend.core.plugin_registry import discover_plugins, registry
 
-    registry.reset()
-    discover_plugins()
+    if not registry.available:
+        discover_plugins()
 
     from backend.core import create_app
 
-    application = create_app()
+    return create_app()
 
-    # 使用 TestClient 触发 lifespan startup（迁移、建表、种子配置、on_startup 钩子）
-    from fastapi.testclient import TestClient
 
-    with TestClient(application) as test_client:
-        # 发一个请求确保 startup 完成
-        test_client.get("/api/ping")
+@pytest_asyncio.fixture
+async def app():
+    """创建真实 FastAPI 应用 —— 所有插件激活，独立 in-memory SQLite。
 
-        yield application
+    每个测试获得独立的 in-memory 数据库，通过 async_client 或 db_session
+    自动触发 ensure_tables 建表。测试结束时自动清理。
+    """
+    import uuid as _uuid
+
+    db_id = _uuid.uuid4().hex[:12]
+    db_url = os.environ.get(
+        "ARCHE_TEST_DB_URL",
+        f"sqlite+aiosqlite:///file:arche_test_{db_id}?mode=memory&cache=shared&uri=true",
+    )
+
+    application = _build_app(db_url)
+
+    # 确保表已创建 + 种子配置（所有 fixture 依赖 app 自动获得）
+    from backend.core.db import ensure_tables, session_factory as sf
+    from backend.core.config import config_manager
+
+    await ensure_tables()
+    if sf is not None:
+        config_manager.set_session_factory(sf)
+        from backend.core import _seed_default_config
+        await _seed_default_config(sf)
+
+    yield application
 
     # 关闭数据库连接
     from backend.core.db import close_db
+    import backend.core.db as db_module
 
+    db_module._initialized = False
     await close_db()
 
-    # 清理数据库文件
-    try:
-        db_path = Path(_TEST_DB)
-        if db_path.exists():
-            db_path.unlink()
-    except PermissionError:
-        pass  # Windows 上可能被缓存占用
+    # TestClient shutdown 已触发 close_db()，无需重复调用
 
 
 # ── HTTP 客户端 ────────────────────────────────────────────────────
@@ -99,11 +121,7 @@ async def app():
 
 @pytest_asyncio.fixture
 async def async_client(app) -> AsyncGenerator[httpx.AsyncClient, None]:
-    """异步 HTTP 客户端 —— 走真实 ASGI 全栈。
-
-    httpx.AsyncClient 的 ASGITransport 会在进入/退出时自动触发
-    lifespan startup/shutdown 事件。
-    """
+    """异步 HTTP 客户端 —— 走真实 ASGI 全栈。"""
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(
         transport=transport,
@@ -112,16 +130,6 @@ async def async_client(app) -> AsyncGenerator[httpx.AsyncClient, None]:
         yield client
 
 
-@pytest.fixture
-def client(app):
-    """同步 TestClient —— 适用于不涉及 async 断言的纯路由测试。
-
-    FastAPI 的 TestClient 内部使用 httpx，会自动管理 lifespan 事件。
-    """
-    from fastapi.testclient import TestClient
-
-    with TestClient(app) as c:
-        yield c
 
 
 # ── 认证工具 ────────────────────────────────────────────────────────
@@ -129,10 +137,7 @@ def client(app):
 
 @pytest_asyncio.fixture
 async def auth_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
-    """注册一个普通测试用户并返回 JWT 认证头。
-
-    创建用户 → 登录 → 提取 access_token → 返回 Authorization header。
-    """
+    """注册普通测试用户并返回 JWT 认证头。"""
     user_suffix = uuid.uuid4().hex[:8]
     reg_payload = {
         "email": f"test_{user_suffix}@example.com",
@@ -141,11 +146,25 @@ async def auth_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
         "password": "TestPass123!",
     }
 
-    # 注册
     resp = await async_client.post("/api/auth/register", json=reg_payload)
     assert resp.status_code == 200, f"注册失败: {resp.text}"
 
-    # 登录
+    # 普通用户设为 level=5（第一个注册用户会默认得到 level=0）
+    from sqlalchemy import select, update
+    from backend.plugins.auth.models import User
+    from backend.core.container import container as global_container
+
+    sf = global_container.get("db")["session_factory"]
+    async with sf() as session:
+        result = await session.execute(
+            select(User).where(User.username == reg_payload["username"])
+        )
+        user = result.scalar_one()
+        await session.execute(
+            update(User).where(User.id == user.id).values(level=5)
+        )
+        await session.commit()
+
     login_payload = {
         "identity": reg_payload["username"],
         "password": reg_payload["password"],
@@ -160,10 +179,7 @@ async def auth_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
 
 @pytest_asyncio.fixture
 async def admin_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
-    """注册 P0 管理员用户并返回 JWT 认证头。
-
-    注册后通过数据库直接设置 level=0，确保拥有管理员权限。
-    """
+    """注册 P0 管理员用户并返回 JWT 认证头。"""
     user_suffix = uuid.uuid4().hex[:8]
     reg_payload = {
         "email": f"admin_{user_suffix}@example.com",
@@ -175,12 +191,11 @@ async def admin_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
     resp = await async_client.post("/api/auth/register", json=reg_payload)
     assert resp.status_code == 200, f"管理员注册失败: {resp.text}"
 
-    # 手动将用户等级设为 P0（确保即使不是第一个注册用户也能当管理员）
+    # 手动将用户等级设为 P0
     from sqlalchemy import select, update
 
     from backend.plugins.auth.models import User
 
-    # 通过 app 的 session_factory 直接操作数据库
     from backend.core.container import container as global_container
 
     sf = global_container.get("db")["session_factory"]
@@ -194,7 +209,6 @@ async def admin_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
         )
         await session.commit()
 
-    # 重新登录获取带 level=0 信息的 JWT
     login_payload = {
         "identity": reg_payload["username"],
         "password": reg_payload["password"],
@@ -212,15 +226,11 @@ async def admin_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
 
 @pytest_asyncio.fixture
 async def db_session(app) -> AsyncGenerator[AsyncSession, None]:
-    """返回一个真实的数据库会话 —— 可进行 CRUD 断言。
-
-    使用 app.state.container 中注册的 session_factory 创建会话。
-    """
+    """返回真实数据库会话。"""
     from backend.core.container import container as global_container
 
     sf: async_sessionmaker[AsyncSession] | None = None
 
-    # 尝试从 app state 获取
     if hasattr(app.state, "container"):
         try:
             db = app.state.container.get("db")
@@ -228,12 +238,11 @@ async def db_session(app) -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             pass
 
-    # 兜底：全局容器
     if sf is None and global_container.is_available("db"):
         db = global_container.get("db")
         sf = db.get("session_factory")
 
-    assert sf is not None, "无法获取 session_factory，应用可能未正确初始化"
+    assert sf is not None, "无法获取 session_factory"
 
     async with sf() as session:
         yield session

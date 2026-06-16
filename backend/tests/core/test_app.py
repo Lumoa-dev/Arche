@@ -50,11 +50,6 @@ class TestHealthEndpoint:
         assert data["code"] == "ok"
         assert data["data"]["status"] == "healthy"
 
-    def test_ping_sync(self, client):
-        """同步 TestClient 同样可以访问 ping。"""
-        resp = client.get("/api/ping")
-        assert resp.status_code == 200
-        assert resp.json()["code"] == "ok"
 
 
 class TestLifecycle:

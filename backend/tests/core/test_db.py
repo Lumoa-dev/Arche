@@ -126,18 +126,23 @@ class TestConfigSeed:
 
         from backend.core.models import ConfigEntry
 
+        # 先触发一次种子写入
+        from backend.core import _seed_default_config
+        from backend.core.config import config_manager
+        from backend.core.db import session_factory as sf
+
+        if sf is not None:
+            config_manager.set_session_factory(sf)
+            await _seed_default_config(sf)
+
         # 计数当前行数
         result = await db_session.execute(select(func.count()).select_from(ConfigEntry))
         count_before = result.scalar()
 
-        # 再次触发 seed（模拟应用重启）
-        from backend.core import _seed_default_config
+        # 再次触发 seed（应是幂等）
+        if sf is not None:
+            await _seed_default_config(sf)
 
-        container = app.state.container
-        db = container.get("db")
-        await _seed_default_config(db["session_factory"])
-
-        # 重新计数
         result = await db_session.execute(select(func.count()).select_from(ConfigEntry))
         count_after = result.scalar()
 

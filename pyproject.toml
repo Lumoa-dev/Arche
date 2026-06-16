@@ -149,8 +149,15 @@ type-check-frontend = "cd frontend && npm run type-check"
 
 # ── 测试 ──
 test = "task test-backend && task test-frontend"
-test-backend = "uv run pytest"
+test-backend = "uv run pytest backend/tests/ -m 'not real' -q --tb=short"
 test-frontend = "cd frontend && npm run test:run"
+
+# 增量/分组测试
+test-core = "uv run pytest backend/tests/core/ -q --tb=short"
+test-edge = "uv run pytest backend/tests/edge_cases/ -q --tb=short"
+test-plugin = "uv run pytest backend/tests/plugins/{args} -q --tb=short"
+test-all = "uv run pytest backend/tests/ -m 'not real' -q --tb=short"
+test-changed = "python scripts/test_changed.py"
 
 # ── 构建 ──
 build = "cd frontend && npm run build"

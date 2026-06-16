@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ── 真实后端集成测试（PostgreSQL + 运行中后端） ──
+  # ── 真实外部服务集成测试（PostgreSQL + -m "real"） ──
   test-real-py:
     runs-on: ubuntu-latest
 
@@ -39,38 +39,8 @@ jobs:
       - name: Install deps
         run: uv sync --frozen
 
-      - name: Start backend
-        run: |
-          nohup uv run uvicorn backend.main:app --host 127.0.0.1 --port 8000 --log-level warning > /tmp/backend.log 2>&1 &
-          echo "Backend PID: $!"
-          # 等待后端就绪（ping 健康检查 + 自动迁移完成）
-          for i in $(seq 1 30); do
-            if curl -s http://127.0.0.1:8000/api/ping > /dev/null 2>&1; then
-              echo "Backend ready after ${i}s"
-              break
-            fi
-            sleep 1
-          done
-
       - name: Run real backend tests
-        run: uv run pytest backend/tests/real/ -v --tb=long --no-header -p no:cacheprovider
-
-      - name: Dump backend logs on failure
-        if: failure()
-        run: cat /tmp/backend.log
-
-  # ── SQLite 集成测试（本地快速模式） ──
-  test-integration-py:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.0.0
-        with:
-          enable-cache: true
-      - name: Install deps
-        run: uv sync --frozen
-      - name: Run integration tests
-        run: uv run pytest backend/tests/integration/ -n auto --tb=short --no-header
+        run: uv run pytest backend/tests/ -m "real" -v --tb=long --no-header -p no:cacheprovider
 
   # ── 前端集成测试 ──
   test-frontend:

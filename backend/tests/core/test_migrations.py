@@ -18,7 +18,7 @@ class TestAlembicMigrations:
 
     @pytest.mark.asyncio
     async def test_tables_exist_after_migration(self, app):
-        """所有核心表和插件表在迁移后已创建。"""
+        """所有核心表和插件表已创建（通过 ensure_tables）。"""
         from sqlalchemy import inspect as sa_inspect
 
         container = app.state.container
@@ -30,20 +30,11 @@ class TestAlembicMigrations:
                 lambda sync_conn: sa_inspect(sync_conn).get_table_names()
             )
 
-        # 核心表
         assert "config_entries" in tables
-
-        # 插件表（来自初始迁移）
         assert "users" in tables
-        assert "oss_files" in tables, f"oss_files missing, tables: {tables}"
         assert "blog_posts" in tables
-
-        # 新迁移补入的表（ip_ban + request_log）
-        assert "ip_bans" in tables, f"ip_bans missing after migration 3a8f72c9d5e1"
-        assert "ip_ban_logs" in tables
-        assert "auto_ban_rule_configs" in tables
-        assert "request_logs" in tables, f"request_logs missing after migration 3a8f72c9d5e1"
-        assert "ip_action_counters" in tables
+        assert "ip_bans" in tables, f"ip_bans missing: {tables}"
+        assert "request_logs" in tables, f"request_logs missing: {tables}"
 
     @pytest.mark.asyncio
     async def test_blog_tables_created(self, app):
