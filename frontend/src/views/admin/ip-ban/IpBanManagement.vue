@@ -148,6 +148,11 @@ function refresh() {
   loadStats()
 }
 
+function onPageUpdate(p: number) {
+  page.value = p
+  loadBans()
+}
+
 onMounted(() => {
   loadBans()
   loadStats()
@@ -243,10 +248,7 @@ const columns = [
       :page="page"
       :page-size="pageSize"
       :item-count="total"
-      @update:page="
-        page = $event
-        loadBans()
-      "
+      @update:page="onPageUpdate"
     />
 
     <!-- 封禁对话框 -->

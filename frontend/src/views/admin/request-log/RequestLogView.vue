@@ -116,6 +116,16 @@ const counterTotal = ref(0)
 const counterPage = ref(1)
 const counterLoading = ref(false)
 
+function onLogPageUpdate(p: number) {
+  logPage.value = p
+  fetchLogs()
+}
+
+function onCounterPageUpdate(p: number) {
+  counterPage.value = p
+  fetchCounters()
+}
+
 const counterColumns = [
   { title: 'IP', key: 'ip', width: 140 },
   {
@@ -325,10 +335,7 @@ onMounted(() => {
               :page="logPage"
               :page-size="20"
               :item-count="logTotal"
-              @update:page="
-                logPage = $event
-                fetchLogs()
-              "
+              @update:page="onLogPageUpdate"
             />
           </div>
         </ArVBox>
@@ -384,10 +391,7 @@ onMounted(() => {
               :page="counterPage"
               :page-size="20"
               :item-count="counterTotal"
-              @update:page="
-                counterPage = $event
-                fetchCounters()
-              "
+              @update:page="onCounterPageUpdate"
             />
           </div>
         </ArVBox>

@@ -28,6 +28,11 @@ async function loadLogs() {
 
 onMounted(loadLogs)
 
+function onPageUpdate(p: number) {
+  page.value = p
+  loadLogs()
+}
+
 const columns = [
   { key: 'ip_or_cidr', title: 'IP/CIDR' },
   { key: 'action', title: '操作' },
@@ -63,10 +68,7 @@ const columns = [
       :page="page"
       :page-size="pageSize"
       :item-count="total"
-      @update:page="
-        page = $event
-        loadLogs()
-      "
+      @update:page="onPageUpdate"
     />
   </div>
 </template>
