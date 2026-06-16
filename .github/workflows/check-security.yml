@@ -42,13 +42,15 @@ jobs:
           else
             CHANGES='${{ steps.filter.outputs.changes }}'
 
-            # CodeQL 在 PR 事件必须始终返回结果（branch protection 要求）
-            if [ "$CHANGES" = "[]" ] && [ "${{ github.event_name }}" = "pull_request" ]; then
-              echo 'languages=["python"]' >> $GITHUB_OUTPUT
+            # PR 事件：branch protection 要求所有语言的 CodeQL 都跑，
+            # 不能按变更内容有条件跳过，否则 check 永远等不到不存在的 job。
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              echo 'languages=["python","javascript"]' >> $GITHUB_OUTPUT
             else
               echo "languages=$CHANGES" >> $GITHUB_OUTPUT
             fi
 
+            # Bandit 扫描（非 required check）仅 python 有变更时跑
             if echo "$CHANGES" | jq -e 'contains(["python"])' > /dev/null 2>&1; then
               echo "run-py-scan=true" >> $GITHUB_OUTPUT
             else
