@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ── 跑后端集成测试 ──
   test-integration-py:
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +19,6 @@ jobs:
       - name: Run integration tests
         run: uv run pytest backend/tests/integration/ -n auto --tb=short --no-header
 
-  # ── 跑攻击测试 ──
   test-attack:
     runs-on: ubuntu-latest
     steps:
@@ -31,35 +29,20 @@ jobs:
       - name: Install deps
         run: uv sync --frozen
       - name: Run attack tests
-        id: tests
-        run: |
-          uv run pytest backend/tests/adversarial/ -v --tb=long --no-header 2>&1 | tee attack-test-report.txt
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v7.0.1
+        run: uv run pytest backend/tests/adversarial/ -v --tb=long --no-header
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6.4.0
         with:
-          name: attack-test-report
-          path: attack-test-report.txt
-          retention-days: 7
-
-  # ── 定时失败告警（建 Issue，不建分支） ──
-  alert-schedule:
-    needs: [test-attack]
-    if: failure() && github.event_name == 'schedule'
-    uses: ./.github/workflows/report-fail.yml
-    with:
-      title: "攻击测试失败"
-      labels: "security,auto-generated"
-      artifact-name: "attack-test-report"
-
-  # ── 合并到 master 失败告警（建 Issue + 建分支） ──
-  alert-fail:
-    needs: [test-integration-py, test-attack]
-    if: failure() && github.event_name == 'workflow_call'
-    uses: ./.github/workflows/report-fail.yml
-    with:
-      title: "集成/攻击测试失败"
-      labels: "bug,auto-generated"
-      create-fix-branch: true
-      branch-prefix: "fix/integration-failure"
-    secrets: inherit
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install deps
+        working-directory: frontend
+        run: npm ci
+      - name: Run frontend integration tests
+        working-directory: frontend
+        run: npx vitest run src/tests/integration/ --reporter=verbose
