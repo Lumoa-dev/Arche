@@ -312,3 +312,75 @@ Keep it tight — one or two sentences per field:
 **Why:** The `AuthMiddleware` only whitelists `/api/auth/register`, `/api/auth/login`, `/api/auth/refresh`. Everything else requires a valid JWT. A health check endpoint should always be public.
 
 **Lesson:** Added `/api/ping` to `AuthMiddleware.PUBLIC_PATHS` — health checks are infrastructure, not application logic.
+
+---
+
+### 2026-06-17: Use pytest-httpx to mock external HTTP in integration tests
+
+**What:** When an integration test triggers outbound HTTP (e.g., GitHub raw content proxy), mock it with `pytest-httpx`'s `httpx_mock` fixture instead of marking the test with `@pytest.mark.real` and skipping in CI.
+
+**When:** Writing tests for plugins that proxy or fetch external URLs — github_proxy, crawler, cloud_integration, oss, ip_ban.
+
+**Why:** `@pytest.mark.real` tests are always skipped by default, so their coverage is effectively zero. `pytest-httpx` intercepts all `httpx.AsyncClient`/`httpx.Client` requests globally, including clients created internally by services (e.g., `HttpProxyService.proxy_raw_content` creates its own `httpx.AsyncClient`). For non-httpx HTTP clients (`urllib3`, `aiohttp`), use `unittest.mock.patch` instead.
+
+**Lesson:** Default to `pytest-httpx` for any integration test that would otherwise need network access. The `httpx_mock` fixture is autowired by pytest — no conftest registration needed. For services that create their own `httpx.AsyncClient` internally, the mock still intercepts because it patches at the transport layer.
+
+---
+
+### 2026-06-17: Distinguish test layers — unit, integration, edge/security
+
+**What:** Organize backend tests into three directories with clear boundaries: `unit/` (pure logic, no ASGI/DB), `core/` + `plugins/` (real ASGI integration), `edge_cases/` (boundary conditions + attack vectors).
+
+**When:** Restructuring the test suite. Previously all tests were "real integration tests" with no mock, but some code (CacheEntry, URL parsing, rate limiter logic) is pure enough to test without the ASGI stack — saving ~74s per run for 13 fast tests.
+
+**Why:** Unit tests run in <0.5s vs integration tests taking 3-8s each. Separating them makes the quick feedback loop faster for pure logic changes. Edge/security tests are a distinct concern — they verify the system doesn't crash or leak under attack, not that features work correctly.
+
+**Lesson:** Enforce the boundary in the directory structure, not in comments. `unit/` tests import service classes directly and construct minimal fakes for dependencies (e.g., `FakeContainer` with `get()` returning config). They never `from conftest import app` or use `async_client`.
+
+---
+
+### 2026-06-17: First-time registration gives level 0 — mass assignment test can't assert `level != 0`
+
+**What:** In `test_security.py::TestMassAssignment::test_cannot_set_own_level`, attempting to register with `level: 0` succeeds and the resulting user has level 0 — not because the request body was honored, but because the first registered user in any test session gets level 0 by auth service logic.
+
+**When:** Writing a stronger assertion that registration with `level: 0` should not result in `level: 0`.
+
+**Why:** The auth service grants level 0 to the first-ever user as a bootstrap mechanism. The `level` field in the request body is ignored (mass assignment protection works), but the first-user promotion happens after the field is already discarded. Any test of mass assignment must avoid asserting on the resulting level value — check instead that extra fields don't cause a 500.
+
+**Lesson:** When testing mass assignment protection in a system with first-user promotion, don't assert on the resulting field value. Check that the API doesn't crash and that the extra fields are silently ignored. Document the first-user quirk in the test comment.
+
+---
+
+### 2026-06-17: Test environment auto-detection — `test_env.py` as the foundation layer
+
+**What:** Create `backend/tests/test_env.py` as the test infrastructure's "eyes" — automatically detects Docker/WSL/CI environment and PostgreSQL/MinIO service availability, then adapts the test configuration accordingly.
+
+**When:** Building the testing foundation layer. Previously, switching between SQLite and PostgreSQL required manual `ARCHE_TEST_DB_URL` setting, and OSS tests always skipped because the storage directory didn't exist.
+
+**Why:** A unified environment detection layer eliminates human error in test configuration. Docker containers detect themselves via `/.dockerenv`, CI via environment variables, service availability via port probes. The detection output is printed at the start of every test run, making the test configuration transparent.
+
+**Lesson:** The detection module must be pure Python stdlib — no pytest fixtures, no application imports — so it can be imported at module level in conftest.py before any fixtures initialize. Cache detection results (via `_CACHE` dict) since they're read-heavy but don't change during a test run.
+
+---
+
+### 2026-06-17: PostgreSQL test isolation — per-test schema for CI/Docker
+
+**What:** When PostgreSQL is available, each `app()` fixture creates an isolated schema (`CREATE SCHEMA test_{uuid}`), runs all tables inside it, and drops it on teardown (`DROP SCHEMA ... CASCADE`). This matches SQLite in-memory's per-test isolation guarantee.
+
+**When:** Running integration tests against a real PostgreSQL database. Without schema isolation, tests using the same fixed database (`arche_test`) can conflict — parallel test runs or sequential tests that leave residual data break each other.
+
+**Why:** SQLite in-memory gives per-test isolation for free (each `app()` creates a brand-new database). PostgreSQL needs an explicit equivalent. Schema-level isolation is lighter than database-level (no connection pool reconfiguration) and can be implemented purely in conftest.py without changing application code.
+
+**Lesson:** Use `isolation_level="AUTOCOMMIT"` for the schema-creation engine (DDL outside transactions). Set `search_path` in the connection URL so all subsequent `Base.metadata.create_all` and queries land in the right schema. Always `DROP SCHEMA ... CASCADE` on teardown — never leave test schemas behind.
+
+---
+
+### 2026-06-17: OSS local storage in tests — auto-create temp dir via fixture
+
+**What:** Added `oss_storage_dir` fixture that creates a pytest `tmp_path` subdirectory and sets `OSS_STORAGE_DIR` env var. The OSS service's `_get_local()` backend auto-discovers this directory, so upload tests work without MinIO. Replaced `pytest.skip("OSS storage 目录未初始化")` with the fixture dependency.
+
+**When:** OSS plugin tests — the `test_upload_image` test always skipped because no storage directory existed in the test environment.
+
+**Why:** The OSS service already had automatic fallback from MinIO → local filesystem (`_get_minio()` → `_get_local()`). The missing piece was just a writable directory. pytest's `tmp_path` provides automatic creation + cleanup, which pairs perfectly with the OSS fallback chain.
+
+**Lesson:** When a service already has graceful fallback, the test infrastructure just needs to provide the fallback target. The `oss_storage_dir` fixture pattern can be reused for any plugin that writes to local filesystem in tests. Name the fixture clearly so plugin tests know they can depend on it.

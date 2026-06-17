@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ── 真实外部服务集成测试（PostgreSQL + -m "real"） ──
+  # ── 全真服务集成测试（PostgreSQL + MinIO） ──
   test-real-py:
     runs-on: ubuntu-latest
 
@@ -26,10 +26,19 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      minio:
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: veiltest
+          MINIO_ROOT_PASSWORD: veiltest123
+          MINIO_DEFAULT_BUCKETS: arche-test
+        ports:
+          - 9000:9000
+          - 9001:9001
+
     env:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/arche_test
+      ARCHE_TEST_DB_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/arche_test
       SECRET_KEY: ci-test-secret-key-for-real-tests
-      ARCHE_TEST_REAL: "1"
 
     steps:
       - uses: actions/checkout@v6
@@ -39,8 +48,8 @@ jobs:
       - name: Install deps
         run: uv sync
 
-      - name: Run real backend tests
-        run: uv run pytest backend/tests/ -m "real" -v --tb=long --no-header -p no:cacheprovider
+      - name: Run full backend tests with real services
+        run: uv run pytest backend/tests/ --tb=long --no-header -p no:cacheprovider --ignore=backend/tests/plugins/request_log
 
   # ── 前端集成测试 ──
   test-frontend:

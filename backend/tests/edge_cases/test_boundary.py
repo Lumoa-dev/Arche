@@ -22,6 +22,10 @@ class TestEmptyInput:
             ("POST", "/api/auth/logout"),
             ("POST", "/api/auth/refresh"),
             ("POST", "/api/oss/upload"),
+            ("POST", "/api/crawler/seeds"),
+            ("POST", "/api/crawler/blacklist"),
+            ("POST", "/api/ip-ban/bans"),
+            ("PUT", "/api/config/LOG_LEVEL"),
         ]
         for method, path in endpoints:
             if method == "POST":
@@ -44,6 +48,19 @@ class TestEmptyInput:
             json={"email": "test@test.com"},  # 缺少 username, nickname, password
         )
         assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_empty_body_auth_required(self, async_client, auth_headers):
+        """需要认证的端点，空 body 加上认证后依然返回 422。"""
+        resp = await async_client.post(
+            "/api/crawler/seeds",
+            json={},
+            headers=auth_headers,
+        )
+        # 认证通过但验证失败
+        assert resp.status_code == 422
+        data = resp.json()
+        assert "validation" in data.get("code", "").lower()
 
 
 class TestLongInput:
@@ -100,6 +117,34 @@ class TestLongInput:
             data = resp.json()
             assert "validation" in data.get("code", "").lower()
 
+    @pytest.mark.asyncio
+    async def test_very_long_url(self, async_client, admin_headers):
+        """爬虫种子 URL 超长时服务端的应对行为。
+
+        当前实现不限制 URL 长度，超长 URL 可能被完整接受。
+        如未来添加 Pydantic 长度校验，应转为 assert 422。
+        """
+        resp = await async_client.post(
+            "/api/crawler/seeds",
+            json={"url": "https://example.com/" + "x" * 5000},
+            headers=admin_headers,
+        )
+        assert resp.status_code in (200, 201, 400, 422, 413)
+
+    @pytest.mark.asyncio
+    async def test_very_long_crawler_blacklist(self, async_client, admin_headers):
+        """爬虫黑名单 pattern 超长时服务端的应对行为。
+
+        当前实现不限制 length，超长 pattern 可能被完整接受。
+        如未来添加 Pydantic 长度校验，应转为 assert 422。
+        """
+        resp = await async_client.post(
+            "/api/crawler/blacklist",
+            json={"pattern": "x" * 10000},
+            headers=admin_headers,
+        )
+        assert resp.status_code in (200, 201, 400, 422)
+
 
 class TestMethodNotAllowed:
     """HTTP 方法限制。"""
@@ -124,6 +169,18 @@ class TestMethodNotAllowed:
     async def test_put_on_readonly_endpoint(self, async_client):
         """PUT 请求只读端点返回 405。"""
         resp = await async_client.put("/api/ping", json={})
+        assert resp.status_code == 405
+
+    @pytest.mark.asyncio
+    async def test_delete_on_readonly(self, async_client):
+        """DELETE 请求只读端点返回 405。"""
+        resp = await async_client.delete("/api/ping")
+        assert resp.status_code == 405
+
+    @pytest.mark.asyncio
+    async def test_patch_on_readonly(self, async_client):
+        """PATCH 请求只读端点返回 405。"""
+        resp = await async_client.patch("/api/ping")
         assert resp.status_code == 405
 
 

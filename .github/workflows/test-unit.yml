@@ -48,7 +48,7 @@ jobs:
       - name: Install deps
         run: uv sync
       - name: Run ${{ matrix.plugin }} tests
-        run: uv run pytest backend/tests/plugins/${{ matrix.plugin }}/ -m 'not real' --tb=short --no-header
+        run: uv run pytest backend/tests/plugins/${{ matrix.plugin }}/ --tb=short --no-header
 
   # ── 后端边界/安全测试 ──
   test-edge:

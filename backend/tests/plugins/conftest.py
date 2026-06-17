@@ -58,6 +58,10 @@ async def _build_plugin_app(plugin_name: str) -> FastAPI:
     1. 如未发现插件则触发发现
     2. 激活目标插件 + 所有它 require/optional 的依赖
     3. 返回已配置的应用实例
+
+    数据库选择基于 test_env 自动检测：
+      - PostgreSQL 可用 → 使用 PostgreSQL
+      - 降级 → SQLite in-memory
     """
     from backend.core.container import ServiceContainer
     from backend.core.db import init_db
@@ -67,6 +71,7 @@ async def _build_plugin_app(plugin_name: str) -> FastAPI:
         setup_security_headers,
     )
     from backend.core.plugin_registry import discover_plugins, registry
+    from backend.tests import test_env
 
     if not registry.available:
         discover_plugins()
@@ -84,15 +89,18 @@ async def _build_plugin_app(plugin_name: str) -> FastAPI:
 
     # 初始化数据库
     import os
-    import uuid
 
     os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
 
-    db_id = uuid.uuid4().hex[:12]
-    database_url = os.environ.get(
-        "ARCHE_TEST_DB_URL",
-        f"sqlite+aiosqlite:///file:arche_test_{plugin_name}_{db_id}?mode=memory&cache=shared&uri=true",
-    )
+    database_url = test_env.recommended_db_url()
+    if not database_url:
+        import uuid
+
+        db_id = uuid.uuid4().hex[:12]
+        database_url = (
+            f"sqlite+aiosqlite:///file:arche_test_{plugin_name}_{db_id}"
+            "?mode=memory&cache=shared&uri=true"
+        )
     engine, session_factory = init_db(database_url)
 
     def _db_factory(c):

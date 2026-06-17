@@ -1,4 +1,7 @@
-"""GitHub 代理插件测试（require_level=1）。"""
+"""GitHub 代理插件测试（require_level=1）。
+
+外部 HTTP 请求通过 pytest-httpx 模拟，无需真实 GitHub API 调用。
+"""
 
 from __future__ import annotations
 
@@ -8,7 +11,7 @@ PREFIX = "/api/github"
 
 
 class TestGitHubProxy:
-    """GitHub 代理 —— 部分端点依赖外部服务。"""
+    """GitHub 代理 —— 通过 pytest-httpx 模拟外部调用。"""
 
     @pytest.mark.asyncio
     async def test_health(self, async_client, admin_headers):
@@ -40,17 +43,26 @@ class TestGitHubProxy:
         data = resp.json()
         assert data["code"] == "ok"
 
-
-@pytest.mark.real
-class TestGitHubProxyReal:
-    """需要真实外部 GitHub 的测试（默认跳过，CI 中通过 -m real 执行）。"""
-
     @pytest.mark.asyncio
-    async def test_raw_file(self, async_client, admin_headers):
-        """GET /raw/{path} 代理到 raw.githubusercontent.com。"""
+    async def test_raw_file(self, async_client, admin_headers, httpx_mock):
+        """GET /raw/{path} 代理到 raw.githubusercontent.com（由 pytest-httpx 拦截）。
+
+        HttpProxyService.proxy_raw_content 内部创建 httpx.AsyncClient 并请求
+        https://raw.githubusercontent.com/owner/repo/branch/file.py，
+        pytest-httpx 拦截该请求并返回模拟响应。
+        """
+        httpx_mock.add_response(
+            url="https://raw.githubusercontent.com/owner/repo/branch/file.py",
+            content=b"print('hello world')\n",
+            headers={"Content-Type": "text/plain; charset=utf-8"},
+        )
+
         resp = await async_client.get(
             f"{PREFIX}/raw/owner/repo/branch/file.py",
             headers=admin_headers,
         )
-        # 外部依赖，接受多种状态码
-        assert resp.status_code in (200, 301, 302, 404, 502, 503)
+        assert resp.status_code == 200, f"raw 代理失败: {resp.text}"
+        assert resp.content == b"print('hello world')\n"
+        # Content-Type 可能因 pytest-httpx 模拟的响应头大小写而不同，
+        # 但一定不是 HTML（proxy_raw_content 走 HTTP 模式返回模拟数据）
+        assert resp.headers.get("content-type", "") != "text/html"

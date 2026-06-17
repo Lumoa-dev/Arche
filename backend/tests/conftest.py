@@ -1,17 +1,19 @@
-"""测试基础架构 —— 真实 ASGI 全栈、真实数据库、零 Mock。
+"""测试基础架构 —— 真实 ASGI 全栈、自动环境感知。
 
 所有测试走真实后端链路：路由器 → 中间件（认证/IP封禁/请求日志）→ 服务层 → 数据库。
 每个 fixture 返回真实对象，没有 MagicMock，没有模拟数据库。
 
-数据库策略：
-  - 每个测试使用独立 SQLite 文件（tmp_path），完全隔离
-  - 启动时执行 Alembic 迁移 + ensure_tables + 种子配置
-  - CI 中可通过 `ARCHE_TEST_DB_URL` 环境变量切换为 PostgreSQL
+环境策略（自动检测）：
+  1. PostgreSQL + MinIO 可用 → 全真服务测试（Docker/CI/WSL 直连）
+  2. 仅 SQLite + 本地文件系统 → 轻量本地测试（裸金属开发机）
+
+可通过 ARCHE_TEST_DB_URL 环境变量强制指定数据库 URL，覆盖自动检测。
 """
 
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import uuid
 from collections.abc import AsyncGenerator
@@ -21,12 +23,32 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from backend.tests import test_env
+
+logger = logging.getLogger(__name__)
+
 # ── 测试环境变量（在导入任何 backend 模块前生效） ──────────────────────
 os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-0123456789"
 os.environ["LOG_LEVEL"] = "CRITICAL"
 os.environ["CORS_ORIGINS"] = "http://testserver"
 os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
 os.environ["ARCHE_TEST"] = "1"
+
+
+# ── 启动日志 ─────────────────────────────────────────────────────────
+
+
+def pytest_configure(config):
+    """pytest 配置完成后输出环境检测报告。"""
+    # 使用 print 而非 logger，确保在测试收集阶段可见
+    print(f"\n[TestEnv] {test_env.describe_environment()}")
+    db_url = test_env.recommended_db_url()
+    if db_url:
+        print(f"[TestEnv] Database: PostgreSQL ({db_url})")
+    else:
+        print("[TestEnv] Database: SQLite in-memory (per-test)")
+    storage = test_env.recommended_storage()
+    print(f"[TestEnv] Storage: {storage['strategy']}")
 
 
 # ── 事件循环 ────────────────────────────────────────────────────────
@@ -42,6 +64,64 @@ def event_loop():
 
 
 # ── FastAPI 应用（function-scoped，每个测试独立 DB） ────────────────
+
+
+def _setup_pg_schema(database_url: str, schema_name: str) -> str:
+    """为 PostgreSQL 测试创建独立 schema。
+
+    当使用 PostgreSQL 时，每个测试获得一个独立 schema，
+    确保测试间完全隔离。测试结束后由 _teardown_pg_schema 清理。
+
+    Args:
+        database_url: 原始 PostgreSQL URL
+        schema_name: 要创建的 schema 名称（如 test_a1b2c3d4）
+
+    Returns:
+        修改后的 database_url，包含 search_path 参数
+    """
+    import re
+
+    if not database_url.startswith("postgresql"):
+        return database_url  # 非 PostgreSQL 无需操作
+
+    # 用简单连接创建 schema
+    from sqlalchemy import text as sa_text
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    temp_engine = create_async_engine(database_url, isolation_level="AUTOCOMMIT")
+    import asyncio
+
+    async def _create():
+        async with temp_engine.connect() as conn:
+            await conn.execute(sa_text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}"))
+            # 将后续连接的 search_path 设为该 schema
+            await conn.execute(
+                sa_text(f"SET search_path TO {schema_name}, public")
+            )
+
+    asyncio.get_running_loop().run_until_complete(_create())
+    import asyncio as _asyncio
+
+    _asyncio.get_event_loop().run_until_complete(temp_engine.dispose())
+
+    # 为后续连接附加 search_path 参数
+    # asyncpg 支持通过 connect_args 传递
+    separator = "&" if "?" in database_url else "?"
+    return f"{database_url}{separator}search_path={schema_name}"
+
+
+async def _teardown_pg_schema(database_url: str, schema_name: str) -> None:
+    """清理 PostgreSQL 测试 schema。"""
+    if not database_url.startswith("postgresql"):
+        return
+
+    from sqlalchemy import text as sa_text
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    engine = create_async_engine(database_url, isolation_level="AUTOCOMMIT")
+    async with engine.begin() as conn:
+        await conn.execute(sa_text(f"DROP SCHEMA IF EXISTS {schema_name} CASCADE"))
+    await engine.dispose()
 
 
 def _build_app(db_url: str):
@@ -80,18 +160,36 @@ def _build_app(db_url: str):
 
 @pytest_asyncio.fixture
 async def app():
-    """创建真实 FastAPI 应用 —— 所有插件激活，独立 in-memory SQLite。
+    """创建真实 FastAPI 应用 —— 基于环境检测自动选择数据库。
 
-    每个测试获得独立的 in-memory 数据库，通过 async_client 或 db_session
-    自动触发 ensure_tables 建表。测试结束时自动清理。
+    环境检测顺序：
+      1. ARCHE_TEST_DB_URL 显式指定 → 使用该 URL
+      2. PostgreSQL 端口可达     → 使用 PostgreSQL（全真测试）
+      3. 降级                    → SQLite in-memory（本地轻量测试）
+
+    隔离策略：
+      - SQLite in-memory：每个测试独立数据库（天生隔离）
+      - PostgreSQL：每个测试创建独立 schema（CREATE SCHEMA test_{uuid}）
+        测试结束后 DROP SCHEMA CASCADE 自动清理
     """
     import uuid as _uuid
 
-    db_id = _uuid.uuid4().hex[:12]
-    db_url = os.environ.get(
-        "ARCHE_TEST_DB_URL",
-        f"sqlite+aiosqlite:///file:arche_test_{db_id}?mode=memory&cache=shared&uri=true",
-    )
+    # 自动检测数据库 URL
+    db_url = test_env.recommended_db_url()
+    use_pg = db_url.startswith("postgresql") if db_url else False
+
+    # PostgreSQL：创建独立 schema 实现隔离
+    pg_schema = None
+    if use_pg:
+        pg_schema = f"test_{_uuid.uuid4().hex[:12]}"
+        db_url = _setup_pg_schema(db_url, pg_schema)
+    else:
+        # 降级：SQLite in-memory，每个测试独立
+        db_id = _uuid.uuid4().hex[:12]
+        db_url = (
+            f"sqlite+aiosqlite:///file:arche_test_{db_id}"
+            "?mode=memory&cache=shared&uri=true"
+        )
 
     application = _build_app(db_url)
 
@@ -116,7 +214,28 @@ async def app():
     db_module._initialized = False
     await close_db()
 
-    # TestClient shutdown 已触发 close_db()，无需重复调用
+    # PostgreSQL：清理独立 schema
+    if pg_schema:
+        original_url = test_env.recommended_db_url()
+        if original_url.startswith("postgresql"):
+            await _teardown_pg_schema(original_url, pg_schema)
+
+
+# ── OSS 测试存储目录 ──────────────────────────────────────────────
+
+
+@pytest.fixture
+def oss_storage_dir(tmp_path) -> str:
+    """为 OSS 测试创建临时存储目录，测试结束后自动清理。
+
+    当 MinIO 不可用时，OSS 服务自动回退到本地文件系统。
+    该 fixture 提供一个已存在的临时目录作为 OSS 存储根，
+    替换 pytest.skip('目录未初始化')。
+    """
+    storage_path = tmp_path / "oss_storage"
+    storage_path.mkdir(parents=True, exist_ok=True)
+    os.environ["OSS_STORAGE_DIR"] = str(storage_path)
+    return str(storage_path)
 
 
 # ── HTTP 客户端 ────────────────────────────────────────────────────
