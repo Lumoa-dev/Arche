@@ -26,7 +26,6 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 
-
 # ── 插件名自动推断 ──────────────────────────────────────────────────
 
 
@@ -45,7 +44,7 @@ def _resolve_plugin_name(request: pytest.FixtureRequest) -> str:
     if dir_name and not dir_name.startswith("_"):
         return dir_name
     raise ValueError(
-        "无法推断插件名：请在测试类中设置 plugin_name = \"xxx\"，"
+        '无法推断插件名：请在测试类中设置 plugin_name = "xxx"，'
         "或将测试文件放在以插件名命名的目录下"
     )
 
@@ -79,7 +78,10 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     # 注册配置
     from backend.core.config import config_manager
 
-    container.register("config", lambda c: config_manager)
+    def _config_factory(c):
+        return config_manager
+
+    container.register("config", _config_factory)
 
     # 初始化数据库
     import os
@@ -93,9 +95,11 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
 
     database_url = os.environ.get("ARCHE_TEST_DB_URL", f"sqlite+aiosqlite:///{db_path}")
     engine, session_factory = init_db(database_url)
-    container.register(
-        "db", lambda c: {"engine": engine, "session_factory": session_factory}
-    )
+
+    def _db_factory(c):
+        return {"engine": engine, "session_factory": session_factory}
+
+    container.register("db", _db_factory)
 
     # 创建 FastAPI 应用
     app = FastAPI(title=f"Arche Plugin Test ({plugin_name})", version="0.1.0")

@@ -38,7 +38,7 @@ def _assert_safe_remote_path(path: str) -> None:
 class SSHExecutor:
     """SSH 远程命令执行 + SFTP 文件传输封装。"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._connections: dict[str, SSHClientConnection] = {}
 
     async def connect(

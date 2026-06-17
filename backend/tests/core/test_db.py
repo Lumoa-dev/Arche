@@ -48,9 +48,11 @@ class TestDatabaseInit:
         engine = db["engine"]
 
         async with engine.connect() as conn:
-            tables = await conn.run_sync(
-                lambda sync_conn: sa_inspect(sync_conn).get_table_names()
-            )
+
+            def _get_table_names(sync_conn):
+                return sa_inspect(sync_conn).get_table_names()
+
+            tables = await conn.run_sync(_get_table_names)
 
         # 至少包含核心表
         assert "config_entries" in tables, f"config_entries 表缺失，已有表: {tables}"
@@ -67,23 +69,23 @@ class TestDatabaseInit:
 
         async with engine.connect() as conn:
             # ConfigEntry
-            config_cols = await conn.run_sync(
-                lambda sync_conn: {
+            def _get_config_cols(sync_conn):
+                return {
                     c["name"]
                     for c in sa_inspect(sync_conn).get_columns("config_entries")
                 }
-            )
+
+            config_cols = await conn.run_sync(_get_config_cols)
             assert "key" in config_cols
             assert "value" in config_cols
             assert "group" in config_cols
             assert "is_sensitive" in config_cols
 
             # User (auth)
-            user_cols = await conn.run_sync(
-                lambda sync_conn: {
-                    c["name"] for c in sa_inspect(sync_conn).get_columns("users")
-                }
-            )
+            def _get_user_cols(sync_conn):
+                return {c["name"] for c in sa_inspect(sync_conn).get_columns("users")}
+
+            user_cols = await conn.run_sync(_get_user_cols)
             assert "email" in user_cols
             assert "username" in user_cols
             assert "password_hash" in user_cols

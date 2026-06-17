@@ -47,7 +47,6 @@ class TestBasePlugin:
         assert plugin.requires == []
         assert plugin.optional == []
 
-
     def test_register_services_default_noop(self):
         """register_services 默认实现不应报错。"""
 

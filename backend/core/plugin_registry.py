@@ -19,7 +19,7 @@ class DependencyError(Exception):
 class PluginRegistry:
     """单例注册表，管理插件发现、排序和激活。"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._plugins: dict[str, Any] = {}
         self._active: list[str] = []
 

@@ -26,9 +26,11 @@ class TestAlembicMigrations:
         engine = db["engine"]
 
         async with engine.connect() as conn:
-            tables = await conn.run_sync(
-                lambda sync_conn: sa_inspect(sync_conn).get_table_names()
-            )
+
+            def _get_table_names(sync_conn):
+                return sa_inspect(sync_conn).get_table_names()
+
+            tables = await conn.run_sync(_get_table_names)
 
         assert "config_entries" in tables
         assert "users" in tables
@@ -45,9 +47,11 @@ class TestAlembicMigrations:
         engine = container.get("db")["engine"]
 
         async with engine.connect() as conn:
-            tables = await conn.run_sync(
-                lambda sync_conn: sa_inspect(sync_conn).get_table_names()
-            )
+
+            def _get_table_names(sync_conn):
+                return sa_inspect(sync_conn).get_table_names()
+
+            tables = await conn.run_sync(_get_table_names)
 
         blog_table_names = [t for t in tables if "blog" in t]
         assert len(blog_table_names) >= 1, f"no blog tables found: {tables}"

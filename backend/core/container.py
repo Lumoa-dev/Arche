@@ -17,7 +17,7 @@ class ServiceNotFoundError(Exception):
 class ServiceContainer:
     """轻量级 IoC 容器，支持延迟实例化和循环检测。"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._factories: dict[str, Callable[[ServiceContainer], Any]] = {}
         self._instances: dict[str, Any] = {}
         self._resolving: list[str] = []

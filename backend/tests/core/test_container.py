@@ -20,7 +20,11 @@ class TestServiceContainer:
         from backend.core.container import ServiceContainer
 
         container = ServiceContainer()
-        container.register("greeter", lambda c: "Hello, World!")
+
+        def _greeter_factory(c):
+            return "Hello, World!"
+
+        container.register("greeter", _greeter_factory)
         result = container.get("greeter")
         assert result == "Hello, World!"
 
@@ -29,7 +33,11 @@ class TestServiceContainer:
         from backend.core.container import ServiceContainer
 
         container = ServiceContainer()
-        container.register("counter", lambda c: object())
+
+        def _counter_factory(c):
+            return object()
+
+        container.register("counter", _counter_factory)
         instance1 = container.get("counter")
         instance2 = container.get("counter")
         assert instance1 is instance2
@@ -40,7 +48,11 @@ class TestServiceContainer:
 
         container = ServiceContainer()
         assert not container.is_available("unknown")
-        container.register("known", lambda c: 42)
+
+        def _known_factory(c):
+            return 42
+
+        container.register("known", _known_factory)
         assert container.is_available("known")
 
     def test_service_not_found(self):
@@ -63,7 +75,11 @@ class TestCircularDependency:
         )
 
         container = ServiceContainer()
-        container.register("a", lambda c: c.get("a"))
+
+        def _a_self_ref(c):
+            return c.get("a")
+
+        container.register("a", _a_self_ref)
 
         with pytest.raises(CircularDependencyError, match="循环依赖"):
             container.get("a")
@@ -76,9 +92,19 @@ class TestCircularDependency:
         )
 
         container = ServiceContainer()
-        container.register("a", lambda c: c.get("b"))
-        container.register("b", lambda c: c.get("c"))
-        container.register("c", lambda c: c.get("a"))
+
+        def _a_to_b(c):
+            return c.get("b")
+
+        def _b_to_c(c):
+            return c.get("c")
+
+        def _c_to_a(c):
+            return c.get("a")
+
+        container.register("a", _a_to_b)
+        container.register("b", _b_to_c)
+        container.register("c", _c_to_a)
 
         with pytest.raises(CircularDependencyError, match="循环依赖"):
             container.get("a")
@@ -88,8 +114,15 @@ class TestCircularDependency:
         from backend.core.container import ServiceContainer
 
         container = ServiceContainer()
-        container.register("a", lambda c: "service_a")
-        container.register("b", lambda c: c.get("a") + "_and_b")
+
+        def _a_factory(c):
+            return "service_a"
+
+        def _b_factory(c):
+            return c.get("a") + "_and_b"
+
+        container.register("a", _a_factory)
+        container.register("b", _b_factory)
 
         result_b = container.get("b")
         assert result_b == "service_a_and_b"
@@ -105,10 +138,17 @@ class TestFactoryParameters:
         from backend.core.container import ServiceContainer
 
         container = ServiceContainer()
-        container.register("config", lambda c: {"debug": True})
+
+        def _config_factory(c):
+            return {"debug": True}
+
+        def _service_factory(c):
+            return {"config": c.get("config"), "container_ref": c}
+
+        container.register("config", _config_factory)
         container.register(
             "service",
-            lambda c: {"config": c.get("config"), "container_ref": c},
+            _service_factory,
         )
 
         svc = container.get("service")
@@ -130,7 +170,10 @@ class TestContainerLifecycle:
             def close(self):
                 close_called.append("closed")
 
-        container.register("svc", lambda c: ServiceWithClose())
+        def _svc_factory(c):
+            return ServiceWithClose()
+
+        container.register("svc", _svc_factory)
         container.get("svc")
         container.shutdown()
         assert close_called == ["closed"]
@@ -149,9 +192,18 @@ class TestContainerLifecycle:
             def close(self):
                 order.append(self.name)
 
-        container.register("first", lambda c: Svc("first"))
-        container.register("second", lambda c: Svc("second"))
-        container.register("third", lambda c: Svc("third"))
+        def _first_factory(c):
+            return Svc("first")
+
+        def _second_factory(c):
+            return Svc("second")
+
+        def _third_factory(c):
+            return Svc("third")
+
+        container.register("first", _first_factory)
+        container.register("second", _second_factory)
+        container.register("third", _third_factory)
 
         # 按 third → second → first 顺序解析
         container.get("third")

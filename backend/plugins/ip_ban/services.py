@@ -7,8 +7,12 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, or_, select
+
+if TYPE_CHECKING:
+    from backend.core.container import ServiceContainer
 
 try:
     import aiohttp
@@ -38,7 +42,7 @@ class IpBanService:
     负责封禁记录的 CRUD、自动封禁规则引擎、IP 匹配检查。
     """
 
-    def __init__(self, container):
+    def __init__(self, container: ServiceContainer) -> None:
         self.container = container
         db = container.get("db")
         self.session_factory = db["session_factory"]
