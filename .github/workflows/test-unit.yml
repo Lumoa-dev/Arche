@@ -34,7 +34,6 @@ jobs:
           - deploy_webhook
           - github_proxy
           - ip_ban
-          - monitor
           - oss
           - request_log
           - search
