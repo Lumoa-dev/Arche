@@ -23,6 +23,7 @@ jobs:
   # ── 后端插件测试（矩阵并行） ──
   test-plugin-py:
     strategy:
+      fail-fast: false
       matrix:
         plugin:
           - asset_mgmt
@@ -47,7 +48,7 @@ jobs:
       - name: Install deps
         run: uv sync
       - name: Run ${{ matrix.plugin }} tests
-        run: uv run pytest backend/tests/plugins/${{ matrix.plugin }}/ --tb=short --no-header
+        run: uv run pytest backend/tests/plugins/${{ matrix.plugin }}/ -m 'not real' --tb=short --no-header
 
   # ── 后端边界/安全测试 ──
   test-edge:

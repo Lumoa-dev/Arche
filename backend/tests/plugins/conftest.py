@@ -1,11 +1,56 @@
-"""插件级测试工具 —— 按需激活指定插件进行独立测试。"""
+"""插件级测试工具 —— 按需激活指定插件进行独立测试。
+
+与根 conftest.py 不同，本 conftest 会覆盖 async_client 等核心 fixture，
+为每个插件测试自动构建仅包含目标插件及其依赖的独立应用，实现测试隔离。
+
+使用方式：
+    测试类定义 plugin_name 类属性即可自动获得隔离的测试环境：
+
+        class TestBlogPosts:
+            plugin_name = "blog"
+
+            @pytest.mark.asyncio
+            async def test_create_post(self, async_client, auth_headers):
+                ...
+
+    如果不设置 plugin_name，会从测试文件所在目录名自动推断。
+"""
 
 from __future__ import annotations
+
+from collections.abc import AsyncGenerator
+from pathlib import Path
 
 import httpx
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
+
+
+# ── 插件名自动推断 ──────────────────────────────────────────────────
+
+
+def _resolve_plugin_name(request: pytest.FixtureRequest) -> str:
+    """从测试类/模块/目录名推断插件名。"""
+    # 1. 测试类的 plugin_name 属性
+    cls_name = getattr(getattr(request, "cls", None), "plugin_name", None)
+    if cls_name:
+        return cls_name
+    # 2. 测试模块的 plugin_name 属性
+    mod_name = getattr(request.module, "plugin_name", None)
+    if mod_name:
+        return mod_name
+    # 3. 测试文件所在目录名
+    dir_name = Path(request.fspath).parent.name
+    if dir_name and not dir_name.startswith("_"):
+        return dir_name
+    raise ValueError(
+        "无法推断插件名：请在测试类中设置 plugin_name = \"xxx\"，"
+        "或将测试文件放在以插件名命名的目录下"
+    )
+
+
+# ── 插件应用构建 ────────────────────────────────────────────────────
 
 
 def _build_plugin_app(plugin_name: str) -> FastAPI:
@@ -44,6 +89,8 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     if db_path.exists():
         db_path.unlink()
 
+    os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
+
     database_url = os.environ.get("ARCHE_TEST_DB_URL", f"sqlite+aiosqlite:///{db_path}")
     engine, session_factory = init_db(database_url)
     container.register(
@@ -53,6 +100,11 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     # 创建 FastAPI 应用
     app = FastAPI(title=f"Arche Plugin Test ({plugin_name})", version="0.1.0")
     app.state.container = container
+
+    # 同步到模块级单例，供 auth_headers 等依赖全局容器的 fixture 使用
+    from backend.core import container as _container_mod
+
+    _container_mod.container = container
 
     # 收集目标插件及其所有依赖
     plugin_obj = registry._plugins.get(plugin_name)
@@ -130,3 +182,32 @@ async def plugin_client(plugin_app, request) -> httpx.AsyncClient:
     client = httpx.AsyncClient(transport=transport, base_url="http://testserver")
     yield client
     await client.aclose()
+
+
+# ── 覆盖根 conftest 的核心 fixture ─────────────────────────────────
+#
+# 这些 fixture 与根 conftest.py 的同名 fixture 完全兼容，
+# 但构建的应用只包含当前插件（及其依赖），而非所有 13 个插件。
+# pytest 会优先使用最近 conftest 中的 fixture，因此插件测试
+# 会自动使用下方的隔离版本。
+#
+# 依赖的 fixture（auth_headers、admin_headers）仍从根 conftest
+# 解析，但它们依赖的 async_client 会在此处被覆盖，从而实现
+# 自动全链路隔离。
+
+
+@pytest_asyncio.fixture
+async def async_client(request) -> AsyncGenerator[httpx.AsyncClient, None]:
+    """基于插件隔离的异步 HTTP 客户端。
+
+    自动从测试类/模块的 plugin_name 属性或测试文件目录名推断插件名，
+    构建仅包含该插件（及其依赖）的独立应用。
+    """
+    plugin_name = _resolve_plugin_name(request)
+    app = _build_plugin_app(plugin_name)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+    ) as client:
+        yield client

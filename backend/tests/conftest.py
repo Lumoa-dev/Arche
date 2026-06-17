@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 os.environ["SECRET_KEY"] = "test-secret-key-for-pytest"
 os.environ["LOG_LEVEL"] = "CRITICAL"
 os.environ["CORS_ORIGINS"] = "http://testserver"
+os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
 os.environ["ARCHE_TEST"] = "1"
 
 
@@ -55,6 +56,7 @@ def _build_app(db_url: str):
     os.environ["DATABASE_URL"] = db_url
     os.environ["SECRET_KEY"] = "test-secret-key-for-pytest"
     os.environ["LOG_LEVEL"] = "CRITICAL"
+    os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
 
     from backend.core.config import config_manager
 
