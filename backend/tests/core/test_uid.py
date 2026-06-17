@@ -7,7 +7,6 @@ import uuid
 import pytest
 
 from backend.core.uid import (
-    SidParts,
     format_uuid,
     make_sid,
     parse_sid,

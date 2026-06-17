@@ -18,7 +18,7 @@ jobs:
       - name: Install deps
         run: uv sync --frozen
       - name: Run core tests
-        run: uv run pytest backend/tests/core/ -n auto --tb=short --no-header
+        run: uv run pytest backend/tests/core/ --tb=short --no-header
 
   # ── 后端插件测试（矩阵并行） ──
   test-plugin-py:
@@ -47,7 +47,7 @@ jobs:
       - name: Install deps
         run: uv sync --frozen
       - name: Run ${{ matrix.plugin }} tests
-        run: uv run pytest backend/tests/plugins/${{ matrix.plugin }}/ -n auto --tb=short --no-header
+        run: uv run pytest backend/tests/plugins/${{ matrix.plugin }}/ --tb=short --no-header
 
   # ── 后端边界/安全测试 ──
   test-edge:
@@ -60,7 +60,7 @@ jobs:
       - name: Install deps
         run: uv sync --frozen
       - name: Run edge case tests
-        run: uv run pytest backend/tests/edge_cases/ -n auto --tb=short --no-header
+        run: uv run pytest backend/tests/edge_cases/ --tb=short --no-header
 
   # ── 前端单元测试 ──
   test-unit-js:

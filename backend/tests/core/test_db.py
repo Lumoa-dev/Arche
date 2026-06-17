@@ -125,12 +125,11 @@ class TestConfigSeed:
         """种子写入是幂等的 —— 再次触发不会产生重复行。"""
         from sqlalchemy import func, select
 
-        from backend.core.models import ConfigEntry
-
         # 先触发一次种子写入
         from backend.core import _seed_default_config
         from backend.core.config import config_manager
         from backend.core.db import session_factory as sf
+        from backend.core.models import ConfigEntry
 
         if sf is not None:
             config_manager.set_session_factory(sf)

@@ -20,7 +20,10 @@ class TestOSS:
         )
         assert resp.status_code == 415
         data = resp.json()
-        assert "not_allowed" in data.get("code", "") or "type" in data.get("message", "").lower()
+        assert (
+            "not_allowed" in data.get("code", "")
+            or "type" in data.get("message", "").lower()
+        )
 
     @pytest.mark.asyncio
     async def test_upload_requires_auth(self, async_client):

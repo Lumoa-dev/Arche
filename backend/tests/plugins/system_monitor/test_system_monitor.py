@@ -17,7 +17,10 @@ class TestSystemMonitor:
         assert data["code"] == "ok"
         summary = data.get("data", {})
         # summary 应包含系统指标字段
-        assert any(k in summary for k in ["cpu", "memory", "disk", "cpu_percent", "memory_percent"])
+        assert any(
+            k in summary
+            for k in ["cpu", "memory", "disk", "cpu_percent", "memory_percent"]
+        )
 
     @pytest.mark.asyncio
     async def test_cpu(self, async_client, admin_headers):
@@ -87,7 +90,9 @@ class TestSystemMonitor:
 
     @pytest.mark.asyncio
     async def test_notifications(self, async_client, admin_headers):
-        resp = await async_client.get(f"{SYS_PREFIX}/notifications", headers=admin_headers)
+        resp = await async_client.get(
+            f"{SYS_PREFIX}/notifications", headers=admin_headers
+        )
         assert resp.status_code in (200, 500)
         if resp.status_code == 200:
             assert "data" in resp.json()

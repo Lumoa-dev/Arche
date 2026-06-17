@@ -25,7 +25,9 @@ class TestAssetMgmt:
 
     @pytest.mark.asyncio
     async def test_search(self, async_client, admin_headers):
-        resp = await async_client.get(f"{PREFIX}/search?keyword=test", headers=admin_headers)
+        resp = await async_client.get(
+            f"{PREFIX}/search?keyword=test", headers=admin_headers
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["code"] == "ok"

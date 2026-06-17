@@ -16,7 +16,11 @@ class TestDeployWebhook:
         resp = await async_client.post(self.DEPLOY_URL, json={})
         assert resp.status_code == 401
         data = resp.json()
-        assert "detail" in data or "auth" in data.get("code", "").lower() or "token" in resp.text.lower()
+        assert (
+            "detail" in data
+            or "auth" in data.get("code", "").lower()
+            or "token" in resp.text.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_deploy_with_invalid_token(self, async_client):

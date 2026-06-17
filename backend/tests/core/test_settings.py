@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 
 class TestAppSettings:
     def test_default_values(self, monkeypatch):
@@ -49,15 +47,12 @@ class TestAppSettings:
 
 class TestPluginSettingsBase:
     def test_get_field_defaults(self):
-        from pydantic import Field
-        from pydantic_settings import BaseSettings
 
         from backend.core.settings.base import PluginSettingsBase
 
         class TestSettings(PluginSettingsBase):  # type: ignore[no-untyped-call]
             str_field: str = "default_str"
             int_field: int = 42
-            list_field: list[str] = ["a", "b"]
             none_field: str | None = None
 
         defaults = TestSettings.get_field_defaults()
@@ -77,7 +72,6 @@ class TestPluginSettingsBase:
 
 class TestCreatePluginSettings:
     def test_create_plugin_settings(self):
-        from pydantic import Field
 
         from backend.core.settings.base import create_plugin_settings
 
@@ -102,6 +96,7 @@ class TestCreatePluginSettings:
         )
 
         import os
+
         os.environ["API_KEY"] = "env_key"
         s = SettingClass()
         assert s.API_KEY == "default_key"

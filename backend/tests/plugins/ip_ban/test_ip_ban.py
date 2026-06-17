@@ -50,4 +50,7 @@ class TestIpBan:
         resp = await async_client.get(f"{PREFIX}/bans", headers=auth_headers)
         assert resp.status_code == 403
         data = resp.json()
-        assert "permission" in data.get("code", "").lower() or "denied" in data.get("message", "").lower()
+        assert (
+            "permission" in data.get("code", "").lower()
+            or "denied" in data.get("message", "").lower()
+        )

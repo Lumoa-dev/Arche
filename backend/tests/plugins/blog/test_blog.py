@@ -78,7 +78,11 @@ class TestBlogPosts:
         assert resp.status_code == 200
         data = resp.json()
         # /my-posts 返回帖子列表
-        posts = data.get("data", {}).get("posts") or data.get("data", {}).get("list") or data.get("data")
+        posts = (
+            data.get("data", {}).get("posts")
+            or data.get("data", {}).get("list")
+            or data.get("data")
+        )
         # 验证列表非空且包含刚创建的帖子标题
         if isinstance(posts, list):
             titles = [p.get("title", "") for p in posts]
@@ -92,7 +96,9 @@ class TestBlogPosts:
             POSTS_URL, json=payload, headers=auth_headers
         )
         assert create_resp.status_code == 200
-        post_id = (create_resp.json()["data"].get("post") or create_resp.json()["data"])["id"]
+        post_id = (
+            create_resp.json()["data"].get("post") or create_resp.json()["data"]
+        )["id"]
 
         new_title = f"Updated Title {suffix}"
         resp = await async_client.put(
@@ -107,14 +113,18 @@ class TestBlogPosts:
         assert updated["title"] == new_title
 
     @pytest.mark.asyncio
-    async def test_update_post_not_author(self, async_client, auth_headers, admin_headers):
+    async def test_update_post_not_author(
+        self, async_client, auth_headers, admin_headers
+    ):
         """非作者不能编辑帖子。"""
         suffix = uuid.uuid4().hex[:8]
         create_resp = await async_client.post(
             POSTS_URL, json=_make_post_payload(suffix), headers=auth_headers
         )
         assert create_resp.status_code == 200
-        post_id = (create_resp.json()["data"].get("post") or create_resp.json()["data"])["id"]
+        post_id = (
+            create_resp.json()["data"].get("post") or create_resp.json()["data"]
+        )["id"]
 
         # 用 admin 用户（非作者）更新
         resp = await async_client.put(
@@ -133,11 +143,11 @@ class TestBlogPosts:
             POSTS_URL, json=_make_post_payload(suffix), headers=auth_headers
         )
         assert create_resp.status_code == 200
-        post_id = (create_resp.json()["data"].get("post") or create_resp.json()["data"])["id"]
+        post_id = (
+            create_resp.json()["data"].get("post") or create_resp.json()["data"]
+        )["id"]
 
-        resp = await async_client.delete(
-            f"{POSTS_URL}/{post_id}", headers=auth_headers
-        )
+        resp = await async_client.delete(f"{POSTS_URL}/{post_id}", headers=auth_headers)
         assert resp.status_code == 200
 
         # 删除后再查应 404

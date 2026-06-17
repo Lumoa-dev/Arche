@@ -193,7 +193,8 @@ class TestJWTSecurity:
     @pytest.mark.asyncio
     async def test_none_algorithm(self, async_client):
         """none 算法攻击被拒接。"""
-        import base64, json
+        import base64
+        import json
 
         header = (
             base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode())

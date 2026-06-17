@@ -14,8 +14,7 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
-from pathlib import Path
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import httpx
 import pytest
@@ -95,8 +94,9 @@ async def app():
     application = _build_app(db_url)
 
     # 确保表已创建 + 种子配置（所有 fixture 依赖 app 自动获得）
-    from backend.core.db import ensure_tables, session_factory as sf
     from backend.core.config import config_manager
+    from backend.core.db import ensure_tables
+    from backend.core.db import session_factory as sf
 
     await ensure_tables()
     if sf is not None:
@@ -108,8 +108,8 @@ async def app():
     yield application
 
     # 关闭数据库连接
-    from backend.core.db import close_db
     import backend.core.db as db_module
+    from backend.core.db import close_db
 
     db_module._initialized = False
     await close_db()
@@ -150,8 +150,9 @@ async def auth_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
 
     # 普通用户设为 level=5（第一个注册用户会默认得到 level=0）
     from sqlalchemy import select, update
-    from backend.plugins.auth.models import User
+
     from backend.core.container import container as global_container
+    from backend.plugins.auth.models import User
 
     sf = global_container.get("db")["session_factory"]
     async with sf() as session:
@@ -191,9 +192,8 @@ async def admin_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
     # 手动将用户等级设为 P0
     from sqlalchemy import select, update
 
-    from backend.plugins.auth.models import User
-
     from backend.core.container import container as global_container
+    from backend.plugins.auth.models import User
 
     sf = global_container.get("db")["session_factory"]
     async with sf() as session:
