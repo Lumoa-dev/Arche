@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 
 import bcrypt
 import jwt
 from sqlalchemy import func, select
+
+if TYPE_CHECKING:
+    from backend.core.container import ServiceContainer
 
 from backend.core.middleware import AppError, AuthError
 from backend.core.rate_limiter import RateLimiter
@@ -16,7 +20,7 @@ from backend.core.rate_limiter import RateLimiter
 class AuthService:
     """认证服务：用户注册/登录/登出/token 管理。"""
 
-    def __init__(self, container):
+    def __init__(self, container: ServiceContainer) -> None:
         self.container = container
         db = container.get("db")
         self.session_factory = db["session_factory"]

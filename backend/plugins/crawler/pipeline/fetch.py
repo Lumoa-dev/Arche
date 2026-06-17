@@ -32,7 +32,7 @@ class FetchStage(BaseStage):
 
     name = "fetch"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:

@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import logging.config
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -171,17 +172,60 @@ def create_app() -> FastAPI:
 
     container.register("db", _db_factory)
 
-    # 4. Create app
-    app = FastAPI(title="Arche", version="0.1.0")
+    # 4. Define lifespan (captures database_url, session_factory, container)
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        import asyncio
+
+        from alembic import command
+        from alembic.config import Config as AlembicConfig
+
+        migrations_dir = Path(__file__).resolve().parent.parent / "migrations"
+        alembic_cfg = AlembicConfig()
+        alembic_cfg.set_main_option("script_location", str(migrations_dir))
+        alembic_cfg.set_main_option("sqlalchemy.url", database_url)
+
+        loop = asyncio.get_event_loop()
+
+        def _run_migrations():
+            command.upgrade(alembic_cfg, "head")
+
+        await loop.run_in_executor(None, _run_migrations)
+
+        from .db import ensure_tables
+
+        await ensure_tables()
+
+        from .db import validate_schema
+
+        await validate_schema()
+
+        config_manager.set_session_factory(session_factory)
+        await _seed_default_config(session_factory)
+        await registry.on_startup()
+
+        yield
+
+        await close_db()
+        registry.on_shutdown()
+        container.shutdown()
+
+    # 5. Create app
+    app = FastAPI(title="Arche", version="0.1.0", lifespan=lifespan)
     app.state.container = container
 
-    # 5. Activate plugins (DAG-ordered setup)
+    # 5.1 健康检查端点（无依赖，用于 CI / 监控探活）
+    @app.get("/api/ping")
+    async def ping():
+        return {"code": "ok", "data": {"status": "healthy"}}
+
+    # 6. Activate plugins (DAG-ordered setup)
     registry.activate_all(app)
 
-    # 6. Register plugin services into container
+    # 7. Register plugin services into container
     registry.register_services(container)
 
-    # 7. Middleware
+    # 8. Middleware
     cors_origins = (
         config_manager.get("CORS_ORIGINS", "http://localhost:5173")
         or "http://localhost:5173"
@@ -208,52 +252,6 @@ def create_app() -> FastAPI:
         except Exception:
             pass
         return response
-
-    # 8. Startup / Shutdown hooks
-    @app.on_event("startup")
-    async def startup():
-        import asyncio
-
-        from alembic import command
-        from alembic.config import Config as AlembicConfig
-
-        # 运行数据库迁移
-        migrations_dir = Path(__file__).resolve().parent.parent / "migrations"
-        alembic_cfg = AlembicConfig()
-        alembic_cfg.set_main_option("script_location", str(migrations_dir))
-        alembic_cfg.set_main_option("sqlalchemy.url", database_url)
-
-        loop = asyncio.get_event_loop()
-
-        def _run_migrations():
-            # 自动迁移。改模型后执行 `alembic revision --autogenerate -m "xxx"`
-            command.upgrade(alembic_cfg, "head")
-
-        await loop.run_in_executor(None, _run_migrations)
-
-        # 兜底：确保所有 ORM 模型对应的表已创建（迁移未覆盖时使用，幂等）
-        from .db import ensure_tables
-
-        await ensure_tables()
-
-        # 校验数据库 schema 是否与模型一致
-        from .db import validate_schema
-
-        await validate_schema()
-
-        # 注入 session factory 供数据库降级使用
-        config_manager.set_session_factory(session_factory)
-
-        # Seed default config (first run only)
-        await _seed_default_config(session_factory)
-
-        await registry.on_startup()
-
-    @app.on_event("shutdown")
-    async def shutdown():
-        await close_db()
-        registry.on_shutdown()
-        container.shutdown()
 
     # 9. Mount frontend static files (built Vue app)
     frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"

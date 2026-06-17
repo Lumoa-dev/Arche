@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from backend.core.base_plugin import BasePlugin
 from backend.core.plugin_registry import registry
+from backend.plugins.request_log.models import IpActionCounter, RequestLog  # noqa: F401
 from backend.plugins.request_log.routes import router
 
 if TYPE_CHECKING:

@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 
 from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, Field
 
 from backend.core.container import ServiceContainer
-from backend.core.middleware import get_real_ip, require_level, require_user
+from backend.core.middleware import (
+    AppError,
+    AuthError,
+    get_real_ip,
+    require_level,
+    require_user,
+)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -113,13 +122,27 @@ async def login(req: LoginRequest, request: Request):
     """用户登录，返回 JWT token。"""
     container: ServiceContainer = request.app.state.container
     auth_service = container.get("auth")
-    # 获取客户端真实 IP 用于限流
     client_ip = get_real_ip(request)
-    result = await auth_service.login(
-        identity=req.identity,
-        password=req.password,
-        client_ip=client_ip,
-    )
+
+    try:
+        result = await auth_service.login(
+            identity=req.identity,
+            password=req.password,
+            client_ip=client_ip,
+        )
+    except AuthError:
+        raise
+    except Exception:
+        logger.exception(
+            "登录过程发生未预期异常: identity=%s, ip=%s",
+            req.identity,
+            client_ip,
+        )
+        raise AppError(
+            "登录服务暂时不可用",
+            code="login_service_error",
+            status_code=503,
+        ) from None
 
     # 标记用户在线
     if container.is_available("session_tracker"):

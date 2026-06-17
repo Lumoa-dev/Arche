@@ -22,6 +22,7 @@ from backend.plugins.search.services import SearchService
 class SearchPlugin(BasePlugin):
     name = "search"
     version = "0.1.0"
+    optional = ["auth"]  # noqa: RUF012
 
     def __init__(self):
         self._app = None

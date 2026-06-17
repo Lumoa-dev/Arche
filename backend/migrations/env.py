@@ -40,6 +40,19 @@ from backend.plugins.crawler.models import CrawlRecord  # noqa: F401
 from backend.plugins.monitor.models import MonitorTemplate  # noqa: F401
 from backend.plugins.oss.models import OSSFile, UserOSSQuota  # noqa: F401
 
+# ip_ban 插件模型（确保 --autogenerate 可检测）
+from backend.plugins.ip_ban.models import (  # noqa: F401
+    AutoBanRuleConfig,
+    IpBan,
+    IpBanLog,
+)
+
+# request_log 插件模型（确保 --autogenerate 可检测）
+from backend.plugins.request_log.models import (  # noqa: F401
+    IpActionCounter,
+    RequestLog,
+)
+
 config = context.config
 
 if config.config_file_name is not None:

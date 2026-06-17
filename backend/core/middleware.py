@@ -84,7 +84,7 @@ def register_error_handlers(app: FastAPI) -> None:
         errors = exc.errors()
         message = _format_validation_errors(errors)  # type: ignore[arg-type]
         return error_response(
-            message, "validation_error", status.HTTP_422_UNPROCESSABLE_ENTITY
+            message, "validation_error", status.HTTP_422_UNPROCESSABLE_CONTENT
         )
 
     @app.exception_handler(Exception)
