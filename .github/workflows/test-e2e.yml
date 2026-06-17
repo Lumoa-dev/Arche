@@ -40,7 +40,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install deps
-        run: uv sync --frozen
+        run: uv sync
       - name: Install Playwright browsers
         run: uv run playwright install --with-deps ${{ matrix.browser }}
       - name: Start backend

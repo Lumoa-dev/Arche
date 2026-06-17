@@ -37,7 +37,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install deps
-        run: uv sync --frozen
+        run: uv sync
 
       - name: Run real backend tests
         run: uv run pytest backend/tests/ -m "real" -v --tb=long --no-header -p no:cacheprovider

@@ -16,7 +16,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install deps
-        run: uv sync --frozen
+        run: uv sync
       - name: Run core tests
         run: uv run pytest backend/tests/core/ --tb=short --no-header
 
@@ -45,7 +45,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install deps
-        run: uv sync --frozen
+        run: uv sync
       - name: Run ${{ matrix.plugin }} tests
         run: uv run pytest backend/tests/plugins/${{ matrix.plugin }}/ --tb=short --no-header
 
@@ -58,7 +58,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install deps
-        run: uv sync --frozen
+        run: uv sync
       - name: Run edge case tests
         run: uv run pytest backend/tests/edge_cases/ --tb=short --no-header
 
