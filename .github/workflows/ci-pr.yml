@@ -29,4 +29,3 @@ jobs:
     uses: ./.github/workflows/test-e2e.yml
     with:
       browsers: '["chromium"]'
-    continue-on-error: true
