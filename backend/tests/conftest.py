@@ -22,7 +22,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # ── 测试环境变量（在导入任何 backend 模块前生效） ──────────────────────
-os.environ["SECRET_KEY"] = "test-secret-key-for-pytest"
+os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-0123456789"
 os.environ["LOG_LEVEL"] = "CRITICAL"
 os.environ["CORS_ORIGINS"] = "http://testserver"
 os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
@@ -54,7 +54,7 @@ def _build_app(db_url: str):
 
     # 确保测试环境变量始终覆盖
     os.environ["DATABASE_URL"] = db_url
-    os.environ["SECRET_KEY"] = "test-secret-key-for-pytest"
+    os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-0123456789"
     os.environ["LOG_LEVEL"] = "CRITICAL"
     os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
 
@@ -63,7 +63,7 @@ def _build_app(db_url: str):
     # ConfigManager 是单例，_load 只执行一次。
     # 后续测试需要手动更新 _values 确保正确的数据库 URL。
     config_manager._values["DATABASE_URL"] = db_url
-    config_manager._values["SECRET_KEY"] = "test-secret-key-for-pytest"
+    config_manager._values["SECRET_KEY"] = "test-secret-key-for-pytest-0123456789"
     config_manager._values["LOG_LEVEL"] = "CRITICAL"
     config_manager._cache.clear()
     config_manager._app_settings = None
@@ -151,18 +151,17 @@ async def auth_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
     assert resp.status_code == 200, f"注册失败: {resp.text}"
 
     # 普通用户设为 level=5（第一个注册用户会默认得到 level=0）
-    from sqlalchemy import select, update
+    from sqlalchemy import select
 
     from backend.core.container import container as global_container
     from backend.plugins.auth.models import User
 
     sf = global_container.get("db")["session_factory"]
     async with sf() as session:
-        result = await session.execute(
+        user = await session.scalar(
             select(User).where(User.username == reg_payload["username"])
         )
-        user = result.scalar_one()
-        await session.execute(update(User).where(User.id == user.id).values(level=5))
+        user.level = 5
         await session.commit()
 
     login_payload = {
@@ -192,18 +191,17 @@ async def admin_headers(async_client: httpx.AsyncClient) -> dict[str, str]:
     assert resp.status_code == 200, f"管理员注册失败: {resp.text}"
 
     # 手动将用户等级设为 P0
-    from sqlalchemy import select, update
+    from sqlalchemy import select
 
     from backend.core.container import container as global_container
     from backend.plugins.auth.models import User
 
     sf = global_container.get("db")["session_factory"]
     async with sf() as session:
-        result = await session.execute(
+        user = await session.scalar(
             select(User).where(User.username == reg_payload["username"])
         )
-        user = result.scalar_one()
-        await session.execute(update(User).where(User.id == user.id).values(level=0))
+        user.level = 0
         await session.commit()
 
     login_payload = {

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -125,4 +126,6 @@ def discover_plugins(plugin_dir: Path | None = None) -> None:
         if not init_file.exists():
             continue
         module_name = f"backend.plugins.{entry.name}"
+        # 清除缓存确保 registry.register() 在调用方 reset 后仍能生效
+        sys.modules.pop(module_name, None)
         import_module(module_name)

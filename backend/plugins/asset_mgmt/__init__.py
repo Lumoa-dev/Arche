@@ -25,6 +25,7 @@ from backend.plugins.asset_mgmt.services import AssetMgmtService
 class AssetMgmtPlugin(BasePlugin):
     name = "asset_mgmt"
     version = "0.1.0"
+    optional = ["auth"]  # noqa: RUF012
 
     def __init__(self):
         self._app = None

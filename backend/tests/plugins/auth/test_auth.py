@@ -96,10 +96,11 @@ class TestRegister:
         assert resp.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_level_assignment(self, async_client, db_session):
+    async def test_level_assignment(self, async_client):
         """验证用户等级分配。"""
         from sqlalchemy import select
 
+        from backend.core import container as global_container
         from backend.plugins.auth.models import User
 
         suffix = uuid.uuid4().hex[:8]
@@ -113,11 +114,14 @@ class TestRegister:
         assert resp.status_code == 200
 
         # 直接从数据库检查 level
-        result = await db_session.execute(
-            select(User).where(User.username == payload["username"])
-        )
-        user = result.scalar_one()
-        assert user.level is not None
+        db = global_container.container.get("db")
+        sf = db["session_factory"]
+        async with sf() as session:
+            user = await session.scalar(
+                select(User).where(User.username == payload["username"])
+            )
+            assert user is not None
+            assert user.level is not None
 
 
 class TestLogin:
@@ -354,20 +358,26 @@ class TestUserManagement:
         assert resp.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_get_user_detail(self, async_client, admin_headers, db_session):
+    async def test_get_user_detail(self, async_client, admin_headers):
         """GET /api/auth/users/{id} 返回指定用户详情。"""
         from sqlalchemy import select
 
+        from backend.core import container as global_container
         from backend.plugins.auth.models import User
 
-        result = await db_session.execute(select(User).limit(1))
-        user = result.scalar_one()
+        db = global_container.container.get("db")
+        sf = db["session_factory"]
+        async with sf() as session:
+            user = await session.scalar(select(User).limit(1))
+            user_id = user.id
+            username = user.username
 
         resp = await async_client.get(
-            f"/api/auth/users/{user.id}", headers=admin_headers
+            f"/api/auth/users/{user_id}", headers=admin_headers
         )
         assert resp.status_code == 200
-        assert resp.json()["data"]["username"] == user.username
+        data = resp.json()
+        assert data["data"]["username"] == username
 
     @pytest.mark.asyncio
     async def test_get_user_detail_not_found(self, async_client, admin_headers):

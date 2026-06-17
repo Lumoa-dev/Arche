@@ -52,13 +52,12 @@ def _resolve_plugin_name(request: pytest.FixtureRequest) -> str:
 # ── 插件应用构建 ────────────────────────────────────────────────────
 
 
-def _build_plugin_app(plugin_name: str) -> FastAPI:
+async def _build_plugin_app(plugin_name: str) -> FastAPI:
     """构建仅包含指定插件及其依赖的 FastAPI 应用。
 
-    1. 重置插件注册表
-    2. 发现所有插件
-    3. 激活目标插件 + 所有它 require/optional 的依赖
-    4. 返回已配置的应用实例
+    1. 如未发现插件则触发发现
+    2. 激活目标插件 + 所有它 require/optional 的依赖
+    3. 返回已配置的应用实例
     """
     from backend.core.container import ServiceContainer
     from backend.core.db import init_db
@@ -69,8 +68,8 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     )
     from backend.core.plugin_registry import discover_plugins, registry
 
-    registry.reset()
-    discover_plugins()
+    if not registry.available:
+        discover_plugins()
 
     # 创建独立的 DI 容器
     container = ServiceContainer()
@@ -85,15 +84,15 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
 
     # 初始化数据库
     import os
-    from pathlib import Path
-
-    db_path = Path(__file__).resolve().parent / f"test_{plugin_name}.db"
-    if db_path.exists():
-        db_path.unlink()
+    import uuid
 
     os.environ["GITHUB_TOKEN"] = "test-github-token-for-pytest"
 
-    database_url = os.environ.get("ARCHE_TEST_DB_URL", f"sqlite+aiosqlite:///{db_path}")
+    db_id = uuid.uuid4().hex[:12]
+    database_url = os.environ.get(
+        "ARCHE_TEST_DB_URL",
+        f"sqlite+aiosqlite:///file:arche_test_{plugin_name}_{db_id}?mode=memory&cache=shared&uri=true",
+    )
     engine, session_factory = init_db(database_url)
 
     def _db_factory(c):
@@ -144,15 +143,16 @@ def _build_plugin_app(plugin_name: str) -> FastAPI:
     setup_security_headers(app)
 
     # 建表
-    import asyncio
+    async with engine.begin() as conn:
+        from backend.core.db import Base
 
-    async def _create_tables():
-        async with engine.begin() as conn:
-            from backend.core.db import Base
+        await conn.run_sync(Base.metadata.create_all)
 
-            await conn.run_sync(Base.metadata.create_all)
+    # 注入 session factory 供 ConfigEntry 查询使用
+    config_manager.set_session_factory(session_factory)
+    from backend.core import _seed_default_config
 
-    asyncio.run(_create_tables())
+    await _seed_default_config(session_factory)
 
     return app
 
@@ -181,11 +181,12 @@ async def plugin_client(plugin_app, request) -> httpx.AsyncClient:
     # 尝试从 request.param 获取插件名（用于 parametrize）
     plugin_name = getattr(request, "param", None) or "auth"
 
-    app = _build_plugin_app(plugin_name)
+    app = await _build_plugin_app(plugin_name)
     transport = httpx.ASGITransport(app=app)
-    client = httpx.AsyncClient(transport=transport, base_url="http://testserver")
-    yield client
-    await client.aclose()
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://testserver"
+    ) as client:
+        yield client
 
 
 # ── 覆盖根 conftest 的核心 fixture ─────────────────────────────────
@@ -208,7 +209,7 @@ async def async_client(request) -> AsyncGenerator[httpx.AsyncClient, None]:
     构建仅包含该插件（及其依赖）的独立应用。
     """
     plugin_name = _resolve_plugin_name(request)
-    app = _build_plugin_app(plugin_name)
+    app = await _build_plugin_app(plugin_name)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(
         transport=transport,

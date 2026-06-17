@@ -22,7 +22,7 @@ class TestConfigManager:
 
         # SECRET_KEY 是在 conftest 中设置的
         value = config_manager.get("SECRET_KEY")
-        assert value == "test-secret-key-for-pytest"
+        assert value == "test-secret-key-for-pytest-0123456789"
 
     def test_get_default(self):
         """get() 在键不存在时返回默认值。"""
@@ -43,7 +43,7 @@ class TestConfigManager:
         from backend.core.config import config_manager
 
         value = config_manager.get_required("SECRET_KEY")
-        assert value == "test-secret-key-for-pytest"
+        assert value == "test-secret-key-for-pytest-0123456789"
 
     def test_get_required_raises(self):
         """get_required() 对不存在的键抛出 RuntimeError。"""
@@ -99,7 +99,9 @@ class TestConfigManager:
         # reload 后自定义值被清除
         assert config_manager.get("RELOAD_TEST") is None
         # 环境变量仍然存在
-        assert config_manager.get("SECRET_KEY") == "test-secret-key-for-pytest"
+        assert (
+            config_manager.get("SECRET_KEY") == "test-secret-key-for-pytest-0123456789"
+        )
 
 
 class TestPluginSettingsRegistry:

@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 class CloudIntegrationPlugin(BasePlugin):
     name = "cloud_integration"
     version = "0.1.0"
+    optional = ["auth"]  # noqa: RUF012
 
     def __init__(self):
         self._app = None

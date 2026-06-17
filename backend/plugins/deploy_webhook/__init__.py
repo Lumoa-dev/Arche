@@ -6,11 +6,12 @@ import asyncio
 import subprocess
 from typing import TYPE_CHECKING
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 from backend.core.base_plugin import BasePlugin
 from backend.core.config import config_manager
+from backend.core.middleware import AppError, AuthError
 from backend.core.plugin_registry import registry
 from backend.plugins.deploy_webhook.settings import DeployWebhookSettings
 
@@ -50,15 +51,16 @@ def _run_script() -> tuple[int, str, str]:
 async def trigger_deploy(request: DeployRequest):
     deploy_token = config_manager.get("DEPLOY_TOKEN", "")
     if not deploy_token or request.token != deploy_token:
-        raise HTTPException(status_code=401, detail="Invalid deploy token")
+        raise AuthError(message="Invalid deploy token")
 
     deploy_script = _get_deploy_script()
     import os
 
     if not os.path.isfile(deploy_script):
-        raise HTTPException(
+        raise AppError(
+            f"Deploy script not found at {deploy_script}",
+            code="deploy_script_not_found",
             status_code=500,
-            detail=f"Deploy script not found at {deploy_script}",
         )
 
     returncode, stdout, stderr = await asyncio.to_thread(_run_script)

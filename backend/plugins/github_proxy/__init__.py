@@ -24,6 +24,7 @@ from backend.plugins.github_proxy.services import GitHubService
 class GithubProxyPlugin(BasePlugin):
     name = "github_proxy"
     version = "0.1.0"
+    optional = ["auth"]  # noqa: RUF012
 
     def __init__(self):
         self._app = None

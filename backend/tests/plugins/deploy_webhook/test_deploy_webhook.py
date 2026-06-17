@@ -12,15 +12,11 @@ class TestDeployWebhook:
 
     @pytest.mark.asyncio
     async def test_deploy_without_token(self, async_client):
-        """无 Token 返回 401。"""
+        """无 Token 返回 422（token 为必填字段）。"""
         resp = await async_client.post(self.DEPLOY_URL, json={})
-        assert resp.status_code == 401
+        assert resp.status_code == 422
         data = resp.json()
-        assert (
-            "detail" in data
-            or "auth" in data.get("code", "").lower()
-            or "token" in resp.text.lower()
-        )
+        assert "validation" in data.get("code", "").lower()
 
     @pytest.mark.asyncio
     async def test_deploy_with_invalid_token(self, async_client):

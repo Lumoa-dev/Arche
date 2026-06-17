@@ -28,6 +28,7 @@ from backend.plugins.ip_ban.services import IpBanService
 
 class IpBanPlugin(BasePlugin):
     name = "ip_ban"
+    optional = ["auth"]  # noqa: RUF012
     version = "0.1.0"
 
     def __init__(self):

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 class ConfigMgmtPlugin(BasePlugin):
     name = "config_mgmt"
+    optional = ["auth"]  # noqa: RUF012
 
     def setup(self, app) -> None:
         app.include_router(router)
