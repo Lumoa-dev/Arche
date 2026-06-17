@@ -335,3 +335,112 @@ class TestTags:
         response = await client.get("/api/blog/tags")
         assert response.status_code == 200
         assert response.json()["code"] == "ok"
+
+
+@pytest.mark.asyncio
+class TestUpdatePostWithContent:
+    """编辑帖子 — content 字段全链路集成测试。
+
+    关键缺口识别：
+    - PUT /posts/{id} 端点支持 content 字段但集成测试未覆盖
+    - update_post 不会检查敏感词（与 create_post 不一致）
+    - update_post 仅标题变更触发重新审核
+    """
+
+    async def _create_and_approve_post(self, client, tokens):
+        """辅助：发帖并通过审核，返回帖子 ID 和 slug。"""
+        create_resp = await client.post(
+            "/api/blog/posts",
+            json={"title": "编辑测试帖", "content": "原始内容", "tags": []},
+            headers=tokens["user"],
+        )
+        post_id = create_resp.json()["data"]["id"]
+        await client.post(
+            f"/api/blog/moderation/{post_id}/approve",
+            headers=tokens["admin"],
+        )
+        return post_id
+
+    async def test_update_post_content_success(self, client, user_and_admin_tokens):
+        """PUT 编辑帖子 content 字段成功。"""
+        post_id = await self._create_and_approve_post(client, user_and_admin_tokens)
+        user_headers = user_and_admin_tokens["user"]
+
+        tip_tap_json = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"更新后的 TipTap 内容"}]}]}'
+        update_resp = await client.put(
+            f"/api/blog/posts/{post_id}",
+            json={"content": tip_tap_json},
+            headers=user_headers,
+        )
+        assert update_resp.status_code == 200
+        assert update_resp.json()["code"] == "ok"
+
+        # 验证 content 已更新
+        get_resp = await client.get(f"/api/blog/posts/by-id/{post_id}")
+        assert get_resp.json()["data"]["content"] == tip_tap_json
+
+    async def test_update_post_content_only_keeps_published(self, client, user_and_admin_tokens):
+        """仅修改 content 时帖子保持 published 状态（不触发重新审核）。"""
+        post_id = await self._create_and_approve_post(client, user_and_admin_tokens)
+        user_headers = user_and_admin_tokens["user"]
+
+        # 仅修改 content，不修改 title
+        update_resp = await client.put(
+            f"/api/blog/posts/{post_id}",
+            json={"content": "仅更新内容"},
+            headers=user_headers,
+        )
+        assert update_resp.status_code == 200
+
+        # content-only 更新不触发重审，帖子仍为 published
+        detail_resp = await client.get(f"/api/blog/posts/by-id/{post_id}")
+        assert detail_resp.json()["data"]["status"] == "published"
+
+    async def test_update_post_title_triggers_re_review(self, client, user_and_admin_tokens):
+        """修改 title 时帖子重新进入审核（status → pending）。"""
+        post_id = await self._create_and_approve_post(client, user_and_admin_tokens)
+        user_headers = user_and_admin_tokens["user"]
+
+        update_resp = await client.put(
+            f"/api/blog/posts/{post_id}",
+            json={"title": "新标题"},
+            headers=user_headers,
+        )
+        assert update_resp.status_code == 200
+
+        # 修改标题触发重审，帖子变为 pending，公开列表不可见
+        public_resp = await client.get("/api/blog/posts")
+        titles = [item["title"] for item in public_resp.json()["data"]["items"]]
+        assert "新标题" not in titles
+
+        # 管理员重新通过审核
+        await client.post(
+            f"/api/blog/moderation/{post_id}/approve",
+            headers=user_and_admin_tokens["admin"],
+        )
+
+        public_resp2 = await client.get("/api/blog/posts")
+        titles2 = [item["title"] for item in public_resp2.json()["data"]["items"]]
+        assert "新标题" in titles2
+
+    async def test_update_post_no_permission(self, client, user_and_admin_tokens):
+        """非作者无法编辑帖子。"""
+        post_id = await self._create_and_approve_post(client, user_and_admin_tokens)
+
+        # 用另一个用户（admin 非作者）尝试编辑
+        update_resp = await client.put(
+            f"/api/blog/posts/{post_id}",
+            json={"content": "恶意编辑"},
+            headers=user_and_admin_tokens["admin"],
+        )
+        assert update_resp.status_code == 403
+
+    async def test_update_post_not_found(self, client, user_and_admin_tokens):
+        """编辑不存在的帖子返回 404。"""
+        fake_id = "00000000-0000-0000-0000-000000000000"
+        update_resp = await client.put(
+            f"/api/blog/posts/{fake_id}",
+            json={"content": "内容"},
+            headers=user_and_admin_tokens["user"],
+        )
+        assert update_resp.status_code == 404

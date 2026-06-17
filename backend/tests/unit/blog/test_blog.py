@@ -673,3 +673,270 @@ class TestBlogServiceTags:
                 user_id=author_id,
             )
         assert "已达上限" in str(excinfo.value)
+
+
+# =============================================================================
+# BlogService 测试 - UpdatePost 敏感词与 Content 字段
+# =============================================================================
+
+
+@pytest.mark.asyncio
+class TestBlogServiceUpdatePostContent:
+    """BlogService update_post 的 content 字段与敏感词检查测试。
+
+    关键缺口识别：
+    - create_post 有敏感词检查，update_post 没有
+    - update_post 仅标题变更触发重新审核，content 变更不触发
+    """
+
+    async def test_update_post_with_content(self, blog_container):
+        """编辑帖子时 content 字段被正确更新。"""
+        service = BlogService(blog_container)
+
+        author_id = uuid.uuid4()
+        post_id = uuid.uuid4()
+        mock_post = MagicMock()
+        mock_post.id = post_id
+        mock_post.author_id = author_id
+        mock_post.content = None
+
+        blog_container._mock_result.scalar_one_or_none.return_value = mock_post
+
+        new_content = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Hello TipTap"}]}]}'
+        with patch.object(service, "generate_slug", return_value="existing-title"):
+            result = await service.update_post(
+                post_id=post_id,
+                author_id=author_id,
+                content=new_content,
+            )
+        assert mock_post.content == new_content
+
+    async def test_update_post_content_change_no_review_trigger(self, blog_container):
+        """仅变更 content 不触发重新审核（status 保持原有值）。
+
+        这是当前行为的验证——content 变更不会将 status 重置为 pending，
+        只有 title 变更才会触发重新审核。
+        """
+        service = BlogService(blog_container)
+
+        author_id = uuid.uuid4()
+        post_id = uuid.uuid4()
+        mock_post = MagicMock()
+        mock_post.id = post_id
+        mock_post.author_id = author_id
+        mock_post.status = "published"
+        mock_post.content = '{"old":"content"}'
+
+        blog_container._mock_result.scalar_one_or_none.return_value = mock_post
+
+        # 仅修改 content，不修改 title
+        result = await service.update_post(
+            post_id=post_id,
+            author_id=author_id,
+            content='{"new":"content"}',
+        )
+        # status 应保持为 "published"，因为 title is None 时不会重置
+        assert mock_post.status == "published"
+
+    async def test_update_post_title_change_triggers_review(self, blog_container):
+        """修改 title 时 status 被重置为 pending。"""
+        service = BlogService(blog_container)
+
+        author_id = uuid.uuid4()
+        post_id = uuid.uuid4()
+        mock_post = MagicMock()
+        mock_post.id = post_id
+        mock_post.author_id = author_id
+        mock_post.status = "published"
+
+        blog_container._mock_result.scalar_one_or_none.return_value = mock_post
+
+        with patch.object(service, "generate_slug", return_value="new-title"):
+            result = await service.update_post(
+                post_id=post_id,
+                author_id=author_id,
+                title="New Title",
+            )
+        # 只有 title 变更才重置为 pending
+        assert mock_post.status == "pending"
+
+    async def test_update_post_no_sensitive_word_check(self, blog_container):
+        """验证 update_post 不执行敏感词检查（已知缺口）。
+
+        如果 update_post 有敏感词检查，包含 '敏感词' 的内容应被拒绝。
+        当前行为：update_post 没有敏感词检查，所以不会拒绝。
+        """
+        service = BlogService(blog_container)
+
+        author_id = uuid.uuid4()
+        post_id = uuid.uuid4()
+        mock_post = MagicMock()
+        mock_post.id = post_id
+        mock_post.author_id = author_id
+        mock_post.content = "clean content"
+
+        blog_container._mock_result.scalar_one_or_none.return_value = mock_post
+
+        # 初始化敏感词过滤器
+        init_filter(["暴力内容"])
+
+        # update_post 不会检查敏感词，所以应该成功
+        with patch.object(service, "generate_slug", return_value="existing-title"):
+            result = await service.update_post(
+                post_id=post_id,
+                author_id=author_id,
+                content="This contains 暴力内容 in content",
+            )
+        assert mock_post.content == "This contains 暴力内容 in content"
+
+
+# =============================================================================
+# BlogService 测试 - 收藏功能
+# =============================================================================
+
+
+@pytest.mark.asyncio
+class TestBlogServiceFavorites:
+    """BlogService 收藏功能测试。
+
+    关键缺口识别：
+    - list_favorites() 未按 user_id 过滤，会返回所有用户的收藏（数据泄露风险）
+    """
+
+    async def test_add_favorite(self, blog_container):
+        """收藏帖子。"""
+        service = BlogService(blog_container)
+
+        post_id = uuid.uuid4()
+        user_id = uuid.uuid4()
+        mock_post = MagicMock()
+
+        blog_container._mock_result.scalar_one_or_none.return_value = None
+
+        with patch.object(service, "get_post_by_id", return_value=mock_post):
+            result = await service.add_favorite(
+                post_id=post_id, user_id=user_id
+            )
+        assert result["action"] == "favorited"
+
+    async def test_remove_favorite(self, blog_container):
+        """取消收藏。"""
+        service = BlogService(blog_container)
+
+        post_id = uuid.uuid4()
+        user_id = uuid.uuid4()
+        mock_post = MagicMock()
+        mock_favorite = MagicMock()
+
+        # 已存在收藏记录 → 取消收藏
+        blog_container._mock_result.scalar_one_or_none.return_value = mock_favorite
+
+        with patch.object(service, "get_post_by_id", return_value=mock_post):
+            result = await service.remove_favorite(
+                post_id=post_id, user_id=user_id
+            )
+        assert result["action"] == "unfavorited"
+
+    async def test_list_favorites_no_user_filter(self, blog_container):
+        """验证 list_favorites 未按 user_id 过滤（已知数据泄露 bug）。
+
+        list_favorites() 接受 user_id 参数但未在查询中使用，
+        会返回所有用户的收藏，而不是仅当前用户的。
+        """
+        service = BlogService(blog_container)
+
+        def _make_mock_post(**kwargs):
+            p = MagicMock()
+            for k, v in kwargs.items():
+                setattr(p, k, v)
+            return p
+
+        # 构造两个不同用户的帖子
+        post1 = _make_mock_post(
+            id=uuid.uuid4(),
+            author_id=uuid.uuid4(),
+            title="User 1 Post",
+            slug="user-1-post",
+            content="content",
+            status="published",
+            required_level=5,
+            cover_url=None,
+            introduction=None,
+            subtitles=[],
+            paragraph_ids=[],
+            views=0,
+            like_count=0,
+            comment_count=0,
+            is_pinned=False,
+            is_featured=False,
+            category_id=None,
+            created_at=None,
+            updated_at=None,
+            published_at=None,
+        )
+
+        post2 = _make_mock_post(
+            id=uuid.uuid4(),
+            author_id=uuid.uuid4(),
+            title="User 2 Post",
+            slug="user-2-post",
+            content="content",
+            status="published",
+            required_level=5,
+            cover_url=None,
+            introduction=None,
+            subtitles=[],
+            paragraph_ids=[],
+            views=0,
+            like_count=0,
+            comment_count=0,
+            is_pinned=False,
+            is_featured=False,
+            category_id=None,
+            created_at=None,
+            updated_at=None,
+            published_at=None,
+        )
+
+        fav1 = MagicMock()
+        fav1.post_id = post1.id
+        fav2 = MagicMock()
+        fav2.post_id = post2.id
+
+        # count 查询
+        count_result = MagicMock()
+        count_result.scalar_one.return_value = 2
+
+        # favorites 数据查询
+        data_result = MagicMock()
+        data_result.scalars.return_value.all.return_value = [fav1, fav2]
+
+        # posts 查询：返回两个帖子
+        posts_scalars = MagicMock()
+        posts_scalars.all.return_value = [post1, post2]
+        posts_result = MagicMock()
+        posts_result.scalars.return_value = posts_scalars
+
+        # author 查询：select(User.id, User.username) 返回 Row 对象
+        # 模拟 Row 对象，有 .id 和 .username 属性
+        author_row1 = MagicMock()
+        author_row1.id = post1.author_id
+        author_row1.username = "user1"
+        author_row2 = MagicMock()
+        author_row2.id = post2.author_id
+        author_row2.username = "user2"
+        author_result = MagicMock()
+        author_result.all.return_value = [author_row1, author_row2]
+
+        # likes 查询
+        likes_result = MagicMock()
+        likes_result.all.return_value = []
+
+        blog_container._mock_session.execute = AsyncMock(
+            side_effect=[count_result, data_result, posts_result, author_result, likes_result]
+        )
+
+        # 使用 user_id=A 调用，但预期返回所有用户的收藏
+        result = await service.list_favorites(user_id=uuid.uuid4())
+        assert result["total"] == 2  # 返回了 2 个收藏（属于不同用户），说明未过滤
+        assert len(result["items"]) == 2

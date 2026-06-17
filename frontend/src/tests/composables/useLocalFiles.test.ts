@@ -118,4 +118,58 @@ describe('useLocalFiles', () => {
     expect(added).toHaveLength(1)
     expect(added[0]!.name).toBe('from-list.txt')
   })
+
+  it('getReferencedFiles 处理相邻多个引用', () => {
+    const { stageFiles, getReferencedFiles } = useLocalFiles()
+    const f1 = createMockFile('a.png')
+    const f2 = createMockFile('b.png')
+    const f3 = createMockFile('c.png')
+    stageFiles([f1, f2, f3])
+
+    const content = '图片 [#1][#2][#3]'
+    const refs = getReferencedFiles(content)
+
+    expect(refs).toHaveLength(3)
+  })
+
+  it('getReferencedFiles 处理超大编号', () => {
+    const { stageFiles, getReferencedFiles } = useLocalFiles()
+    const files = Array.from({ length: 100 }, (_, i) => createMockFile(`img${i + 1}.png`, 100, i))
+    stageFiles(files)
+
+    const content = '引用 [#1] 和 [#100]'
+    const refs = getReferencedFiles(content)
+
+    expect(refs).toHaveLength(2)
+    expect(refs[0]!.index).toBe(1)
+    expect(refs[1]!.index).toBe(100)
+  })
+
+  it('getReferencedFiles 忽略不完整的引用标记', () => {
+    const { stageFiles, getReferencedFiles } = useLocalFiles()
+    stageFiles([createMockFile('test.png')])
+
+    // 缺少 ] 或 [ 的标记不应被匹配
+    const content = '不完整标记 #1] 和 [#2 和 [abc]'
+    const refs = getReferencedFiles(content)
+    expect(refs).toEqual([])
+  })
+
+  it('getReferencedFiles 处理空内容', () => {
+    const { stageFiles, getReferencedFiles } = useLocalFiles()
+    stageFiles([createMockFile('test.png')])
+
+    expect(getReferencedFiles('')).toEqual([])
+  })
+
+  it('getReferencedFiles 只返回已暂存文件中的引用', () => {
+    const { stageFiles, getReferencedFiles } = useLocalFiles()
+    const f1 = createMockFile('present.png')
+    stageFiles([f1])
+
+    // 引用 #999 不存在于暂存文件中
+    const refs = getReferencedFiles('查看 [#1] 和 [#999]')
+    expect(refs).toHaveLength(1)
+    expect(refs[0]!.name).toBe('present.png')
+  })
 })
