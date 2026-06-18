@@ -11,6 +11,7 @@ from backend.core.middleware import (
     PermissionError,
     error_response,
     get_current_user,
+    get_real_ip,
     register_error_handlers,
     require_level,
     require_user,
@@ -232,3 +233,61 @@ class TestUserAuthUtils:
         # 默认等级5 > 4，应该被拒绝
         with pytest.raises(PermissionError, match="需要等级 <= 4，当前等级 5"):
             await test_func2(request=mock_request)
+
+
+class TestGetRealIp:
+    """测试 get_real_ip 函数。"""
+
+    def _make_request(self, headers=None, client_host=None):
+        from unittest.mock import MagicMock
+
+        request = MagicMock()
+        request.headers = headers or {}
+        request.client = MagicMock() if client_host else None
+        if request.client:
+            request.client.host = client_host
+        return request
+
+    def test_x_real_ip_first_priority(self):
+        """X-Real-IP 优先。"""
+        request = self._make_request(
+            headers={
+                "X-Real-IP": "203.0.113.5",
+                "X-Forwarded-For": "198.51.100.1",
+            },
+            client_host="10.0.0.1",
+        )
+        assert get_real_ip(request) == "203.0.113.5"
+
+    def test_x_forwarded_for_second_priority(self):
+        """无 X-Real-IP 时取 X-Forwarded-For 首个 IP。"""
+        request = self._make_request(
+            headers={"X-Forwarded-For": "203.0.113.1, 198.51.100.2"},
+            client_host="10.0.0.1",
+        )
+        assert get_real_ip(request) == "203.0.113.1"
+
+    def test_client_host_fallback(self):
+        """无代理头时回退到 client.host。"""
+        request = self._make_request(headers={}, client_host="192.168.1.1")
+        assert get_real_ip(request) == "192.168.1.1"
+
+    def test_empty_when_nothing_available(self):
+        """没有任何来源时返回空字符串。"""
+        request = self._make_request(headers={})
+        request.client = None
+        assert get_real_ip(request) == ""
+
+    def test_forwarded_for_strip_spaces(self):
+        """X-Forwarded-For 中的空格应被去除。"""
+        request = self._make_request(
+            headers={"X-Forwarded-For": "  203.0.113.1  ,  10.0.0.1  "},
+        )
+        assert get_real_ip(request) == "203.0.113.1"
+
+    def test_real_ip_empty_header(self):
+        """X-Real-IP 为空时回退到 X-Forwarded-For。"""
+        request = self._make_request(
+            headers={"X-Real-IP": "", "X-Forwarded-For": "203.0.113.1"},
+        )
+        assert get_real_ip(request) == "203.0.113.1"

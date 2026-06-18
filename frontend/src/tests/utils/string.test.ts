@@ -6,7 +6,9 @@ import {
   lowercaseFirst,
   truncate,
   maskPhone,
-  maskEmail
+  maskEmail,
+  randomString,
+  htmlToText
 } from '@/lib/utils/string'
 
 describe('camelToKebab', () => {
@@ -94,10 +96,64 @@ describe('maskEmail', () => {
 
   it('短用户名不脱敏', () => {
     expect(maskEmail('ab@example.com')).toBe('ab@example.com')
+    expect(maskEmail('a@example.com')).toBe('a@example.com')
   })
 
   it('无效邮箱原样返回', () => {
     expect(maskEmail('')).toBe('')
     expect(maskEmail('not-email')).toBe('not-email')
+  })
+})
+
+describe('randomString', () => {
+  it('生成指定长度的字符串', () => {
+    expect(randomString(0)).toBe('')
+    expect(randomString(8).length).toBe(8)
+    expect(randomString(32).length).toBe(32)
+    expect(randomString(128).length).toBe(128)
+  })
+
+  it('结果只包含字母和数字', () => {
+    const str = randomString(1000)
+    expect(str).toMatch(/^[A-Za-z0-9]+$/)
+  })
+
+  it('多次调用应产生不同结果', () => {
+    const result1 = randomString(20)
+    const result2 = randomString(20)
+    expect(result1).not.toBe(result2)
+  })
+})
+
+describe('htmlToText', () => {
+  it('基本 HTML 标签剥离', () => {
+    expect(htmlToText('<p>Hello World</p>')).toBe('Hello World')
+  })
+
+  it('嵌套标签', () => {
+    expect(htmlToText('<div><p>Hello <b>World</b></p></div>')).toBe('Hello World')
+  })
+
+  it('空字符串返回空', () => {
+    expect(htmlToText('')).toBe('')
+  })
+
+  it('纯文本原样返回', () => {
+    expect(htmlToText('just text')).toBe('just text')
+  })
+
+  it('script 标签内容被移除', () => {
+    expect(htmlToText('<script>alert("xss")</script><p>content</p>')).toBe('content')
+  })
+
+  it('style 标签内容被移除', () => {
+    expect(htmlToText('<style>.cls{color:red}</style><p>text</p>')).toBe('text')
+  })
+
+  it('换行和多余空格处理', () => {
+    const result = htmlToText('<p>line1</p><p>line2</p>')
+    // 不同标签间的文本可能连在一起
+    expect(result).toContain('line1')
+    expect(result).toContain('line2')
   })
 })
