@@ -35,6 +35,18 @@ Keep it tight — one or two sentences per field:
 
 ## Entries
 
+### 2026-06-20: Register new test directories in conftest.py TEST_SOURCE_MAP
+
+**What:** When adding a new test directory under `backend/tests/unit/<plugin>/`, also add a mapping entry in `backend/tests/conftest.py`'s `TEST_SOURCE_MAP` so the diff-based test selector picks them up.
+
+**When:** Creating unit tests for a plugin that previously had none (e.g., `ip_ban`, `request_log`).
+
+**Why:** The diff-mode test skipping logic in `pytest_collection_modifyitems` uses `TEST_SOURCE_MAP` to decide which tests to run based on changed source files. Without an entry, changes to the plugin's source code won't trigger the new tests in local dev mode.
+
+**Lesson:** After creating a new `backend/tests/unit/<plugin>/` directory, add `"unit/<plugin>/": ["backend/plugins/<plugin>/", "backend/core/"]` to `TEST_SOURCE_MAP`. Always run the full unit test suite to verify no pre-existing tests were broken.
+
+---
+
 ### 2026-06-12: Use `--body-file` in PowerShell for `gh issue create`
 
 **What:** Pass issue body via a temp file (`--body-file`) instead of inline `--body`.
