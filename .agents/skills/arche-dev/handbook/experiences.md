@@ -225,18 +225,15 @@ Keep it tight — one or two sentences per field:
 
 ---
 
-### 2026-06-16: Use `--body-file` for `gh pr create` under PowerShell to avoid backtick escaping
+### 2026-06-21: Sandbox may lack GH_TOKEN for issue automation — generate report + script as fallback
 
-**What:** Use `--body-file <tempfile>` to pass PR body content instead of inline `--body "..."`.
+**What:** When executing GitHub issue automation (close invalid issues, add labels, flag inappropriate content), check that `GH_TOKEN` is set before making write API calls. If not available, complete read-only analysis and generate a ready-to-run shell script.
 
-**When:** Creating a GitHub PR from Windows PowerShell with a body that contains Markdown backticks (`).
+**When:** Any task that requires writing to GitHub (closing issues, commenting, adding labels) from a Trae sandbox or CI environment.
 
-**Why:** Two things conspire to break the content:
-- PowerShell's backtick (\`) is the escape character itself (same role as `\` in bash). Every \` in a CLI argument string gets consumed by PS
-- The chain PS → Git Bash → gh CLI is too long — phantom characters appear (backticks become backslashes, leading letters like `b` in `backend` get swallowed)
-- `--body-file` reads from disk, completely bypassing shell argument parsing — content arrives intact
+**Why:** Sandbox environments don't always have the user's `GH_TOKEN`. Reading public repo data works without auth, but write operations require authentication. Falling back to generating an actionable script lets the user run it on their local machine.
 
-**Lesson:** On Windows, any `gh pr create` / `gh issue create` call with multi-line or special-character body should use `--body-file <tempfile>` + clean up the temp file afterward.
+**Lesson:** Start by checking `GH_TOKEN` availability early. If missing, do the full analysis (read-only) and generate an execution script the user can run locally. Never attempt write operations that will fail — produce the shell script with all decisions pre-made.
 
 ---
 
