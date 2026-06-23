@@ -183,7 +183,17 @@ Keep it tight — one or two sentences per field:
 
 ---
 
-### 2026-06-24: Name CI/CD workflow files with elementary-level English, split tests by type
+### 2026-06-24: Every public endpoint needs `@require_level` — search API as a case study
+
+**What:** The `/api/search/suggestions` endpoint was completely unauthenticated, allowing any unauthenticated visitor to enumerate registered users by searching partial email addresses (via `User.email.ilike(pattern)`).
+
+**When:** Adding a search endpoint or any new route — especially ones that seem "harmless" like suggestion/search.
+
+**Why:** The `search_suggestions` route in [search/routes.py](file:///workspace/backend/plugins/search/routes.py#L12) had no `@require_level` decorator, and the downstream `_search_users` method queried `User.email` — a field that should never be exposed to unauthenticated callers. Search/suggestion endpoints are often overlooked because they feel like "read-only" operations, but they can leak PII.
+
+**Lesson:** Add `@require_level` (or at minimum `require_user()`) to every new HTTP endpoint by default. Remove auth only when there's an explicit product requirement for public access. For search endpoints specifically, audit the query fields — emails, phone numbers, and internal IDs should not be searchable without authentication.
+
+---
 
 **What:** Rename all workflow files and job names to the most basic English words (check / test / scan / build / deploy). Avoid advanced terms like adversarial / codeql / bandit / validate / sync. Split tests into 3 files by type.
 
