@@ -276,3 +276,15 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-06-29: Add TEST_SOURCE_MAP entries when creating new test directories
+
+**What:** When creating a new test directory (e.g., `unit/ip_ban/`, `unit/request_log/`), add the corresponding mapping entry in `conftest.py`'s `TEST_SOURCE_MAP`.
+
+**When:** Adding new test directories that don't exist in the project yet — the diff-based smart-skip runner won't know when to include them.
+
+**Why:** `TEST_SOURCE_MAP` maps test directories to source directories. Without an entry, the diff runner defaults to running the test (`_is_test_for_source` returns `True` for unmapped tests), but the mapping makes behavior explicit and allows the test to be correctly skipped when unrelated code changes.
+
+**Lesson:** Always check `backend/tests/conftest.py`'s `TEST_SOURCE_MAP` after creating a new test directory. Test both scenarios: (1) changing a source file triggers the new tests, (2) changing unrelated code skips them.
