@@ -4,6 +4,28 @@ Lessons learned during Arche development — non-obvious pitfalls, design ration
 
 ## How to Contribute
 
+---
+
+### 2026-06-30: Audit findings — SSH command injection via string formatting in `get_job_logs`
+
+**What:** `job.logs_path` is directly interpolated into an SSH command string (`f"tail -n {lines} {job.logs_path}"`) without `shlex.quote()`. The StepCommandBuilder in `steps.py` correctly uses `shlex.quote()` for all other SSH command construction — this one was missed.
+
+**When:** Security audit of `cloud_integration/services.py` — the `get_job_logs()` method.
+
+**Why:** Inconsistent coding pattern: `orchestrator.py` delegates to `StepCommandBuilder` (which quotes), but `services.py` builds SSH commands inline without quoting.
+
+**Lesson:** Every SSH command string that includes any runtime variable must use `shlex.quote()`. Audit all `ssh.execute()` call sites for string-formatting patterns — if a variable is user-influenced (even indirectly via DB), it must be quoted. Set up a ruff custom rule or grep pattern for `f".*\{.*\}.*ssh"` to catch these.
+
+---
+
+### 2026-06-30: Audit — `get_real_ip()` trust boundary must be enforced at deployment
+
+**What:** `get_real_ip()` unconditionally trusts `X-Real-IP` / `X-Forwarded-For`, enabling rate-limiter bypass when the app is exposed without nginx.
+
+**When:** Security audit of login rate-limiting. The function is correct when behind nginx (which overwrites these headers), but there's no assertion that nginx is present.
+
+**Lesson:** Add a config flag like `TRUST_PROXY_HEADERS` that gates extraction from proxy headers. In dev mode, log a warning if these headers are present but the flag is off. This makes the trust boundary explicit rather than implicit.
+
 Log an entry immediately when you encounter something worth remembering.
 
 ### Entry Criteria
