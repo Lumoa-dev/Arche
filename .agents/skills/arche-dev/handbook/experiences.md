@@ -240,6 +240,16 @@ Keep it tight — one or two sentences per field:
 
 ---
 
+### 2026-06-30: Add `enabled` field to default auto-ban rules to prevent KeyError
+
+**What:** Added `"enabled": True` to all four default auto-ban rule definitions (`login_failure`, `high_4xx`, `rate_limit`, `geo_surge`) in `IpBanService._get_default_rules()`.
+
+**When:** Writing unit tests for `IpBanService` — the auto-ban rule engine's `_check_*_rule()` methods access `rule["enabled"]` but the default dict returned by `_get_default_rules()` didn't include this key, causing `KeyError`.
+
+**Why:** The `get_rule_configs()` method merges DB-stored rules (which include `enabled`) with defaults for rules not yet in the DB. The merge uses `**default` where the default dict lacked `enabled`. The database model has `server_default="true"` for `enabled`, but the in-memory default dict must match.
+
+**Lesson:** Whenever a service method has a two-tier config (DB + defaults), ensure the default dict schema exactly matches the DB model schema — including boolean flag fields that have server-side defaults. Tests that exercise the engine path before the first `get_rule_configs()` call would surface this immediately.
+
 ### 2026-06-16: Remove dangling jobs from CI/CD workflows
 
 **What:** Cleaned up all unused and conditional-skip jobs across CI/CD:
