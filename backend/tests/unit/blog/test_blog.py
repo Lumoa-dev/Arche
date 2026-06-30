@@ -673,3 +673,415 @@ class TestBlogServiceTags:
                 user_id=author_id,
             )
         assert "已达上限" in str(excinfo.value)
+
+
+# =============================================================================
+# BlogService 测试 - 内容校验
+# =============================================================================
+
+
+@pytest.mark.asyncio
+class TestBlogServiceContentValidation:
+    """BlogService 内容校验测试。"""
+
+    async def test_is_trusted_video_host_bilibili(self, blog_container):
+        """bilibili.com 域名被识别为受信任。"""
+        assert BlogService._is_trusted_video_host(
+            "https://www.bilibili.com/video/BV1GJ411x7H7"
+        )
+        assert BlogService._is_trusted_video_host(
+            "https://bilibili.com/video/BV1xx411c7mu"
+        )
+
+    async def test_is_trusted_video_host_b23tv(self, blog_container):
+        """b23.tv 短域名被识别为受信任。"""
+        assert BlogService._is_trusted_video_host("https://b23.tv/abc123")
+        assert BlogService._is_trusted_video_host("https://www.b23.tv/xyz456")
+
+    async def test_is_trusted_video_host_youtube(self, blog_container):
+        """youtube.com 域名被识别为受信任。"""
+        assert BlogService._is_trusted_video_host(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        )
+        assert BlogService._is_trusted_video_host(
+            "https://youtube.com/shorts/abc123"
+        )
+
+    async def test_is_trusted_video_host_untrusted(self, blog_container):
+        """不受信域名返回 False。"""
+        assert not BlogService._is_trusted_video_host(
+            "https://evil-site.com/video"
+        )
+        assert not BlogService._is_trusted_video_host(
+            "https://bilibili.com.evil.com/x"
+        )
+        assert not BlogService._is_trusted_video_host("not-a-url")
+        assert not BlogService._is_trusted_video_host("")
+
+    async def test_validate_video_url_bilibili_valid(self, blog_container):
+        """有效 bilibili 视频链接。"""
+        service = BlogService(blog_container)
+        assert service._validate_video_url(
+            "https://www.bilibili.com/video/BV1GJ411x7H7"
+        )
+        assert service._validate_video_url(
+            "https://b23.tv/BV1xx411c7mu"
+        )
+
+    async def test_validate_video_url_youtube_valid(self, blog_container):
+        """有效 YouTube 视频链接。"""
+        service = BlogService(blog_container)
+        assert service._validate_video_url(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        )
+        assert service._validate_video_url(
+            "https://www.youtube.com/embed/dQw4w9WgXcQ"
+        )
+        assert service._validate_video_url(
+            "https://youtube.com/shorts/abc123"
+        )
+
+    async def test_validate_video_url_invalid(self, blog_container):
+        """无效视频链接格式返回 False。"""
+        service = BlogService(blog_container)
+        assert not service._validate_video_url(
+            "https://www.bilibili.com/watch/not-a-bv"
+        )
+        assert not service._validate_video_url(
+            "https://www.youtube.com/feed/explore"
+        )
+
+    async def test_validate_video_url_trusted_domain_no_pattern(self, blog_container):
+        """受信域名但链接不含视频 ID 模式返回 False。"""
+        service = BlogService(blog_container)
+        assert not service._validate_video_url(
+            "https://bilibili.com/"
+        )
+        assert not service._validate_video_url(
+            "https://youtube.com/"
+        )
+
+    async def test_validate_post_file_refs_all_exist(self, blog_container):
+        """正文中所有 [#N] 引用文件均已上传。"""
+        service = BlogService(blog_container)
+
+        mock_result = MagicMock()
+        mock_result.all.return_value = [(1,), (2,), (3,)]
+        blog_container._mock_session.execute.return_value = mock_result
+
+        errors = await service.validate_post_file_refs(
+            "正文引用 [#1] 和 [#2] 以及 [#3]", owner_id=uuid.uuid4()
+        )
+
+        assert errors == []
+
+    async def test_validate_post_file_refs_missing(self, blog_container):
+        """正文中部分 [#N] 引用文件未上传。"""
+        service = BlogService(blog_container)
+
+        mock_result = MagicMock()
+        mock_result.all.return_value = [(1,)]  # 只有 #1 存在
+        blog_container._mock_session.execute.return_value = mock_result
+
+        errors = await service.validate_post_file_refs(
+            "用了 [#1] 和 [#2]", owner_id=uuid.uuid4()
+        )
+
+        assert len(errors) == 1
+        assert "#'2'" in errors[0]
+        assert "未上传" in errors[0]
+
+    async def test_validate_post_file_refs_no_refs(self, blog_container):
+        """正文中没有文件引用时直接通过。"""
+        service = BlogService(blog_container)
+        errors = await service.validate_post_file_refs(
+            "纯文本，没有文件引用", owner_id=uuid.uuid4()
+        )
+        assert errors == []
+
+    async def test_validate_content_combines_file_and_video_errors(self, blog_container):
+        """validate_content 合并文件和视频链接校验结果。"""
+        service = BlogService(blog_container)
+        mock_result = MagicMock()
+        mock_result.all.return_value = []  # 没有任何文件
+        blog_container._mock_session.execute.return_value = mock_result
+
+        errors = await service.validate_content(
+            "引用 [#1]", owner_id=uuid.uuid4(),
+        )
+
+        # 至少包含文件引用错误
+        file_errors = [e for e in errors if "#'1'" in e]
+        assert len(file_errors) >= 1
+
+    async def test_validate_content_no_issues(self, blog_container):
+        """内容没有问题时的校验通过。"""
+        service = BlogService(blog_container)
+
+        mock_result = MagicMock()
+        mock_result.all.return_value = []
+        blog_container._mock_session.execute.return_value = mock_result
+
+        errors = await service.validate_content(
+            "这是一段完全正常的内容。", owner_id=uuid.uuid4()
+        )
+        assert errors == []
+
+    async def test_validate_content_with_valid_video(self, blog_container):
+        """视频链接合法时不报错。"""
+        service = BlogService(blog_container)
+
+        mock_result = MagicMock()
+        mock_result.all.return_value = []
+        blog_container._mock_session.execute.return_value = mock_result
+
+        content = (
+            "视频链接: https://www.bilibili.com/video/BV1GJ411x7H7"
+        )
+        errors = await service.validate_content(content, owner_id=uuid.uuid4())
+        assert errors == []
+
+
+# =============================================================================
+# BlogService 测试 - 文件导入与解析
+# =============================================================================
+
+
+class TestBlogServiceImport:
+    """BlogService 文件导入与解析测试。"""
+
+    def test_extract_title_from_markdown(self, blog_container):
+        """从 Markdown 文本中提取 # 标题。"""
+        service = BlogService(blog_container)
+        text = "# 我的文章\n\n这是正文内容。\n\n## 小节标题"
+        title, body = service._extract_title(text, "unknown.md")
+        assert title == "我的文章"
+        assert "这是正文内容" in body
+        assert "# 我的文章" not in body
+
+    def test_extract_title_no_heading(self, blog_container):
+        """无标题时使用文件名作为标题。"""
+        service = BlogService(blog_container)
+        text = "直接是正文，没有标题行"
+        title, body = service._extract_title(text, "hello_world.md")
+        assert title == "hello_world"
+        assert body == "直接是正文，没有标题行"
+
+    def test_extract_title_empty_text(self, blog_container):
+        """空文本使用文件名。"""
+        service = BlogService(blog_container)
+        title, body = service._extract_title("", "导入的帖子.txt")
+        assert title == "导入的帖子"
+        assert body == ""
+
+    def test_extract_html_body_basic(self, blog_container):
+        """从 HTML 提取 body 内容。"""
+        service = BlogService(blog_container)
+        html = "<html><body><h1>标题</h1><p>段落内容</p></body></html>"
+        text = service._extract_html_body(html)
+        assert "# 标题" in text
+        assert "段落内容" in text
+
+    def test_extract_html_body_no_body_tag(self, blog_container):
+        """无 body 标签时直接处理整个 HTML。"""
+        service = BlogService(blog_container)
+        html = "<h1>标题</h1><p>正文</p>"
+        text = service._extract_html_body(html)
+        assert "# 标题" in text
+        assert "正文" in text
+
+    def test_extract_html_body_complex(self, blog_container):
+        """复杂 HTML 转换。"""
+        service = BlogService(blog_container)
+        html = """
+        <body>
+            <h1>主标题</h1>
+            <h2>副标题</h2>
+            <p>第一段<br/>换行</p>
+            <h3>三级标题</h3>
+            <p>第二段</p>
+        </body>
+        """
+        text = service._extract_html_body(html)
+        assert "# 主标题" in text
+        assert "## 副标题" in text
+        assert "### 三级标题" in text
+        assert "第一段" in text
+        assert "换行" in text
+        assert "第二段" in text
+
+    def test_extract_html_body_empty(self, blog_container):
+        """空 HTML 返回空字符串。"""
+        service = BlogService(blog_container)
+        text = service._extract_html_body("")
+        assert text == ""
+
+    def test_extract_html_body_escaped_html(self, blog_container):
+        """HTML 实体被正确转义。"""
+        service = BlogService(blog_container)
+        html = '<body><p>A &amp; B &lt; C</p></body>'
+        text = service._extract_html_body(html)
+        assert "&" in text
+        assert "A & B < C" in text or "A &amp; B" in text  # 实体被 unescape
+
+
+# =============================================================================
+# BlogService 测试 - 统计与趋势
+# =============================================================================
+
+
+@pytest.mark.asyncio
+class TestBlogServiceStats:
+    """BlogService 统计功能测试。"""
+
+    async def test_get_stats_all_zeros(self, blog_container):
+        """空数据库时所有统计值为 0。"""
+        service = BlogService(blog_container)
+
+        # 6 次 count 查询 + 1 次 coalesce 查询
+        results = []
+        for _ in range(6):
+            r = MagicMock()
+            r.scalar_one.return_value = 0
+            results.append(r)
+        # coalesce 查询
+        r_coalesce = MagicMock()
+        r_coalesce.scalar_one.return_value = 0
+        results.append(r_coalesce)
+
+        blog_container._mock_session.execute = AsyncMock(side_effect=results)
+
+        stats = await service.get_stats()
+
+        assert stats["total_posts"] == 0
+        assert stats["published_posts"] == 0
+        assert stats["pending_posts"] == 0
+        assert stats["total_views"] == 0
+        assert stats["total_comments"] == 0
+        assert stats["total_likes"] == 0
+        assert stats["today_posts"] == 0
+
+    async def test_get_daily_trend_returns_days_count(self, blog_container):
+        """get_daily_trend 返回指定天数的趋势数据。"""
+        service = BlogService(blog_container)
+
+        # 三个查询: posts, views, comments
+        r1 = MagicMock()
+        r1.all.return_value = []
+        r2 = MagicMock()
+        r2.all.return_value = []
+        r3 = MagicMock()
+        r3.all.return_value = []
+
+        blog_container._mock_session.execute = AsyncMock(
+            side_effect=[r1, r2, r3]
+        )
+
+        result = await service.get_daily_trend(days=7)
+        assert result["days"] == 7
+        assert len(result["trend"]) == 7
+
+    async def test_get_hot_posts_empty(self, blog_container):
+        """无发布帖子时返回空列表。"""
+        service = BlogService(blog_container)
+
+        r = MagicMock()
+        r.scalars.return_value.all.return_value = []
+        blog_container._mock_session.execute.return_value = r
+
+        result = await service.get_hot_posts(limit=10)
+        assert result == []
+
+    async def test_get_hot_posts_returns_top_n(self, blog_container):
+        """get_hot_posts 按浏览量降序返回限制数量的帖子。"""
+        service = BlogService(blog_container)
+
+        mock_posts = [MagicMock() for _ in range(3)]
+        for i, p in enumerate(mock_posts):
+            p.id = uuid.uuid4()
+            p.title = f"热门文章{i + 1}"
+            p.views = 100 - i * 10
+            p.author_id = uuid.uuid4()
+            p.created_at = None
+
+        r_posts = MagicMock()
+        r_posts.scalars.return_value.all.return_value = mock_posts
+
+        # 作者查询
+        r_author = MagicMock()
+        r_author.all.return_value = [
+            MagicMock(id=mock_posts[0].author_id, username="作者1"),
+            MagicMock(id=mock_posts[1].author_id, username="作者2"),
+            MagicMock(id=mock_posts[2].author_id, username="作者3"),
+        ]
+
+        # 点赞查询
+        r_likes = MagicMock()
+        r_likes.all.return_value = []
+
+        # 评论查询
+        r_comments = MagicMock()
+        r_comments.all.return_value = []
+
+        blog_container._mock_session.execute = AsyncMock(
+            side_effect=[r_posts, r_author, r_likes, r_comments]
+        )
+
+        result = await service.get_hot_posts(limit=3)
+        assert len(result) == 3
+        assert result[0]["title"] == "热门文章1"
+
+
+# =============================================================================
+# BlogService 测试 - 帖子文件生命周期
+# =============================================================================
+
+
+@pytest.mark.asyncio
+class TestBlogServiceFileLifecycle:
+    """BlogService 帖子文件生命周期测试。"""
+
+    async def test_scan_and_clean_post_files_referenced(self, blog_container):
+        """正文引用的文件被标记为 persisted。"""
+        service = BlogService(blog_container)
+
+        pf1 = MagicMock()
+        pf1.file_index = 1
+        pf1.id = uuid.uuid4()
+        pf1.status = "temp"
+
+        pf2 = MagicMock()
+        pf2.file_index = 2
+        pf2.id = uuid.uuid4()
+        pf2.status = "temp"
+
+        r = MagicMock()
+        r.scalars.return_value.all.return_value = [pf1, pf2]
+        blog_container._mock_session.execute.return_value = r
+
+        refs = await service.scan_and_clean_post_files(
+            uuid.uuid4(), "正文引用 [#1]"
+        )
+
+        assert sorted(refs) == [1]
+        assert pf1.status == "persisted"
+        assert pf2.status == "temp"  # 未引用的不改状态
+
+    async def test_scan_and_clean_post_files_no_refs(self, blog_container):
+        """正文无引用时清理所有 temp 文件。"""
+        service = BlogService(blog_container)
+
+        pf1 = MagicMock()
+        pf1.file_index = 1
+        pf1.id = uuid.uuid4()
+        pf1.status = "temp"
+
+        r = MagicMock()
+        r.scalars.return_value.all.return_value = [pf1]
+        blog_container._mock_session.execute.return_value = r
+
+        refs = await service.scan_and_clean_post_files(
+            uuid.uuid4(), "无引用的正文"
+        )
+
+        assert refs == []
