@@ -276,3 +276,18 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-07-02: Test gap analysis — `ip_ban` and `request_log` plugins had zero unit tests
+
+**What:** Written from scratch:
+- `backend/tests/unit/ip_ban/test_ip_ban_models.py` (26 tests) — BloomFilter, LRUSet, ip_matches_cidr
+- `backend/tests/unit/ip_ban/test_ip_ban_services.py` (22 tests) — IpBanService CRUD, auto-ban rules, event recording, stats
+- `backend/tests/unit/request_log/test_request_log.py` (30 tests) — classify_action, _get_client_ip, middleware dispatch, LogAggregationService
+
+**When:** Automated test gap analysis scanning the entire codebase.
+
+**Why:** `ip_ban` is a security-critical module (IP blocking, auto-ban engine, Bloom filter, LRU cache) with no unit tests. `request_log` handles security audit logging and scheduler-based aggregation with no unit tests. Regression in either could silently break security enforcement.
+
+**Lesson:** Critical security and infrastructure modules should have unit tests before or alongside integration tests. The `db_container` fixture in `conftest.py` already provides a mock `ip_ban` service — but it didn't have tests exercising it. Always update `TEST_SOURCE_MAP` in `conftest.py` when adding new test directories. And note: `_get_default_rules()` in `ip_ban/services.py` doesn't include `enabled` in the default dict — the first call to `get_rule_configs()` returns rules without `enabled` field, which causes a KeyError if `_check_*_rule()` is triggered before the rules are initialized via a second `get_rule_configs()` call.
