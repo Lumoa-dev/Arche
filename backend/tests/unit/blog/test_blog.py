@@ -673,3 +673,176 @@ class TestBlogServiceTags:
                 user_id=author_id,
             )
         assert "已达上限" in str(excinfo.value)
+
+    async def test_create_tag_concurrency_rollback(self, blog_container):
+        """并发创建标签时冲突回滚。"""
+        service = BlogService(blog_container)
+
+        # 第一次查询返回 None（标签不存在）
+        # 第二次查询（回滚后）返回已有标签
+        existing_tag = MagicMock()
+        existing_tag.name = "python"
+
+        blog_container._mock_result.scalar_one_or_none.side_effect = [
+            None,  # 第一次查询：标签不存在
+            existing_tag,  # 第二次查询：回滚后查到已有标签
+        ]
+
+        # 让 session.rollback() 和 commit 成为 AsyncMock
+        blog_container._mock_session.commit = AsyncMock(side_effect=Exception("duplicate"))
+        blog_container._mock_session.rollback = AsyncMock()
+
+        # 这应该返回已存在的标签，而不是抛出异常
+        result = await service.create_tag(name="Python")
+        assert result is not None
+
+
+# =============================================================================
+# BlogService 测试 - Slug 生成
+# =============================================================================
+
+
+@pytest.mark.asyncio
+class TestBlogServiceSlug:
+    """BlogService slug 生成测试。"""
+
+    async def test_generate_slug_basic(self, blog_container):
+        """基本 slug 生成。"""
+        service = BlogService(blog_container)
+        blog_container._mock_result.scalar_one_or_none.return_value = None
+
+        slug = await service.generate_slug("Hello World")
+        assert slug == "hello-world"
+
+    async def test_generate_slug_removes_special_chars(self, blog_container):
+        """特殊字符应被移除。"""
+        service = BlogService(blog_container)
+        blog_container._mock_result.scalar_one_or_none.return_value = None
+
+        slug = await service.generate_slug("Hello, World! @2024")
+        assert slug == "hello-world-2024"
+
+    async def test_generate_slug_empty_becomes_post(self, blog_container):
+        """空标题转为 'post'。"""
+        service = BlogService(blog_container)
+        blog_container._mock_result.scalar_one_or_none.return_value = None
+
+        slug = await service.generate_slug("!!!")
+        assert slug == "post"
+
+    async def test_generate_slug_duplicate_appends_counter(self, blog_container):
+        """重复 slug 应追加数字后缀。"""
+        service = BlogService(blog_container)
+
+        existing = MagicMock()
+        existing.slug = "hello-world"
+
+        # 第一次查询返回已有 slug
+        # 第二次查询 candidate "hello-world-1" 返回 None → 可用
+        blog_container._mock_result.scalar_one_or_none.side_effect = [
+            existing,
+            None,
+        ]
+
+        slug = await service.generate_slug("Hello World")
+        assert slug == "hello-world-1"
+
+    async def test_generate_slug_exclude_slug(self, blog_container):
+        """排除指定 slug。"""
+        service = BlogService(blog_container)
+        blog_container._mock_result.scalar_one_or_none.return_value = None
+
+        slug = await service.generate_slug("Hello World", exclude_slug="hello-world")
+        assert slug == "hello-world"
+
+
+# =============================================================================
+# BlogService 测试 - 内容验证
+# =============================================================================
+
+
+@pytest.mark.asyncio
+class TestBlogServiceContentValidation:
+    """BlogService 内容验证测试。"""
+
+    async def test_validate_content_empty(self, blog_container):
+        """空内容应通过验证。"""
+        service = BlogService(blog_container)
+        errors = await service.validate_content("", owner_id=uuid.uuid4())
+        assert errors == []
+
+    async def test_is_trusted_video_host_bilibili(self):
+        """bilibili.com 域名应被识别为受信任视频平台。"""
+        assert BlogService._is_trusted_video_host("https://www.bilibili.com/video/BV1GJ411x") is True
+        assert BlogService._is_trusted_video_host("https://b23.tv/abc123") is True
+
+    async def test_is_trusted_video_host_youtube(self):
+        """youtube.com 域名应被识别为受信任视频平台。"""
+        assert BlogService._is_trusted_video_host("https://www.youtube.com/watch?v=test") is True
+        assert BlogService._is_trusted_video_host("https://youtube.com/shorts/abc123") is True
+        # youtu.be 使用重定向，不被直接识别为受信任域名
+        assert BlogService._is_trusted_video_host("https://youtu.be/abc123") is False
+
+    async def test_is_trusted_video_host_other(self):
+        """其他域名不被识别为视频平台。"""
+        assert BlogService._is_trusted_video_host("https://vimeo.com/12345") is False
+        assert BlogService._is_trusted_video_host("https://example.com/video") is False
+
+    async def test_is_trusted_video_host_invalid_url(self):
+        """无效 URL 返回 False。"""
+        assert BlogService._is_trusted_video_host("") is False
+        assert BlogService._is_trusted_video_host("not-a-url") is False
+
+    async def test_validate_video_url_bilibili_valid(self, blog_container):
+        """有效的 bilibili 视频链接应通过验证。"""
+        service = BlogService(blog_container)
+        assert service._validate_video_url("https://www.bilibili.com/video/BV1GJ411x") is True
+
+    async def test_validate_video_url_bilibili_invalid(self, blog_container):
+        """无效的 bilibili 链接应被拒绝。"""
+        service = BlogService(blog_container)
+        assert service._validate_video_url("https://www.bilibili.com/") is False
+
+    async def test_validate_video_url_youtube_valid(self, blog_container):
+        """有效的 YouTube 链接应通过验证。"""
+        service = BlogService(blog_container)
+        assert service._validate_video_url("https://www.youtube.com/watch?v=test123") is True
+        assert service._validate_video_url("https://youtu.be/abc123") is True
+
+    async def test_validate_video_url_other_host(self, blog_container):
+        """非视频平台的链接应返回 True（不验证）。"""
+        service = BlogService(blog_container)
+        assert service._validate_video_url("https://example.com/video") is True
+
+
+# =============================================================================
+# 工具函数补充测试
+# =============================================================================
+
+
+class TestAccessLevelFunctionsEdge:
+    """权限等级工具函数边界测试。"""
+
+    def test_can_user_see_post_equal_level(self):
+        """用户等级等于帖子要求等级时可看。"""
+        assert can_user_see_post(5, 5) is True
+
+    def test_can_user_see_post_lower_level(self):
+        """用户等级低于帖子要求等级时不可看。"""
+        assert can_user_see_post(3, 5) is False
+
+    def test_can_user_see_post_admin_level_0(self):
+        """P0 用户可以看所有等级的帖子。"""
+        for level in range(0, 11):
+            assert can_user_see_post(level, 0) is True
+
+    def test_can_user_see_post_public(self):
+        """公开帖子（required_level=5）用户等级 5 可看。"""
+        assert can_user_see_post(5, 5) is True
+
+    def test_can_user_see_post_negative_level(self):
+        """负数等级处理（用户等级越低越有特权）。"""
+        # 等级 -1 的用户（极高特权）可以看等级 0 的帖子
+        assert can_user_see_post(0, -1) is True
+        # 等级 5 的用户不能看等级 -1 的帖子（需要极高权限）
+        assert can_user_see_post(-1, 5) is False
