@@ -276,3 +276,18 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-07-07: Read the actual source before writing mock-based tests
+
+**What:** Always read the target module's API (constructor signature, method names, return types) before writing mock-based unit tests. Don't assume the interface from the function name alone.
+
+**When:** Writing unit tests for backend services using MagicMock as fixtures. Three instances of API mismatch happened during a single test-gap analysis session:
+- `RateLimiter.__init__(max_attempts, window_seconds)` — not `(rate, per)`. Methods are `is_limited(key)` / `record_attempt(key)` / `reset(key)`, not `allow()` / `consume()`.
+- `UserSessionTracker.__init__(container)` — takes a `ServiceContainer`, not keyword args. Methods are `user_online` / `user_offline` / `refresh`, not `track` / `remove_session` / `heartbeat`. Timeout comes from `config.get("ONLINE_TIMEOUT_SECONDS")`, not a constructor param.
+- `classify_action(method, path, status_code)` — returns a plain string (`"api_call"`, `"login_fail"`, `"page_view"`, `"other"`), not a dict with action/category.
+
+**Why:** These are not "design flaws" — they are deviations from the interface assumed by reading only the test context. Reading the actual source before writing mocks would have caught all three in under 2 minutes each, avoiding ~45 minutes of back-and-forth test fixing.
+
+**Lesson:** Mock-testing workflow: (1) Read the target module's `__init__` and key method signatures. (2) Design mock setup to match the actual API. (3) Verify with a quick `pytest` on just the new file before the full suite run. When a test fails with `TypeError` on init or assert on return value, fix the mock, not the production code.
