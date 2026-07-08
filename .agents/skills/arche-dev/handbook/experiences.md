@@ -240,6 +240,42 @@ Keep it tight — one or two sentences per field:
 
 ---
 
+### 2026-07-09: Test gap analysis — wrong pytest.raises match pattern for AppError
+
+**What:** Use `pytest.raises(Exception, match="ban_not_found")` will fail because `AppError.__str__` returns the Chinese message, not the error code.
+
+**When:** Writing tests for `IpBanService.unban_ip()` which raises `AppError("封禁记录不存在", code="ban_not_found")`.
+
+**Why:** `pytest.raises` matches against `str(exception)`, not the `code` attribute. `AppError` uses Chinese user-facing messages, so the match pattern must be Chinese.
+
+**Lesson:** For `AppError` assertions, always match on the Chinese message, not the `code` string. Use `pytest.raises(Exception, match="封禁记录不存在")` instead of `match="ban_not_found"`.
+
+---
+
+### 2026-07-09: Seed rule configs before testing auto-ban rule engine
+
+**What:** Call `await service.get_rule_configs()` to seed default rules to DB before testing auto-ban rule logic.
+
+**When:** Testing `IpBanService.record_event()` which internally calls `get_rule_configs()` → `_check_*_rule()`.
+
+**Why:** The first call to `get_rule_configs()` returns in-memory defaults that lack the `enabled` field. Only after DB seeding does the field exist. The rule engine's `_check_*_rule()` methods access `rule["enabled"]`, which crashes with `KeyError` on unseeded data.
+
+**Lesson:** For plugins with a `_ensure_default_rule` pattern, always seed the DB first in tests. The cleanest approach is to call `get_rule_configs()` once before any rule engine tests.
+
+---
+
+### 2026-07-09: Test gap analysis — three high-risk modules had zero coverage
+
+**What:** `ip_ban`, `request_log`, and `useArChartTheme` had no tests despite being security-critical or widely used.
+
+**When:** Running automated test gap analysis across the entire codebase.
+
+**Why:** The `ip_ban` plugin (600+ lines) is a security middleware that intercepts every request. `request_log` tracks all user behavior. Missing test coverage means regressions in these modules could silently compromise the platform.
+
+**Lesson:** When adding a new plugin, add tests in the same PR. The conftest.py `TEST_SOURCE_MAP` and `module_db` fixture imports must also be updated. Use `ip_matches_cidr` pure function tests as a pattern for isolating logic from DB dependencies.
+
+---
+
 ### 2026-06-16: Remove dangling jobs from CI/CD workflows
 
 **What:** Cleaned up all unused and conditional-skip jobs across CI/CD:
