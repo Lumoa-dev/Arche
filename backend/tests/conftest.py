@@ -34,6 +34,9 @@ TEST_SOURCE_MAP = {
     "unit/monitor/": ["backend/plugins/monitor/", "backend/core/"],
     "unit/asset_mgmt/": ["backend/plugins/asset_mgmt/", "backend/core/"],
     "unit/system_monitor/": ["backend/plugins/system_monitor/", "backend/core/"],
+    "unit/ip_ban/": ["backend/plugins/ip_ban/", "backend/core/"],
+    "unit/request_log/": ["backend/plugins/request_log/", "backend/core/"],
+    "unit/config_mgmt/": ["backend/plugins/config_mgmt/", "backend/core/"],
     "integration/": None,  # 集成测试：任一 backend 文件变化就跑
     "e2e/": "__never__",  # E2E 永不自动跑
 }

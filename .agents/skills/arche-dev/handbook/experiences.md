@@ -276,3 +276,15 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-07-10: Always include `enabled` in default rule config dicts
+
+**What:** When defining default rule configs in `_get_default_rules()`, include the `enabled` field explicitly. Missing it causes `KeyError` when the auto-ban rule engine checks `rule["enabled"]` on first invocation.
+
+**When:** Writing IpBanService tests triggered auto-ban rules via `record_event()`. The `get_rule_configs()` method merges DB-stored rules with defaults, but the default dict lacked `enabled`, so the merged result for first-time rules didn't have it either.
+
+**Why:** `_get_default_rules()` returned dicts with `threshold`, `window_seconds`, `ban_duration_minutes`, `description` but not `enabled`. The `_check_login_failure_rule`/`_check_rate_limit_rule`/`_check_high_4xx_rule` methods all access `rule["enabled"]` — missing it crashes the whole request. The DB model has `server_default="true"` but that only applies when the ORM writes to DB, not when the dict is constructed from Python defaults.
+
+**Lesson:** Any dict that represents a complete rule configuration must include all fields that the consumer checks — especially boolean flags like `enabled`. When a model has `server_default` for a field, the in-memory default dict must also include that field with the same default value. Test auto-ban rule triggering early to catch this gap.
