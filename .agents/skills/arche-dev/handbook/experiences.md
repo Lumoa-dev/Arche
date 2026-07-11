@@ -276,3 +276,17 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-07-12: Validate IP address octets in test data; routes with `global_container` can't be unit-tested
+
+**What:** Two lessons from writing `ip_ban` and `request_log` unit tests:
+1. IP `10.0.0.300` is invalid (octet > 255) — `ipaddress.ip_address()` raises `ValueError`, causing `ip_matches_cidr()` to return `False` silently
+2. Routes that import `global_container` (module-level singleton) instead of `request.app.state.container` cannot be tested with the `test_app` fixture — the fixture sets up `app.state.container`, not the global singleton
+
+**When:** Writing unit tests for `ip_ban` and `request_log` plugins. The `high_4xx` rule engine test used `10.0.0.300` as the test IP, causing a confusing failure where the ban was triggered but `is_ip_banned` returned `False`.
+
+**Why:** `ipaddress.ip_address()` rejects any octet > 255. The `ip_matches_cidr()` function catches the exception and returns `False`, making the failure silent. For `request_log` routes, the `_get_session_factory()` helper uses `from backend.core.container import container as global_container` which is a different object from `app.state.container` set up by the test fixture.
+
+**Lesson:** Always use valid IP addresses (`10.0.0.1` through `10.0.0.99`) in test data. For routes that depend on the global container singleton, write integration tests (with the real app boot sequence) instead of unit tests. Service-level tests alone are sufficient for logic coverage.
