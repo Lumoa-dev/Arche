@@ -276,3 +276,15 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-07-12: Batch issue management — verify GH_TOKEN before executing write operations
+
+**What:** Before running `gh api` write operations (close issue, add label, add comment), verify that `GH_TOKEN` is set in the environment. Use `curl` for read-only operations (public repos don't need auth).
+
+**When:** Running automated GitHub issue management tasks in a sandbox/CI environment. The `gh` CLI requires `GH_TOKEN` for all authenticated API calls, but read-only API calls to public repos work via `curl` without auth.
+
+**Why:** The sandbox environment may not have `GH_TOKEN` configured even when the user claims it is. Attempting `gh api` without a token returns exit code 4 with `"To use GitHub CLI in automation, set the GH_TOKEN environment variable."` Using `curl` for reads and checking `GH_TOKEN` early prevents wasted effort.
+
+**Lesson:** Always start with `gh auth status` (or `curl` to a public endpoint) to verify authentication capability. Fall back to `curl` for read-only analysis when token is unavailable. Report the limitation clearly so the user can run the write commands themselves.
