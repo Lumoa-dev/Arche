@@ -398,6 +398,7 @@ class IpBanService:
         return {
             "login_failure": {
                 "name": "登录失败封禁",
+                "enabled": True,
                 "threshold": 10,
                 "window_seconds": 300,
                 "ban_duration_minutes": 30,
@@ -405,6 +406,7 @@ class IpBanService:
             },
             "high_4xx": {
                 "name": "4xx 高频封禁",
+                "enabled": True,
                 "threshold": 50,
                 "window_seconds": 3600,
                 "ban_duration_minutes": 60,
@@ -412,6 +414,7 @@ class IpBanService:
             },
             "rate_limit": {
                 "name": "请求频率封禁",
+                "enabled": True,
                 "threshold": 200,
                 "window_seconds": 60,
                 "ban_duration_minutes": 10,
@@ -419,6 +422,7 @@ class IpBanService:
             },
             "geo_surge": {
                 "name": "地域突增预警",
+                "enabled": True,
                 "threshold": 100,
                 "window_seconds": 300,
                 "ban_duration_minutes": 0,
