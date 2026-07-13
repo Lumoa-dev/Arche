@@ -35,6 +35,52 @@ Keep it tight — one or two sentences per field:
 
 ## Entries
 
+### 2026-07-14: Test gap analysis — seed default rules before updating rule configs
+
+**What:** Always call `get_rule_configs()` before `update_rule_config()` in IpBanService tests, because `update_rule_config` requires the rule to exist in the database first, but default rules are only created by `get_rule_configs()`.
+
+**When:** Writing IpBanService auto-rule engine tests that modify rule configs.
+
+**Why:** `update_rule_config()` performs a DB lookup for the rule by ID. If `get_rule_configs()` hasn't been called yet, the `_ensure_default_rule()` method hasn't run, so no `AutoBanRuleConfig` rows exist in the database. The `update_rule_config()` call then raises `AppError("规则不存在")`.
+
+**Lesson:** When testing stateful services that lazily initialize default data, ensure the initialization happens before modification. The pattern is: `get_rule_configs()` first (creates defaults), then `update_rule_config()` (modifies them).
+
+---
+
+### 2026-07-14: Use `>` (strictly greater than) for sliding window bounds — records at exact boundary are excluded
+
+**What:** When testing sliding window rate limiters, records at exactly `window_start` are excluded from the window because the code uses `t > window_start` (strictly greater than), not `t >= window_start`.
+
+**When:** Writing RateLimiter tests with `@patch("time.time")` — computing expected counts at window boundaries.
+
+**Why:** `RateLimiter.is_limited()` cleans records with `t > window_start`. A record at `t = window_start` is NOT included. This means the effective window is `(now - window_seconds, now]`, not `[now - window_seconds, now]`.
+
+**Lesson:** When computing expected counts in sliding window tests, use `t > window_start` semantics. Records at the exact boundary shift out of the window one tick earlier than may be intuitively expected.
+
+---
+
+### 2026-07-14: Avoid `\S+` regex in non-hex capture groups — commas and punctuation will be captured
+
+**What:** Use `[\w/]+` or a character class instead of `\S+` when capturing non-numeric values like `N/A` from log lines, because `\S+` also matches trailing punctuation.
+
+**When:** Writing log parser tests that capture non-numeric epoch values.
+
+**Why:** The regex `Epoch:\s*(\S+)` on input `"Epoch: N/A, loss: 1.0"` captures `"N/A,"` (with trailing comma), not `"N/A"`. `\S+` matches any non-whitespace character, including `,`.
+
+**Lesson:** Use `[\w/]+` or `[^,\s]+` when capturing identifier-like tokens that may be followed by punctuation. Always verify the captured value against the expected value in tests — the comma is easy to miss.
+
+---
+
+### 2026-07-14: `_get_client_ip` checks `X-Forwarded-For` before `X-Real-IP`
+
+**What:** When testing `_get_client_ip()`, don't set both `X-Forwarded-For` and `X-Real-IP` headers if the test expects `X-Real-IP` to win — the function reads `X-Forwarded-For` first and returns immediately if non-empty.
+
+**When:** Writing request log service tests that verify IP extraction logic.
+
+**Why:** The implementation prioritizes `X-Forwarded-For` over `X-Real-IP`. This is intentional: `X-Forwarded-For` is the de facto standard proxy header, while `X-Real-IP` is a fallback for configurations that don't support multi-hop forwarding.
+
+**Lesson:** Test the `X-Real-IP` path by omitting `X-Forwarded-For` from the mock headers. Add a separate test verifying that `X-Forwarded-For` takes precedence over `X-Real-IP` when both are present.
+
 ### 2026-06-12: Use `--body-file` in PowerShell for `gh issue create`
 
 **What:** Pass issue body via a temp file (`--body-file`) instead of inline `--body`.
