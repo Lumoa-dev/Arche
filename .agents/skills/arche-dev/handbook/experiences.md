@@ -35,6 +35,18 @@ Keep it tight — one or two sentences per field:
 
 ## Entries
 
+### 2026-07-15: Seed default rules before updating auto-ban rule configs in tests
+
+**What:** Call `await service.get_rule_configs()` before `await service.update_rule_config()` in IpBanService tests, because `update_rule_config` expects the rule to already exist in the DB.
+
+**When:** Testing the auto-ban rule engine — `update_rule_config`, `record_event` → `_check_login_failure_rule`, etc.
+
+**Why:** `update_rule_config()` queries the `auto_ban_rule_configs` table for the rule and raises `AppError("rule_not_found")` if it doesn't exist. Default rules are only auto-created by `get_rule_configs()` → `_ensure_default_rule()`. The rule engine methods (`_check_*_rule`) also call `get_rule_configs()` internally, so if the threshold is already acceptable in the defaults, tests pass without seeding. But custom thresholds require seeding first.
+
+**Lesson:** For any test involving `update_rule_config`, first call `get_rule_configs()` to seed the defaults. The `record_event` path auto-seeds because `get_rule_configs()` is called internally, but only at the default threshold values.
+
+---
+
 ### 2026-06-12: Use `--body-file` in PowerShell for `gh issue create`
 
 **What:** Pass issue body via a temp file (`--body-file`) instead of inline `--body`.
