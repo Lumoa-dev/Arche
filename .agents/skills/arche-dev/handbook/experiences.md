@@ -35,6 +35,16 @@ Keep it tight — one or two sentences per field:
 
 ## Entries
 
+### 2026-07-17: Use `--input -` with JSON pipe for `gh api -X PATCH` labels field
+
+**What:** Pipe JSON via stdin (`echo '{"labels":[...]}' | gh api ... --input -`) instead of `-f labels='...'` or `--field labels=...`.
+
+**When:** Sending array-type fields (like `labels`) to `gh api -X PATCH`. The `-f` and `--field` flags always send string values, but GitHub API's `labels` field requires a JSON array.
+
+**Why:** `-f labels='["invalid"]'` sends the literal string `"[\"invalid\"]"` which GitHub rejects with `"is not an array"`. `--input -` pipes raw JSON directly, preserving the array type.
+
+**Lesson:** For array/object fields in GitHub REST API calls, always use `--input -` with a JSON pipe. Use `-f`/`--field` only for scalar values (strings, numbers, booleans).
+
 ### 2026-06-12: Use `--body-file` in PowerShell for `gh issue create`
 
 **What:** Pass issue body via a temp file (`--body-file`) instead of inline `--body`.
