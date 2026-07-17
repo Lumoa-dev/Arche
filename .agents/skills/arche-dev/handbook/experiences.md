@@ -257,6 +257,16 @@ Keep it tight — one or two sentences per field:
 
 ---
 
+### 2026-07-18: Add unit tests for uncovered core modules and plugins
+
+**What:** Added 106 unit tests across 4 uncovered areas: `core/rate_limiter.py`, `core/uid.py`, `plugins/ip_ban/`, `plugins/request_log/services.py`.
+
+**When:** Test gap analysis identified that `RateLimiter` (sliding window concurrency), `uid.py` (SID parsing), `ip_ban` (BloomFilter, LRUSet, CIDR matching, auto-ban rules), and `request_log` (classify_action, IP extraction, aggregation) had zero dedicated test coverage.
+
+**Why:** These are core/shared modules used by critical paths (auth rate limiting, model ID generation, IP ban middleware, request logging). Missing coverage means regressions in these modules silently degrade security and observability.
+
+**Lesson:** When adding a new plugin or core module, write unit tests for it in the same PR. The test patterns to follow: pure functions get synchronous tests (rate_limiter, uid, ip_matches_cidr, BloomFilter, LRUSet, classify_action), services with DB dependencies get async tests using `db_container` fixture, and scheduler-based services get patch-based tests for start/stop lifecycle.
+
 ### 2026-06-16: Fix integration test "Event loop is closed" caused by missing ip_ban models import and duplicate indexes
 
 **What:** Three fixes for integration test failures:
