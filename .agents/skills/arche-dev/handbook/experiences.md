@@ -276,3 +276,25 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-07-20: 测试缺口分析关键发现
+
+**What:** 全面审查测试覆盖率时，发现大量安全关键模块和核心基础设施缺乏测试覆盖。
+
+**When:** 自动化测试缺口分析。已补充 9 个后端测试文件 + 4 个前端测试文件，共 175 + 36 = 211 个测试用例全部通过。
+
+**Why:** 以下模块存在实质性回归风险：
+- **ip_ban 插件**：BloomFilter、LRUSet、自动封禁规则引擎、IP-CIDR 匹配函数完全无测试覆盖
+- **auth/session.py**：UserSessionTracker 的在线会话追踪、超时清理、峰值记录无测试
+- **auth/middleware.py**：AuthMiddleware 的公开路由放行、mock token 处理、JWT 解析、博客公开 GET 路由逻辑无测试
+- **core/rate_limiter.py**：滑动窗口限流器，核心基础设施，被 auth 和多个插件使用
+- **core/uid.py**：SID 生成/解析/格式化工具，被全项目使用
+- **request_log 插件**：行为分类函数 classify_action、客户端 IP 提取、跳过路径常量无测试
+- **oss/rate_limiter.py**：Token Bucket 算法的 TokenBucket 和 RateLimiterManager 无测试
+- **blog/sensitive_words.py**：敏感词过滤器匹配逻辑、大小写不敏感、全局过滤器初始化无测试
+- **前端 permission-bus**：权限缓存初始化、页面可访问性判断、缓存清理等核心逻辑无测试
+- **前端 API 服务层**：ipBan.ts 和 requestLog.ts 的 API 调用封装无测试
+
+**Lesson:** 安全关键模块（auth、ip_ban、rate_limiter）和核心基础设施（uid、sensitive_words）应优先获得测试覆盖。测试编写时注意：Mock 的 auto-create 特性会影响 hasattr 检查；APScheduler 的 asyncio scheduler 需要 @pytest.mark.asyncio；BloomFilter 的 hash 一致性依赖测试验证；Token Bucket 的 consume 等待测试需使用超时中断而非真实等待。
