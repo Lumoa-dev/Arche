@@ -61,6 +61,34 @@ async def list_configs(request: Request, group: str | None = None):
     return {"code": "ok", "message": "获取成功", "data": items}
 
 
+# --- Groups ---
+
+
+@router.get("/groups")
+@require_level(0)
+async def list_groups(request: Request):
+    """列出所有配置分组。"""
+    from sqlalchemy import distinct
+
+    from backend.core.container import ServiceContainer
+    from backend.core.models import ConfigEntry
+
+    container: ServiceContainer = request.app.state.container
+    config = container.get("config")
+    session_factory = config._session_factory
+
+    if not session_factory:
+        return {"code": "ok", "data": []}
+
+    async with session_factory() as session:
+        result = await session.execute(
+            select(distinct(ConfigEntry.group)).order_by(ConfigEntry.group)
+        )
+        groups = [row[0] for row in result.all()]
+
+    return {"code": "ok", "message": "获取成功", "data": groups}
+
+
 # --- Get single entry ---
 
 
@@ -212,34 +240,6 @@ async def delete_config(key: str, request: Request):
     config.invalidate_cache(key)
 
     return {"code": "ok", "message": "删除成功", "data": {}}
-
-
-# --- Groups ---
-
-
-@router.get("/groups")
-@require_level(0)
-async def list_groups(request: Request):
-    """列出所有配置分组。"""
-    from sqlalchemy import distinct
-
-    from backend.core.container import ServiceContainer
-    from backend.core.models import ConfigEntry
-
-    container: ServiceContainer = request.app.state.container
-    config = container.get("config")
-    session_factory = config._session_factory
-
-    if not session_factory:
-        return {"code": "ok", "data": []}
-
-    async with session_factory() as session:
-        result = await session.execute(
-            select(distinct(ConfigEntry.group)).order_by(ConfigEntry.group)
-        )
-        groups = [row[0] for row in result.all()]
-
-    return {"code": "ok", "message": "获取成功", "data": groups}
 
 
 # --- Reload cache ---

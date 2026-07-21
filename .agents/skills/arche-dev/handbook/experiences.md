@@ -276,3 +276,15 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-07-22: Route ordering in FastAPI — static paths must precede dynamic `{key}` paths
+
+**What:** Place `@router.get("/groups")` before `@router.get("/{key}")` in the same APIRouter, otherwise `/groups` is shadowed by `/{key}` with `key="groups"`.
+
+**When:** Adding `list_groups` route to config_mgmt plugin. The route was defined after `get_config("/{key}")`, making it unreachable. The test uncovered this as a production bug.
+
+**Why:** FastAPI (Starlette) matches routes in definition order, not by path specificity. A request to `/config/groups` matches the first compatible pattern — `GET /config/{key}` wins over `GET /config/groups` because it's defined first.
+
+**Lesson:** When adding a static path segment to an APIRouter that already has a `/{param}` pattern, register the static route first. This applies to all HTTP methods, not just GET.
