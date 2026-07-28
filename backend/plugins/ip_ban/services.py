@@ -366,7 +366,21 @@ class IpBanService:
             )
             rule = result.scalar_one_or_none()
             if not rule:
-                raise AppError("规则不存在", code="rule_not_found", status_code=404)
+                # 如果规则不存在，尝试用默认值创建
+                defaults = self._get_default_rules()
+                if rule_id not in defaults:
+                    raise AppError("规则不存在", code="rule_not_found", status_code=404)
+                rule = AutoBanRuleConfig(
+                    id=rule_id,
+                    name=defaults[rule_id]["name"],
+                    enabled=defaults[rule_id].get("enabled", True),
+                    threshold=defaults[rule_id]["threshold"],
+                    window_seconds=defaults[rule_id]["window_seconds"],
+                    ban_duration_minutes=defaults[rule_id]["ban_duration_minutes"],
+                    description=defaults[rule_id].get("description"),
+                )
+                session.add(rule)
+                await session.flush()
 
             allowed_fields = {
                 "enabled",
@@ -398,6 +412,7 @@ class IpBanService:
         return {
             "login_failure": {
                 "name": "登录失败封禁",
+                "enabled": True,
                 "threshold": 10,
                 "window_seconds": 300,
                 "ban_duration_minutes": 30,
@@ -405,6 +420,7 @@ class IpBanService:
             },
             "high_4xx": {
                 "name": "4xx 高频封禁",
+                "enabled": True,
                 "threshold": 50,
                 "window_seconds": 3600,
                 "ban_duration_minutes": 60,
@@ -412,6 +428,7 @@ class IpBanService:
             },
             "rate_limit": {
                 "name": "请求频率封禁",
+                "enabled": True,
                 "threshold": 200,
                 "window_seconds": 60,
                 "ban_duration_minutes": 10,
@@ -419,6 +436,7 @@ class IpBanService:
             },
             "geo_surge": {
                 "name": "地域突增预警",
+                "enabled": True,
                 "threshold": 100,
                 "window_seconds": 300,
                 "ban_duration_minutes": 0,
@@ -436,6 +454,7 @@ class IpBanService:
             rule = AutoBanRuleConfig(
                 id=rule_id,
                 name=default["name"],
+                enabled=default.get("enabled", True),
                 threshold=default["threshold"],
                 window_seconds=default["window_seconds"],
                 ban_duration_minutes=default["ban_duration_minutes"],

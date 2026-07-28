@@ -168,7 +168,7 @@ def fake_container():
             "GITHUB_CACHE_TTL": 300,
             "GITHUB_TIMEOUT": 10,
             "GITHUB_DEFAULT_MODE": "auto",
-            "SECRET_KEY": "test_secret_key_12345",
+            "SECRET_KEY": "test_secret_key_12345678901234567890",
         }
 
         def get_required(self, key):
@@ -272,7 +272,7 @@ async def db_container(in_memory_db, fake_container):
             "GITHUB_CACHE_TTL": 300,
             "GITHUB_TIMEOUT": 10,
             "GITHUB_DEFAULT_MODE": "auto",
-            "SECRET_KEY": "test_secret_key_12345",
+            "SECRET_KEY": "test_secret_key_12345678901234567890",
         }
 
         def __init__(self):
