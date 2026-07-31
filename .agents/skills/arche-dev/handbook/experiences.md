@@ -276,3 +276,18 @@ Keep it tight — one or two sentences per field:
 1. `module_db` — add the new plugin's models import so `create_all` picks them up
 2. `db_container.get_service` — add explicit handling for the new plugin's service (even if mocked)
 3. Check model indexes — never combine `index=True` on a column with an explicit `Index()` in `__table_args__` for the same column
+
+---
+
+### 2026-08-01: Write unit tests for untested plugins before integration test coverage
+
+**What:** When adding a new plugin, write unit tests first (data structures, pure functions, service CRUD), then integration tests (API routes). For plugins with middleware + models, write separate unit test files for the middleware layer and the service layer.
+
+**When:** Adding test coverage for `ip_ban` and `request_log` plugins — both had zero test coverage despite being security-critical and production-deployed.
+
+**Why:** 
+- `ip_ban` middleware has custom data structures (BloomFilter, LRUSet) that are pure-Python and trivially testable without any DB — these are the highest-value-per-line tests in the project.
+- `IpBanService` uses memory SQLite (`module_db` fixture) for CRUD and auto-ban rule engine — the `_make_service` helper pattern (swap `container.get("db")` with real `module_db`) avoids needing the full `db_container` fixture.
+- `request_log` has pure functions (`classify_action`, `_get_client_ip`) that are easy to test in isolation, plus `LogAggregationService` that needs APScheduler — make `start`/`stop` tests async to provide an event loop.
+
+**Lesson:** When backfilling test coverage for plugins, follow this order: (1) pure utility functions, (2) data structures, (3) service CRUD with in-memory DB, (4) middleware logic. Each layer is independently testable. Also add the new test directory to `TEST_SOURCE_MAP` in `conftest.py` so diff-based test skipping works correctly.
