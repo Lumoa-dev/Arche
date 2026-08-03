@@ -410,6 +410,13 @@ async def test_app(db_container):
     registry.activate_all(app)
     registry.register_services(db_container)
 
+    # 将 db 注册到模块级全局容器，供 request_log 等通过 global_container 访问的插件使用
+    from backend.core.container import container as _global_container
+
+    _db = db_container.get("db")
+    _global_container._factories["db"] = lambda c: _db
+    _global_container._instances.pop("db", None)
+
     secret_key = db_container.get("config").get_required("SECRET_KEY")
     app.add_middleware(AuthMiddleware, secret_key=secret_key)
 
